@@ -1,0 +1,25 @@
+{
+  "name": "trip-planner",
+  "productName": "Trip Planner",
+  "version": "0.1.0",
+  "description": "Shanghai / Suzhou / Hangzhou trip planner — map of places + multi-city itinerary planning.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.gerry.tripplanner",
+    "productName": "Trip Planner",
+    "files": ["index.html", "main.js", "cities.js", "data.js", "districts-geo.js", "images.js", "vendor/**/*", "tiles/**/*"],
+    "mac": { "category": "public.app-category.travel", "target": "dmg" },
+    "win": { "target": "nsis" }
+  }
+}

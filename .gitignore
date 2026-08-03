@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Electron build output (electron-builder)
+dist/
+out/
+release/
+*.dmg
+*.exe
+*.AppImage
+*.blockmap
+*.snap
+*.pkg
+
+# Logs & caches
+*.log
+npm-debug.log*
+.cache/
+.electron-builder-cache/
+
+# OS / editor cruft
+.DS_Store
+.vscode/
+.idea/
+Thumbs.db
