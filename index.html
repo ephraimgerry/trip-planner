@@ -46,7 +46,49 @@
     .nav button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
     .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .panel[hidden] { display: none; }
-    #tripPanel { overflow-y: auto; padding: 14px; }
+    #tripBar { flex: 0 0 auto; }
+    #tripBar:empty { display: none; }
+    #tripContent { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; }
+
+    /* pinned controls bar in a trip */
+    .trip-sticky { padding: 9px 14px; border-bottom: 1px solid var(--line); background: #fafafb; display: flex; flex-direction: column; gap: 8px; }
+    .seg-row { display: flex; gap: 8px; }
+    .seg { display: flex; flex: 1; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: #fff; }
+    .seg button { flex: 1; padding: 7px 4px; font-size: 12px; font-weight: 600; border: none; background: #fff; color: var(--muted); cursor: pointer; }
+    .seg button + button { border-left: 1px solid var(--line); }
+    .seg button.on { background: var(--ink); color: #fff; }
+    .scope-toggle.sticky { margin: 0; }
+
+    /* day grouping: type headers + time slots */
+    .type-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 8px 2px 2px; }
+    .slot { display: flex; gap: 9px; align-items: flex-start; padding: 2px 0; }
+    .slot .slot-tag { flex: 0 0 92px; font-size: 11px; font-weight: 700; color: #4a3d63; padding-top: 9px; }
+    .slot .slot-p { flex: 1; min-width: 0; }
+
+    /* Trip view (replaces the map on the right) */
+    #tripView { flex: 1; height: 100%; overflow-y: auto; background: var(--bg); }
+    #tripView[hidden] { display: none; }
+    .tv { max-width: 900px; margin: 0 auto; padding: 22px 26px 40px; }
+    .tv-empty { color: var(--muted); font-size: 14px; padding: 60px 24px; text-align: center; }
+    .tv-gallery { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; }
+    .tv-gallery img { height: 220px; border-radius: 12px; object-fit: cover; flex: 0 0 auto; background: #e8e8e8; }
+    .tv h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.02em; }
+    .tv .tv-sub { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+    .tv .tv-dist { display: inline-block; font-size: 12.5px; background: #eef1f5; color: #445; border-radius: 999px; padding: 4px 11px; margin-bottom: 12px; font-weight: 600; }
+    .tv p.tv-desc { font-size: 14px; line-height: 1.6; color: #2b3240; max-width: 640px; }
+    .tv .tv-links { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+    .tv .tv-links a, .tv .tv-links button { font-size: 13px; text-decoration: none; padding: 8px 13px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: #fff; cursor: pointer; }
+    .tv .tv-links a:hover, .tv .tv-links button:hover { border-color: var(--accent); color: var(--accent); }
+    .tv h2 { font-size: 15px; margin: 26px 0 12px; }
+    .tv-near { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+    .near-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.05); transition: .12s; }
+    .near-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.12); transform: translateY(-2px); }
+    .near-card img { width: 100%; height: 118px; object-fit: cover; background: #e8e8e8; display: block; }
+    .near-card .nc-body { padding: 9px 11px; }
+    .near-card .nc-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .near-card .nc-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; display: flex; justify-content: space-between; gap: 6px; }
+    .near-card .nc-add { margin: 0 11px 10px; font-size: 11.5px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; width: calc(100% - 22px); }
+    .near-card .nc-add:hover { border-color: #9b5de5; color: #6d28a8; }
 
     /* ---------- Trips ---------- */
     .trip-actions { display: flex; gap: 8px; margin-bottom: 12px; }
@@ -107,6 +149,33 @@
     .add-place-sel { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: #fbfbfa; }
     .day-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 2px 4px; }
     .tip-note { font-size: 11.5px; color: var(--muted); background: #f6f7f9; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.45; }
+
+    /* Alternatives — a deck of place-cards per day */
+    .alts { margin: 12px 2px 4px; }
+    .alts-label { font-size: 12px; font-weight: 700; color: #4a3d63; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px; cursor: pointer; }
+    .alts-label .wexpand { margin-left: auto; font-size: 11px; color: #7a6a97; font-weight: 700; }
+    .altcard { display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line);
+      border-radius: 12px; box-shadow: 0 2px 9px rgba(30,30,50,.10); padding: 8px; }
+    .altcard img { width: 50px; height: 50px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: #eee; }
+    .altcard .ac-body { flex: 1; min-width: 0; }
+    .altcard .ac-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+    .altcard .ac-name:hover { color: var(--accent); }
+    .altcard .ac-cn { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .altcard .ac-actions { display: flex; gap: 6px; margin-top: 6px; }
+    .altcard .in-day { font-size: 11px; color: #1b7a34; font-weight: 700; align-self: center; }
+    .alts.open .altcard { margin-bottom: 8px; }
+    /* collapsed: a real stack of cards peeking */
+    .altstack { position: relative; height: 90px; cursor: pointer; }
+    .altcard.mini { position: absolute; left: 0; right: 0; top: 0; }
+    .altcard.mini .ac-cn, .altcard.mini .ac-actions { display: none; }
+    .altstack .s0 { z-index: 3; }
+    .altstack .s1 { transform: translate(8px, 9px); z-index: 2; opacity: .9; }
+    .altstack .s2 { transform: translate(16px, 18px); z-index: 1; opacity: .78; }
+    .altstack:hover .s0 { box-shadow: 0 4px 14px rgba(30,30,50,.18); }
+
+    .pop .wishbtn { display: block; margin-top: 8px; font-size: 11.5px; background: #faf7fd; border: 1px solid #c7b8d8; color: #4a3d63; border-radius: 7px; padding: 5px 9px; cursor: pointer; width: 100%; }
+    .pop .wishbtn:hover { border-color: #9b5de5; color: #6d28a8; }
 
     /* ---------- Modal (replaces prompt/confirm; Electron-safe) ---------- */
     .modal-back { position: fixed; inset: 0; background: rgba(20,24,34,.42); display: flex; align-items: center; justify-content: center; z-index: 4000; }
@@ -322,12 +391,14 @@
       </div>
 
       <div id="tripPanel" class="panel" hidden>
+        <div id="tripBar"></div>
         <div id="tripContent"></div>
       </div>
 
     </aside>
     <div id="resizer" title="Drag to resize the sidebar"></div>
     <div id="map"></div>
+    <div id="tripView" hidden></div>
   </div>
   <div class="hint" id="hint"></div>
 
@@ -591,6 +662,7 @@
         ${btn("want","⭐ Want")}${btn("planned","📅 Plan")}${btn("visited","✅ Been")}
       </div>
       <textarea placeholder="Your notes…">${note.replace(/</g,"&lt;")}</textarea>
+      <button class="wishbtn">＋ Add as an alternative</button>
       ${store.base===p.id?"":`<button class="setbase">🎯 Set as base for distances</button>`}
       ${p.custom?`<button class="del">Delete this pin</button>`:""}
     </div>`;
@@ -617,6 +689,16 @@
     if (ta) ta.oninput = () => { store.notes[p.id] = ta.value; save(); renderList(); };
     const sb = el.querySelector(".setbase");
     if (sb) sb.onclick = () => { store.base = p.id; save(); refresh(); showHint("🎯 Base set to " + p.name); };
+    const wb = el.querySelector(".wishbtn");
+    if (wb) wb.onclick = () => {
+      const t = (store.trips || []).find(x => x.id === openTripId) || (store.trips || [])[0];
+      if (!t) { showHint("Create a trip first (🧳 Trips tab)"); return; }
+      t.wishlist = t.wishlist || [];
+      if (t.wishlist.includes(p.id)) { showHint("Already an alternative in " + t.name); return; }
+      t.wishlist.push(p.id); save();
+      showHint("🃏 Added as alternative — see it under a " + ((CITIES[p.city] || {}).name || "city") + " day");
+      if (openTripId === t.id) renderTrip();
+    };
     const del = el.querySelector(".del");
     if (del) del.onclick = () => deleteCustom(p.id);
   }
@@ -872,6 +954,36 @@
   const cityTint = { shanghai: "#e63946", suzhou: "#c1121f", hangzhou: "#2a9d8f" };
   let openTripId = null;
   let focusedDate = null;
+  let wishOpenDate = null;   // which day's alternatives stack is expanded
+  let wishPrevW = 0;         // sidebar width before expanding
+  let dayView = "type";      // "type" | "time"
+  let tripViewOn = false;    // right side shows place-detail instead of the map
+  let selectedPlaceId = null;
+
+  const CAT_ORDER = ["sight", "culture", "nature", "food", "coffee", "matcha", "shopping", "nightlife", "custom"];
+  const isCafe = p => p.c === "coffee" || p.c === "matcha" || p.sub === "coffee" || p.sub === "matcha";
+  // arrange a day's places into a rough time-of-day sequence
+  function sequenceDay(places) {
+    const food = places.filter(p => p.c === "food");
+    const cafe = places.filter(isCafe);
+    const night = places.filter(p => p.c === "nightlife");
+    const see = places.filter(p => ["sight", "culture", "nature", "shopping"].includes(p.c));
+    const custom = places.filter(p => p.c === "custom");
+    const seq = [];
+    if (cafe[0]) seq.push({ slot: "☕ Morning", p: cafe[0] });
+    if (food.length >= 3) seq.push({ slot: "🍳 Breakfast", p: food.shift() });
+    const half = Math.ceil(see.length / 2);
+    see.slice(0, half).forEach(p => seq.push({ slot: "🏙️ Morning", p }));
+    if (food[0]) seq.push({ slot: "🍜 Lunch", p: food.shift() });
+    see.slice(half).forEach(p => seq.push({ slot: "🎨 Afternoon", p }));
+    if (cafe[1]) seq.push({ slot: "🍵 Afternoon", p: cafe[1] });
+    custom.forEach(p => seq.push({ slot: "📍 Anytime", p }));
+    if (food[0]) seq.push({ slot: "🍽️ Dinner", p: food.shift() });
+    food.forEach(p => seq.push({ slot: "🥟 Snack", p }));
+    cafe.slice(2).forEach(p => seq.push({ slot: "☕ Coffee", p }));
+    night.forEach(p => seq.push({ slot: "🍸 Evening", p }));
+    return seq;
+  }
 
   // date helpers (safe: noon avoids TZ/DST edge)
   function addDays(str, n) {
@@ -894,7 +1006,7 @@
     if (view === "map") { clearScope(); renderList(); }
     if (view === "trip") renderTrip();
   }
-  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; refreshMarkers(); }
+  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; setRightView(false); refreshMarkers(); }
 
   // ---- seed the user's Shanghai/Suzhou/Hangzhou trip once ----
   function seedTrip() {
@@ -939,7 +1051,7 @@
           "🚇 Metro Line 2 (first ~05:30) — ~75 min, ¥7, earliest but slow",
         ], 0),
       ],
-      plan: {},
+      plan: {}, wishlist: [],
     };
     const ITIN = {
       "2026-11-08": ["The Bund", "Yu Garden", "Yuyuan Bazaar", "Nanjing Road Pedestrian", "Nanxiang Steamed Buns"],
@@ -969,6 +1081,7 @@
   }
   function renderTripList() {
     clearScope();
+    document.getElementById("tripBar").innerHTML = "";
     let h = `<div class="trip-actions"><button class="btn primary" id="newTripBtn">＋ New trip</button></div>`;
     if (!store.trips.length) h += `<div class="tip-note">No trips yet. Create one, add city stays with dates, pick transport between them, add hotels, and drop places into each day. Everything saves in your browser.</div>`;
     store.trips.forEach(t => {
@@ -986,8 +1099,17 @@
   function segForDate(t, date) { return t.segments.find(s => date >= s.start && date < s.end); }
 
   function renderTripDetail(t) {
+    t.wishlist = t.wishlist || [];
     // opening a trip scopes the map to its places; keep any current day highlight
     scopeTrip = t; refreshMarkers();
+    // pinned controls bar (always visible while the day list scrolls)
+    document.getElementById("tripBar").innerHTML = `<div class="trip-sticky">
+      <div class="seg-row">
+        <div class="seg" id="dayViewSeg"><button data-dv="type" class="${dayView === "type" ? "on" : ""}">🗂 By type</button><button data-dv="time" class="${dayView === "time" ? "on" : ""}">🕒 By time</button></div>
+        <div class="seg" id="rightViewSeg"><button data-rv="map" class="${tripViewOn ? "" : "on"}">🗺 Map</button><button data-rv="trip" class="${tripViewOn ? "on" : ""}">📋 Trip view</button></div>
+      </div>
+      <label class="scope-toggle sticky"><input type="checkbox" id="scopeAll" ${scopeShowAll ? "checked" : ""}> Show other places nearby (off = only my trip's spots)</label>
+    </div>`;
     const days = dateRange(t.start, t.end);
     let h = `<div class="trip-actions">
       <button class="btn sm" id="backTrips">← Trips</button>
@@ -1006,8 +1128,7 @@
       tripContent.innerHTML = h; wireTripDetail(t); return;
     }
 
-    h += `<label class="scope-toggle"><input type="checkbox" id="scopeAll" ${scopeShowAll ? "checked" : ""}> Show other places nearby (off = only my trip's spots on the map)</label>
-    <div class="tip-note">Tap a <b>day header</b> to zoom the map to that day and highlight its spots (numbered). Tap a transport option to choose it · use the dropdown to add places · 🏨 add hotels anytime.</div>`;
+    h += `<div class="tip-note">Tap a <b>day header</b> to focus that day on the map · tap a place name to see it (map, or the 📋 Trip view). Switch 🗂 By type / 🕒 By time above.</div>`;
 
     days.forEach((date, i) => {
       const seg = segForDate(t, date);
@@ -1042,14 +1163,26 @@
         else
           h += `<div class="hotel"><span>🏨</span><button data-addhotel="${si}" style="font-weight:600">＋ Add hotel for ${esc(cname)}</button></div>`;
       }
-      // planned places (numbered, matching map markers when focused)
+      // planned places — grouped by type, or sequenced by time
       const ids = t.plan[date] || [];
-      ids.forEach((id, idx) => {
-        const p = placeById(id); if (!p) return;
-        h += `<div class="dplace" data-fly="${id}"><span class="dnum2">${idx + 1}</span><span class="pemoji">${catOf(p).emoji}</span>
-          <span>${esc(p.name)} <span class="pcn2">${esc(p.cn || "")}</span></span>
-          <button class="rm" data-rm="${id}" data-date="${date}" title="remove">×</button></div>`;
-      });
+      const dayPlaces = ids.map(placeById).filter(Boolean);
+      const prow = (p) => `<div class="dplace" data-fly="${p.id}"><span class="pemoji">${catOf(p).emoji}</span>
+        <span>${esc(p.name)} <span class="pcn2">${esc(p.cn || "")}</span></span>
+        <button class="rm" data-rm="${p.id}" data-date="${date}" title="remove">×</button></div>`;
+      if (dayView === "time") {
+        sequenceDay(dayPlaces).forEach(({ slot, p }) => {
+          h += `<div class="slot"><div class="slot-tag">${slot}</div><div class="slot-p">${prow(p)}</div></div>`;
+        });
+      } else {
+        const byCat = {};
+        dayPlaces.forEach(p => { (byCat[p.c] = byCat[p.c] || []).push(p); });
+        CAT_ORDER.forEach(c => {
+          const arr = byCat[c]; if (!arr || !arr.length) return;
+          const m = CATEGORIES[c] || CATEGORIES.custom;
+          h += `<div class="type-head">${m.emoji} ${m.label} · ${arr.length}</div>`;
+          arr.forEach(p => { h += prow(p); });
+        });
+      }
       // departure flight
       if (t.inbound.date === date && (t.inbound.flight || t.inbound.leg))
         h += `<div class="flight"><span class="fno">✈ ${esc(t.inbound.flight)}</span><span class="leg">depart ${esc(t.inbound.leg)}</span></div>`;
@@ -1061,6 +1194,41 @@
           .sort((a, b) => a.name.localeCompare(b.name))
           .map(p => `<option value="${p.id}">${catOf(p).emoji} ${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
         h += `<select class="add-place-sel" data-adddate="${date}"><option value="">＋ Add a ${esc(cname)} place to this day…</option>${opts}</select>`;
+      }
+      // Alternatives — a stack of "maybe" place-cards for this day's city
+      if (t.inbound.date !== date) {
+        const alts = t.wishlist.map(placeById).filter(p => p && (p.city || "shanghai") === city);
+        const open = wishOpenDate === date;
+        if (alts.length || open) {
+          h += `<div class="alts ${open ? "open" : ""}">
+            <div class="alts-label" data-wish="${date}">🃏 Alternatives — ${alts.length} in ${esc(cname)}<span class="wexpand">${open ? "▲ close" : "▼"}</span></div>`;
+          if (open) {
+            if (!alts.length) h += `<div class="day-empty">Nothing here yet. On the map, open a place → “＋ Alternative”, then drop it into a day.</div>`;
+            alts.forEach(p => {
+              const inDay = (t.plan[date] || []).includes(p.id);
+              h += `<div class="altcard">
+                <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
+                <div class="ac-body">
+                  <div class="ac-name" data-fly="${p.id}">${catOf(p).emoji} ${esc(p.name)}</div>
+                  <div class="ac-cn">${esc(p.cn || "")}</div>
+                  <div class="ac-actions">
+                    ${inDay ? `<span class="in-day">✓ already in day</span>` : `<button class="btn sm" data-wadd="${p.id}" data-date="${date}">＋ Add to day</button>`}
+                    <button class="btn sm" data-wrm="${p.id}">✕ remove</button>
+                  </div>
+                </div></div>`;
+            });
+          } else {
+            // collapsed: peek of up to 3 cards, visually stacked
+            h += `<div class="altstack" data-wish="${date}">`;
+            alts.slice(0, 3).forEach((p, i) => {
+              h += `<div class="altcard mini s${i}">
+                <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
+                <div class="ac-body"><div class="ac-name">${catOf(p).emoji} ${esc(p.name)}</div></div></div>`;
+            });
+            h += `</div>`;
+          }
+          h += `</div>`;
+        }
       }
       h += `</div></div>`;
     });
@@ -1100,9 +1268,13 @@
     });
     tripContent.querySelectorAll("[data-fly]").forEach(d => d.onclick = (e) => {
       if (e.target.classList.contains("rm")) return;
-      const p = placeById(d.dataset.fly); if (p) focusPlace(p);   // map is always visible; keep trip panel open
+      const p = placeById(d.dataset.fly); if (p) tripSelect(p);   // map fly, or Trip-view detail
     });
     tripContent.querySelectorAll("[data-focus]").forEach(el => el.onclick = () => focusDay(t, el.dataset.focus));
+    // pinned bar controls
+    const bar = document.getElementById("tripBar");
+    bar.querySelectorAll("[data-dv]").forEach(b => b.onclick = () => { dayView = b.dataset.dv; renderTripDetail(t); });
+    bar.querySelectorAll("[data-rv]").forEach(b => b.onclick = () => { setRightView(b.dataset.rv === "trip"); renderTripDetail(t); });
     const scopeAll = document.getElementById("scopeAll");
     if (scopeAll) scopeAll.onchange = () => { scopeShowAll = scopeAll.checked; refreshMarkers(); };
     tripContent.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
@@ -1117,15 +1289,36 @@
     tripContent.querySelectorAll("[data-rmhotel]").forEach(b => b.onclick = () => { t.segments[+b.dataset.rmhotel].hotel = null; save(); renderTripDetail(t); });
     const addStay = document.getElementById("addStay");
     if (addStay) addStay.onclick = () => addCityStay(t);
+    // wishlist: expand/collapse the stacked card (widens the sidebar when open)
+    tripContent.querySelectorAll("[data-wish]").forEach(el => el.onclick = () => {
+      const date = el.dataset.wish;
+      const opening = wishOpenDate !== date;
+      wishOpenDate = opening ? date : null;
+      if (opening) { wishPrevW = parseInt(sidebar.style.width, 10) || 440; sidebar.style.width = Math.min(760, Math.max(660, wishPrevW)) + "px"; }
+      else if (wishPrevW) { sidebar.style.width = wishPrevW + "px"; }
+      map.invalidateSize();
+      renderTripDetail(t);
+    });
+    tripContent.querySelectorAll("[data-wadd]").forEach(b => b.onclick = () => {
+      const date = b.dataset.date, id = b.dataset.wadd;
+      (t.plan[date] = t.plan[date] || []).push(id);          // schedule it…
+      t.wishlist = t.wishlist.filter(x => x !== id);          // …and take it out of the parking lot
+      save(); renderTripDetail(t);
+    });
+    tripContent.querySelectorAll("[data-wrm]").forEach(b => b.onclick = () => {
+      t.wishlist = t.wishlist.filter(x => x !== b.dataset.wrm); save(); renderTripDetail(t);
+    });
   }
 
   function focusDay(t, date) {
     focusedDate = (focusedDate === date) ? null : date;   // tap again to unfocus
-    const ids = focusedDate ? (t.plan[date] || []).filter(id => placeById(id)) : [];
+    let ordered = t.plan[date] || [];
+    if (dayView === "time") ordered = sequenceDay(ordered.map(placeById).filter(Boolean)).map(s => s.p.id);
+    const ids = focusedDate ? ordered.filter(id => placeById(id)) : [];
     dayFocusIds = new Set(ids);
     dayFocusOrder = {}; ids.forEach((id, i) => dayFocusOrder[id] = i + 1);
     renderTripDetail(t);   // marks the focused day + refreshMarkers() re-icons highlights
-    if (!focusedDate) return;
+    if (!focusedDate || tripViewOn) return;   // map is hidden in Trip view
     const pts = ids.map(id => { const p = placeById(id); return [p.lat, p.lng]; });
     if (pts.length > 1) map.fitBounds(pts, { padding: [70, 70], maxZoom: 15 });
     else if (pts.length === 1) map.flyTo(pts[0], 15, { duration: .6 });
@@ -1133,6 +1326,70 @@
       if (CITIES[c]) map.flyTo(CITIES[c].center, CITIES[c].zoom, { duration: .6 }); }
     setTimeout(() => map.invalidateSize(), 60);
     showHint(pts.length ? (pts.length + " spots highlighted for this day") : "No places planned for this day yet");
+  }
+
+  // ---- Trip view: right side shows the selected place + nearby (with photos) ----
+  function setRightView(on) {
+    tripViewOn = on;
+    const mapEl = document.getElementById("map"), tvEl = document.getElementById("tripView");
+    if (!mapEl || !tvEl) return;
+    mapEl.style.display = on ? "none" : "";
+    tvEl.hidden = !on;
+    if (on) renderTripView(); else setTimeout(() => map.invalidateSize(), 60);
+  }
+  function tripSelect(p) {
+    selectedPlaceId = p.id;
+    if (tripViewOn) renderTripView(); else focusPlace(p);
+  }
+  function nearbyPlaces(p, n) {
+    return allPlaces().filter(x => x.id !== p.id)
+      .map(x => ({ x, km: haversine(p, x) })).sort((a, b) => a.km - b.km).slice(0, n || 12);
+  }
+  function addAlternative(id) {
+    const t = (store.trips || []).find(x => x.id === openTripId) || (store.trips || [])[0];
+    if (!t) { showHint("Create a trip first"); return; }
+    t.wishlist = t.wishlist || [];
+    if (!t.wishlist.includes(id)) { t.wishlist.push(id); save(); showHint("🃏 Added as alternative"); if (openTripId === t.id) renderTrip(); }
+    else showHint("Already an alternative");
+  }
+  function renderTripView() {
+    const tv = document.getElementById("tripView");
+    const p = placeById(selectedPlaceId);
+    if (!p) { tv.innerHTML = `<div class="tv-empty">Tap a place name in your trip (or a nearby card) to see its photos, details and nearby spots here.</div>`; return; }
+    const cat = catOf(p), d = distInfo(p);
+    const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : "";
+    const cityNm = (CITIES[p.city] || {}).name || "";
+    const term = p.name + " " + (p.cn || "") + " " + cityName(p);
+    let h = `<div class="tv">
+      <div class="tv-gallery">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" onerror="this.remove()">`).join("")}</div>
+      <h1>${cat.emoji} ${esc(p.name)}${p.hot ? " 🔥" : ""}</h1>
+      <div class="tv-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${cat.label}${dName ? " · " + esc(dName) : ""}${cityNm ? " · " + esc(cityNm) : ""}</div>
+      ${d ? `<span class="tv-dist">📍 ${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
+      ${p.desc ? `<p class="tv-desc">${esc(p.desc)}</p>` : ""}
+      ${p.src ? `<div class="tv-sub" style="margin-top:8px">🔎 found via ${esc(p.src)}</div>` : ""}
+      <div class="tv-links">
+        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">🔗 Website</a>` : ""}
+        <a href="https://www.google.com/maps/search/?api=1&query=${q(term)}" target="_blank" rel="noopener">🗺 Map</a>
+        <a href="https://www.google.com/search?tbm=isch&q=${q(term)}" target="_blank" rel="noopener">📷 Photos</a>
+        <a href="https://www.xiaohongshu.com/search_result?keyword=${q(p.cn || p.name)}" target="_blank" rel="noopener">📕 RED</a>
+        <button data-tvalt="${p.id}">＋ Add as alternative</button>
+      </div>
+      <h2>Nearby places</h2>
+      <div class="tv-near">`;
+    nearbyPlaces(p, 12).forEach(({ x, km }) => {
+      h += `<div class="near-card" data-tvsel="${x.id}">
+        <img src="${imageFor(x)}" loading="lazy" onerror="this.style.visibility='hidden'">
+        <div class="nc-body"><div class="nc-name">${catOf(x).emoji} ${esc(x.name)}</div>
+          <div class="nc-meta"><span>${esc(catOf(x).label)}</span><span>${kmText(km)}</span></div></div>
+        <button class="nc-add" data-tvalt="${x.id}">＋ Alternative</button></div>`;
+    });
+    h += `</div></div>`;
+    tv.innerHTML = h;
+    tv.querySelectorAll("[data-tvsel]").forEach(c => c.onclick = (e) => {
+      if (e.target.classList.contains("nc-add")) return;
+      selectedPlaceId = c.dataset.tvsel; renderTripView(); tv.scrollTop = 0;
+    });
+    tv.querySelectorAll("[data-tvalt]").forEach(b => b.onclick = (e) => { e.stopPropagation(); addAlternative(b.dataset.tvalt); });
   }
 
   async function editHotel(t, si) {
@@ -1174,7 +1431,7 @@
     const trip = { id: "trip-" + v.start + "-" + v.name.toLowerCase().replace(/[^\w]+/g, "-").slice(0, 12),
       name: v.name, start: v.start, end: v.end,
       outbound: { flight: "", date: v.start, leg: "" }, inbound: { flight: "", date: v.end, leg: "" },
-      segments: [], legs: [], plan: {} };
+      segments: [], legs: [], plan: {}, wishlist: [] };
     store.trips.push(trip); save(); openTripId = trip.id; renderTrip();
   }
 
@@ -1225,11 +1482,39 @@
     return n;
   };
 
+  // one-time patch: add the user's own place list into the seeded trip's days
+  // (runs once; leaves any of your other edits/hotels intact)
+  function patchUserList() {
+    if (store.patchUserList1) return;
+    store.patchUserList1 = true;
+    const t = (store.trips || []).find(x => x.id === "trip-shsz-2026-11");
+    if (!t) return;
+    const add = (date, ids) => { t.plan[date] = t.plan[date] || []; ids.forEach(id => { if (!t.plan[date].includes(id)) t.plan[date].push(id); }); };
+    add("2026-11-08", ["zhongyaotang-gelato"]);                          // Bund / Old City
+    add("2026-11-10", ["the-merchants", "fpa-store", "randomevent"]);    // French Concession / Xuhui
+    add("2026-11-11", ["the-louis-lv", "lamb-skewers-hjyq", "feng-bar-noodle"]); // Jing'an
+    add("2026-11-19", ["polux-pairet", "wei-xiang-zhai", "matcha-wang"]); // back in Shanghai / Xintiandi
+    add("2026-11-20", ["aujeong-chicken"]);                             // last day
+    save();
+  }
+  // one-time cleanup: drop Huangyan Quarry from any saved trip
+  function cleanupHuangyan() {
+    if (store.rmHuangyan1) return;
+    store.rmHuangyan1 = true;
+    (store.trips || []).forEach(t => {
+      Object.keys(t.plan || {}).forEach(d => { t.plan[d] = t.plan[d].filter(id => id !== "huangyan-quarry"); });
+      if (t.wishlist) t.wishlist = t.wishlist.filter(id => id !== "huangyan-quarry");
+    });
+    save();
+  }
+
   // ------------------------------------------------------------------ go
   buildDistrictOptions();
   setCity("shanghai");
   seedTrip();
-  showHint("New: 🧳 Trips tab — your Shanghai·Suzhou·Hangzhou trip is ready to tweak");
+  patchUserList();
+  cleanupHuangyan();
+  showHint("Tip: on the map, “＋ Add as an alternative”; then open a day's Alternatives stack to slot it in");
   </script>
 </body>
 </html>
