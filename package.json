@@ -18,7 +18,7 @@
   "build": {
     "appId": "com.gerry.tripplanner",
     "productName": "Trip Planner",
-    "files": ["index.html", "main.js", "cities.js", "data.js", "districts-geo.js", "images.js", "vendor/**/*", "tiles/**/*"],
+    "files": ["main.js", "frontend/**/*"],
     "mac": { "category": "public.app-category.travel", "target": "dmg" },
     "win": { "target": "nsis" }
   }

@@ -28,9 +28,52 @@
       flex: 0 0 7px; cursor: col-resize; background: transparent; z-index: 600;
       border-right: 1px solid transparent; transition: background .12s;
     }
+
+    /* ---------- Extended sidebar: a day's ALTERNATIVES (next to the main sidebar) ---------- */
+    #altbar { flex: 0 1 336px; min-width: 240px; height: 100%; display: flex; flex-direction: column;
+      background: #fbfaff; border-right: 1px solid var(--line); box-shadow: var(--shadow); z-index: 490; }
+    #altbar[hidden] { display: none; }
+    .side-head { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-bottom: 1px solid var(--line); background: #fff; }
+    .side-head .sh-t { font-weight: 700; font-size: 14px; flex: 1; min-width: 0; }
+    .side-head .sh-t small { display: block; font-weight: 600; font-size: 11px; color: var(--muted);
+      margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .side-head .sh-x { border: none; background: none; font-size: 15px; cursor: pointer; color: var(--muted); line-height: 1; }
+    .side-head .sh-x:hover { color: var(--accent); }
+    .alt-scope { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted);
+      padding: 8px 13px 0; cursor: pointer; }
+    #alt-body { flex: 1; min-height: 0; overflow-y: auto; padding: 11px 12px; display: flex; flex-direction: column; gap: 9px; }
+    #alt-foot { flex: 0 0 auto; padding: 10px 12px; border-top: 1px solid var(--line); background: #fff; }
+    #alt-foot select { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: #fbfbfa; }
+    .altcard.sel { border-color: var(--accent); box-shadow: 0 3px 13px rgba(230,57,70,.18); }
+
+    /* ---------- Mini browser: right side of the screen ---------- */
+    #webresizer { flex: 0 0 7px; cursor: col-resize; background: transparent; z-index: 600; transition: background .12s; }
+    #webresizer[hidden] { display: none; }
+    #webresizer:hover, #webresizer.drag { background: var(--accent); opacity: .5; }
+    #webpanel { flex: 0 1 470px; min-width: 300px; height: 100%; display: flex; flex-direction: column;
+      background: var(--panel); border-left: 1px solid var(--line); box-shadow: var(--shadow); z-index: 480; }
+    #webpanel[hidden] { display: none; }
+    #web-detail { flex: 0 0 auto; max-height: 42%; overflow-y: auto; padding: 11px 13px; border-bottom: 1px solid var(--line); }
+    #web-detail .ext-gal { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 9px; }
+    #web-detail .ext-gal img { height: 104px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: #eee; }
+    #web-detail .ext-cn { color: var(--muted); font-size: 12.5px; margin: 2px 0 6px; }
+    #web-detail .ext-dist { display: inline-block; font-size: 12px; background: #eef1f5; color: #445; border-radius: 999px; padding: 3px 10px; font-weight: 600; margin-bottom: 8px; }
+    #web-detail p { font-size: 12.5px; line-height: 1.5; color: #2b3240; margin: 0 0 10px; }
+    #web-detail .ext-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+    #web-detail .ext-actions button, #web-detail .ext-actions a { font-size: 12px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; text-decoration: none; color: var(--ink); }
+    #web-detail .ext-actions button:hover, #web-detail .ext-actions a:hover { border-color: var(--accent); color: var(--accent); }
+    .web-tabs { display: flex; align-items: center; gap: 5px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: #fafafb; }
+    .web-tabs .navb { font-size: 12px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; color: var(--muted); }
+    .web-tabs button { font-size: 11.5px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; color: var(--muted); }
+    .web-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .web-tabs #web-open { margin-left: auto; }
+    .web-sep { width: 1px; height: 16px; background: var(--line); margin: 0 3px; }
+    #miniweb { flex: 1; width: 100%; border: none; background: #fff; }
+    #web-load { flex: 0 0 auto; font-size: 11px; color: var(--muted); padding: 4px 12px; border-bottom: 1px solid var(--line); background: #fff; }
+    #web-load[hidden] { display: none; }
     #resizer:hover, #resizer.drag { background: var(--accent); opacity: .5; }
     body.resizing { user-select: none; }
-    body.resizing #map { pointer-events: none; }
+    body.resizing #map, body.resizing #webpanel { pointer-events: none; }
     header { padding: 14px 18px 10px; border-bottom: 1px solid var(--line); }
     header h1 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
     header h1 span { color: var(--accent); }
@@ -60,13 +103,21 @@
     .scope-toggle.sticky { margin: 0; }
 
     /* day grouping: type headers + time slots */
+    .overview { background: #f6f7f9; border-radius: 9px; padding: 9px 11px; margin-bottom: 12px; font-size: 12.5px; }
+    .overview .ov-sum { color: #2b3240; }
+    .overview .ov-toggle { margin-top: 6px; font-size: 11.5px; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; }
+    .ov-list { border: 1px solid var(--line); border-radius: 9px; padding: 4px 10px; margin-bottom: 12px; }
+    .ov-item { display: flex; align-items: center; gap: 8px; padding: 6px 2px; font-size: 13px; border-bottom: 1px solid #f1f1f3; }
+    .ov-item:last-child { border-bottom: none; }
+    .ov-item .wname { flex: 1; cursor: pointer; min-width: 0; }
+    .ov-item .wname:hover { color: var(--accent); }
     .type-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 8px 2px 2px; }
     .slot { display: flex; gap: 9px; align-items: flex-start; padding: 2px 0; }
     .slot .slot-tag { flex: 0 0 92px; font-size: 11px; font-weight: 700; color: #4a3d63; padding-top: 9px; }
     .slot .slot-p { flex: 1; min-width: 0; }
 
     /* Trip view (replaces the map on the right) */
-    #tripView { flex: 1; height: 100%; overflow-y: auto; background: var(--bg); }
+    #tripView { flex: 1 1 0; min-width: 0; height: 100%; overflow-y: auto; background: var(--bg); }
     #tripView[hidden] { display: none; }
     .tv { max-width: 900px; margin: 0 auto; padding: 22px 26px 40px; }
     .tv-empty { color: var(--muted); font-size: 14px; padding: 60px 24px; text-align: center; }
@@ -121,6 +172,9 @@
     .day-head:hover { background: #f2f2f0; }
     .day-head .focusbtn { margin-left: 6px; font-size: 10.5px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; background: #fff; }
     .day.focused .day-head .focusbtn { background: #ffb703; color: #4a3500; border-color: #ffb703; }
+    .day-head .altsbtn { font-size: 10.5px; font-weight: 700; color: #6d28a8; border: 1px solid #d9cbe8; border-radius: 6px; padding: 2px 6px; background: #faf7fd; }
+    .day-head .altsbtn:hover { border-color: #9b5de5; }
+    .day-head .altsbtn.on { background: #6d28a8; color: #fff; border-color: #6d28a8; }
     .dplace .dnum2 { flex: 0 0 auto; width: 19px; height: 19px; border-radius: 50%; background: var(--ink); color: #fff;
       font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
     .scope-toggle { display: flex; align-items: center; gap: 7px; font-size: 12.5px; background: #f3f5f8; border-radius: 9px; padding: 8px 11px; margin-bottom: 12px; cursor: pointer; }
@@ -135,10 +189,16 @@
     .opt.chosen .radio { border-color: #2ca24a; background: #2ca24a radial-gradient(#fff 28%, transparent 32%); }
     .opt-add { font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; padding: 2px 0; }
 
-    .hotel { display: flex; align-items: center; gap: 8px; font-size: 12.5px; background: #fff7e9; border: 1px solid #f0dcb8; border-radius: 9px; padding: 7px 10px; margin-bottom: 10px; }
-    .hotel .hn { font-weight: 600; }
-    .hotel .hlinks { margin-left: auto; display: flex; gap: 8px; }
-    .hotel a, .hotel button { font-size: 11px; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: none; padding: 0; }
+    .hotelcard { display: flex; gap: 10px; background: #fff7e9; border: 1px solid #f0dcb8; border-radius: 11px; padding: 10px 11px; margin-bottom: 10px; }
+    .hotelcard.need { background: #fdecec; border-color: #f3c5c5; }
+    .hotelcard .hc-ic { font-size: 20px; line-height: 1.2; }
+    .hotelcard .hc-body { flex: 1; min-width: 0; }
+    .hotelcard .hc-name { font-weight: 700; font-size: 13.5px; }
+    .hotelcard .hc-area { font-size: 12px; color: var(--muted); margin-top: 1px; }
+    .hotelcard .hc-dates { font-size: 12px; color: #7a5200; font-weight: 600; margin-top: 4px; }
+    .hotelcard .hc-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 7px; }
+    .hotelcard .hc-links a, .hotelcard .hc-links button { font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: none; padding: 0; }
+    .hotelcard .hc-links a:hover, .hotelcard .hc-links button:hover { text-decoration: underline; }
 
     .dplace { display: flex; gap: 8px; align-items: center; padding: 6px 4px; border-radius: 8px; cursor: pointer; font-size: 13px; }
     .dplace:hover { background: #f3f4f6; }
@@ -150,31 +210,21 @@
     .day-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 2px 4px; }
     .tip-note { font-size: 11.5px; color: var(--muted); background: #f6f7f9; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.45; }
 
-    /* Alternatives — a deck of place-cards per day */
-    .alts { margin: 12px 2px 4px; }
-    .alts-label { font-size: 12px; font-weight: 700; color: #4a3d63; margin-bottom: 8px;
-      display: flex; align-items: center; gap: 6px; cursor: pointer; }
-    .alts-label .wexpand { margin-left: auto; font-size: 11px; color: #7a6a97; font-weight: 700; }
+    /* Alternatives — place-cards, shown in the extended sidebar */
     .altcard { display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line);
-      border-radius: 12px; box-shadow: 0 2px 9px rgba(30,30,50,.10); padding: 8px; }
+      border-radius: 12px; box-shadow: 0 2px 9px rgba(30,30,50,.10); padding: 8px; cursor: pointer; }
+    .altcard:hover { border-color: #c7b8d8; }
     .altcard img { width: 50px; height: 50px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: #eee; }
     .altcard .ac-body { flex: 1; min-width: 0; }
-    .altcard .ac-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
-    .altcard .ac-name:hover { color: var(--accent); }
+    .altcard .ac-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .altcard:hover .ac-name { color: var(--accent); }
     .altcard .ac-cn { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .altcard .ac-actions { display: flex; gap: 6px; margin-top: 6px; }
     .altcard .in-day { font-size: 11px; color: #1b7a34; font-weight: 700; align-self: center; }
-    .alts.open .altcard { margin-bottom: 8px; }
-    /* collapsed: a real stack of cards peeking */
-    .altstack { position: relative; height: 90px; cursor: pointer; }
-    .altcard.mini { position: absolute; left: 0; right: 0; top: 0; }
-    .altcard.mini .ac-cn, .altcard.mini .ac-actions { display: none; }
-    .altstack .s0 { z-index: 3; }
-    .altstack .s1 { transform: translate(8px, 9px); z-index: 2; opacity: .9; }
-    .altstack .s2 { transform: translate(16px, 18px); z-index: 1; opacity: .78; }
-    .altstack:hover .s0 { box-shadow: 0 4px 14px rgba(30,30,50,.18); }
 
-    .pop .wishbtn { display: block; margin-top: 8px; font-size: 11.5px; background: #faf7fd; border: 1px solid #c7b8d8; color: #4a3d63; border-radius: 7px; padding: 5px 9px; cursor: pointer; width: 100%; }
+    .pop .extbtn { display: block; margin-top: 8px; font-size: 12px; background: var(--ink); border: 1px solid var(--ink); color: #fff; border-radius: 7px; padding: 6px 9px; cursor: pointer; width: 100%; font-weight: 600; }
+    .pop .extbtn:hover { filter: brightness(1.1); }
+    .pop .wishbtn { display: block; margin-top: 6px; font-size: 11.5px; background: #faf7fd; border: 1px solid #c7b8d8; color: #4a3d63; border-radius: 7px; padding: 5px 9px; cursor: pointer; width: 100%; }
     .pop .wishbtn:hover { border-color: #9b5de5; color: #6d28a8; }
 
     /* ---------- Modal (replaces prompt/confirm; Electron-safe) ---------- */
@@ -251,7 +301,7 @@
     footer button:hover { border-color: #cfd2d8; background: #fafafa; }
 
     /* ---------- Map ---------- */
-    #map { flex: 1; height: 100%; z-index: 1; }
+    #map { flex: 1 1 0; min-width: 0; height: 100%; z-index: 1; }
     .leaflet-popup-content { margin: 12px 14px; font-family: inherit; }
     .pop h3 { margin: 0 0 2px; font-size: 15px; }
     .pop .pcn { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
@@ -316,6 +366,9 @@
     .setbase { font-size: 11px; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; margin-top: 4px; }
 
     .marker-ring { border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0,0,0,.4); position: relative; }
+    .hotel-pin { width: 32px; height: 32px; border-radius: 10px 10px 10px 2px; background: #7a5200; color: #fff;
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
+      border: 2px solid #ffd67a; box-shadow: 0 2px 6px rgba(0,0,0,.45); transform: rotate(-2deg); }
     .marker-ring .mnum { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
     .marker-ring.focus::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
@@ -397,8 +450,43 @@
 
     </aside>
     <div id="resizer" title="Drag to resize the sidebar"></div>
+
+    <!-- extended sidebar: alternatives for the selected day -->
+    <aside id="altbar" hidden>
+      <div class="side-head">
+        <span class="sh-t">🃏 Alternatives<small id="alt-sub"></small></span>
+        <button class="sh-x" id="alt-close" title="Close">✕</button>
+      </div>
+      <label class="alt-scope"><input type="checkbox" id="altAllCities"> Show alternatives from every city</label>
+      <div id="alt-body"></div>
+      <div id="alt-foot"></div>
+    </aside>
+
     <div id="map"></div>
     <div id="tripView" hidden></div>
+
+    <!-- mini browser, right side of the screen -->
+    <div id="webresizer" title="Drag to resize the mini browser" hidden></div>
+    <aside id="webpanel" hidden>
+      <div class="side-head">
+        <span class="sh-t" id="web-title">Place<small id="web-sub"></small></span>
+        <button class="sh-x" id="web-close" title="Close">✕</button>
+      </div>
+      <div id="web-detail"></div>
+      <div class="web-tabs">
+        <button class="navb" id="web-back" title="Back">◀</button>
+        <button class="navb" id="web-reload" title="Reload">⟳</button>
+        <span class="web-sep"></span>
+        <button data-web="search" class="on">Search</button>
+        <button data-web="images">Images</button>
+        <button data-web="maps">Maps</button>
+        <button data-web="red">RED</button>
+        <button id="web-open" title="Open in real browser">↗</button>
+      </div>
+      <div id="web-load" hidden>loading…</div>
+      <webview id="miniweb" src="about:blank" partition="persist:miniweb"
+        useragent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36"></webview>
+    </aside>
   </div>
   <div class="hint" id="hint"></div>
 
@@ -407,6 +495,7 @@
   <script src="cities.js"></script>
   <script src="images.js"></script>
   <script src="data.js"></script>
+  <script src="api/client.js"></script>
   <script>
   // ------------------------------------------------------------------ state
   const LS_KEY = "shanghai-planner-v1";
@@ -448,6 +537,28 @@
   const districtGeom   = {};   // key -> geojson feature (for point-in-polygon)
   const zoneGroup  = L.layerGroup().addTo(map);
   const labelGroup = L.layerGroup().addTo(map);
+  const hotelLayer = L.layerGroup().addTo(map);   // distinct 🏨 markers for where you stay
+
+  const hotelIcon = () => L.divIcon({
+    className: "", iconSize: [34, 34], iconAnchor: [17, 30],
+    html: `<div class="hotel-pin">🏨</div>`,
+  });
+  const hotelMarkers = {};
+  function drawHotels(t) {
+    hotelLayer.clearLayers();
+    for (const k in hotelMarkers) delete hotelMarkers[k];
+    if (!t) return;
+    t.segments.forEach((s, si) => {
+      const ho = s.hotel; if (!ho || typeof ho.lat !== "number") return;
+      const m = L.marker([ho.lat, ho.lng], { icon: hotelIcon(), zIndexOffset: 1000 }).addTo(hotelLayer);
+      hotelMarkers[si] = m;
+      m.bindPopup(`<div class="pop"><h3>🏨 ${(ho.name || "").replace(/</g, "&lt;")}</h3>
+        <div class="pcn">${(ho.area || "").replace(/</g, "&lt;")}</div>
+        <div class="distline">🛏 Stay ${fmtDay(s.start)} → ${fmtDay(s.end)}</div>
+        ${ho.link ? `<div class="links"><a href="${ho.link}" target="_blank" rel="noopener">🗺 Open in Maps</a></div>` : ""}</div>`, { minWidth: 200 });
+      m.bindTooltip(`🏨 ${(ho.name || "")}`, { direction: "top", offset: [0, -26] });
+    });
+  }
 
   function styleFor(key, hover) {
     const c = DISTRICTS[key].color;
@@ -662,6 +773,7 @@
         ${btn("want","⭐ Want")}${btn("planned","📅 Plan")}${btn("visited","✅ Been")}
       </div>
       <textarea placeholder="Your notes…">${note.replace(/</g,"&lt;")}</textarea>
+      <button class="extbtn">🔎 Details &amp; live web</button>
       <button class="wishbtn">＋ Add as an alternative</button>
       ${store.base===p.id?"":`<button class="setbase">🎯 Set as base for distances</button>`}
       ${p.custom?`<button class="del">Delete this pin</button>`:""}
@@ -672,7 +784,8 @@
     const m = markers[p.id];
     m.bindPopup(() => popupHtml(p), { minWidth: 240, maxWidth: 260 });
     m.bindTooltip(() => tooltipHtml(p), { direction: "top", offset: [0, -6], opacity: 1, className: "place-tt", sticky: false });
-    m.on("popupopen", (e) => wirePopup(e.popup, p));
+    // opening a marker also drives the mini browser (unless it was closed by hand)
+    m.on("popupopen", (e) => { wirePopup(e.popup, p); openWeb(p, { auto: true }); if (altOpenDate) renderAlts(); });
   }
   // (re)attach popup control handlers; called on open and after any setContent
   function wirePopup(popup, p) {
@@ -689,6 +802,8 @@
     if (ta) ta.oninput = () => { store.notes[p.id] = ta.value; save(); renderList(); };
     const sb = el.querySelector(".setbase");
     if (sb) sb.onclick = () => { store.base = p.id; save(); refresh(); showHint("🎯 Base set to " + p.name); };
+    const eb = el.querySelector(".extbtn");
+    if (eb) eb.onclick = () => { markers[p.id] && markers[p.id].closePopup(); selectPlace(p); };
     const wb = el.querySelector(".wishbtn");
     if (wb) wb.onclick = () => {
       const t = (store.trips || []).find(x => x.id === openTripId) || (store.trips || [])[0];
@@ -954,11 +1069,12 @@
   const cityTint = { shanghai: "#e63946", suzhou: "#c1121f", hangzhou: "#2a9d8f" };
   let openTripId = null;
   let focusedDate = null;
-  let wishOpenDate = null;   // which day's alternatives stack is expanded
-  let wishPrevW = 0;         // sidebar width before expanding
+  let altOpenDate = null;    // which day's alternatives the extended sidebar is showing
+  let altAllCities = false;  // extended sidebar: only this day's city, or every city
   let dayView = "type";      // "type" | "time"
   let tripViewOn = false;    // right side shows place-detail instead of the map
   let selectedPlaceId = null;
+  let overviewOpen = false;  // couldn't-fit list expanded
 
   const CAT_ORDER = ["sight", "culture", "nature", "food", "coffee", "matcha", "shopping", "nightlife", "custom"];
   const isCafe = p => p.c === "coffee" || p.c === "matcha" || p.sub === "coffee" || p.sub === "matcha";
@@ -992,6 +1108,7 @@
   }
   function fmtDay(str) { return new Date(str + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }); }
   function dateRange(a, b) { const out = []; let c = a; let guard = 0; while (c <= b && guard++ < 400) { out.push(c); c = addDays(c, 1); } return out; }
+  const nights = s => Math.max(1, dateRange(s.start, s.end).length - 1);
   const esc = s => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   function findPlaceId(q) {
@@ -1006,9 +1123,89 @@
     if (view === "map") { clearScope(); renderList(); }
     if (view === "trip") renderTrip();
   }
-  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; setRightView(false); refreshMarkers(); }
+  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); setRightView(false); closeAlts(); refreshMarkers(); }
 
-  // ---- seed the user's Shanghai/Suzhou/Hangzhou trip once ----
+  // ---- v2 trip: rebuilt to match the booked hotels, then re-optimized ----
+  const mapsLink = q2 => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q2);
+  function makeTripV2() {
+    const L = (from, to, date, options, chosen) => ({ from, to, date, options, chosen });
+    const ITIN = {
+      // Shanghai (Amara) — famous spots, arranged day → night
+      "2026-11-08": ["Yu Garden", "Yuyuan Bazaar", "Nanxiang Steamed Buns", "Nanjing Road Pedestrian", "Rockbund", "The Bund", "Lost Heaven"],
+      "2026-11-09": ["Lujiazui", "Shanghai Tower", "Museum of Art Pudong", "North Bund", "Oriental Pearl"],
+      "2026-11-10": ["Wukang Mansion", "Anfu Road", "Wuyuan Road", "% Arabica (Wukang Road)", "Chifane", "Ren He Guan", "Beer Lady"],
+      "2026-11-11": ["Jing'an Temple", "Natural History Museum", "Zhang Garden", "The Louis", "Ibaursak", "Found 158"],
+      // travel day — Shanghai morning/afternoon (near Amara) → Fuxing after lunch → Suzhou evening
+      "2026-11-12": ["1000 Trees", "M50 Creative Park", "Shantang Street", "Tongdexing Noodle House"],
+      // Suzhou morning/afternoon → Fuxing after lunch → Hangzhou evening
+      "2026-11-13": ["Pingjiang Road", "Suzhou Museum", "Humble Administrator's Garden", "Lion Grove Garden", "Hefang Street", "Starbucks Reserve", "Nansong Shufang"],
+      // Hangzhou (Atour, Hubin/West Lake)
+      "2026-11-14": ["West Lake", "Su Causeway", "Broken Bridge", "Lingyin Temple", "Feilai Feng", "Louwailou"],
+      // Hangzhou (Club Med, Longwu tea hills)
+      "2026-11-15": ["Longjing Tea Village", "Meijiawu Tea Village", "Grandma's Home"],
+      // Hangzhou morning → Fuxing after lunch → Shanghai evening
+      "2026-11-16": ["Leifeng Pagoda", "Xintiandi", "Tianzifang", "Polux by Paul Pairet"],
+      "2026-11-17": ["West Bund", "Long Museum", "Tank Shanghai", "Power Station of Art"],
+      "2026-11-18": ["Columbia Circle", "Sinan Mansions", "TX Huaihai", "Matcha Wang", "Speak Low"],
+      "2026-11-19": ["Zhujiajiao Water Town"],
+      "2026-11-20": ["Shanghai Museum", "People's Square", "Wei Xiang Zhai", "Aujeong", "The Bund"],
+    };
+    // places we wanted but couldn't fit (mostly the 1-day Suzhou crunch) → Alternatives
+    const CANT_FIT = ["Lingering Garden", "Master of the Nets Garden", "Tiger Hill", "Hanshan Temple", "Pan Gate",
+      "Tongli Water Town", "Zhouzhuang Water Town", "Mudu Ancient Town", "Shuangta Market", "Green Dog Coffee",
+      "Xixi National Wetland Park", "Yue Fei Temple", "Three Pools Mirroring the Moon"];
+    const trip = {
+      id: "trip-shsz-2026-11", name: "Shanghai · Suzhou · Hangzhou",
+      start: "2026-11-07", end: "2026-11-21",
+      outbound: { flight: "SQ836", date: "2026-11-07", leg: "SIN 17:00 → Shanghai Pudong (PVG) 22:00" },
+      inbound:  { flight: "SQ827", date: "2026-11-21", leg: "Shanghai Pudong (PVG) 08:20 → SIN 14:10" },
+      segments: [
+        { city: "shanghai", start: "2026-11-07", end: "2026-11-12", hotel: { name: "Amara Shanghai", area: "600 Changshou Rd, Putuo", link: mapsLink("Amara Shanghai 600 Changshou Road Putuo"), lat: 31.2470, lng: 121.4385 } },
+        { city: "suzhou",   start: "2026-11-12", end: "2026-11-13", hotel: { name: "Ji Hotel Suzhou Guanqian St · Pingjiang", area: "66 Luoguqiao Xiatang, Lindun Rd, Gusu", link: mapsLink("Ji Hotel Suzhou Guanqian Street Pingjiang Lindun Road"), lat: 31.3135, lng: 120.6270 } },
+        { city: "hangzhou", start: "2026-11-13", end: "2026-11-15", hotel: { name: "Atour Hotel Hangzhou Pinghai Rd · Hubin", area: "Pinghai Rd, Hubin, by West Lake", link: mapsLink("Atour Hotel Hangzhou Pinghai Road Hubin West Lake"), lat: 30.2530, lng: 120.1640 } },
+        { city: "hangzhou", start: "2026-11-15", end: "2026-11-16", hotel: { name: "Club Med Urban Oasis Hangzhou", area: "Longwu area, Xihu (approx)", link: mapsLink("Club Med Urban Oasis Hangzhou Longwu"), lat: 30.1470, lng: 120.0900 } },
+        { city: "shanghai", start: "2026-11-16", end: "2026-11-21", hotel: null }, // ⚠ no hotel booked yet
+      ],
+      legs: [
+        L("Pudong Airport", "Shanghai (Amara)", "2026-11-07", [
+          "🚕 Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
+          "🚄 Maglev to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — bullet-speed welcome if still running",
+          "🚇 Metro Line 2 — ~70 min, ¥7 (last train ~22:00)"], 0),
+        L("Shanghai", "Suzhou", "2026-11-12", [
+          "🚄 Fuxing (复兴号) bullet, Shanghai Hongqiao → Suzhou — depart after lunch (~14:00), 25–30 min, ¥40; roomier Fuxing seats",
+          "🚄 any G-train from Shanghai Railway Stn — ~30 min, ¥26–40",
+          "🚕 Private car — ~1h20, ≈¥350"], 0),
+        L("Suzhou", "Hangzhou", "2026-11-13", [
+          "🚄 Fuxing (复兴号) bullet, Suzhou N → Hangzhou — depart mid-afternoon (~15:30) so you finish the gardens first; ~1h25, ¥120–160; extra legroom",
+          "🚄 G via Shanghai Hongqiao (1 change) — ~1h50, more departures",
+          "🚕 Private car — ~2h, ≈¥600"], 0),
+        L("Hangzhou (Hubin)", "Club Med Longwu", "2026-11-15", [
+          "🚕 Taxi / Didi across town to Longwu — ~35–45 min, ≈¥70",
+          "🚇 Metro + short taxi — ~1h"], 0),
+        L("Hangzhou", "Shanghai", "2026-11-16", [
+          "🚄 Fuxing (复兴号) bullet, Hangzhou East → Shanghai Hongqiao — depart after lunch (~14:00), ~1h, ¥73–120; roomy Fuxing seats",
+          "🚄 any G-train to Shanghai Railway Stn (central) — ~1h, ¥73",
+          "🚕 Private car — ~2h, ≈¥600"], 0),
+        L("Shanghai", "Pudong Airport", "2026-11-21", [
+          "🚕 Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
+          "🚄 Maglev from Longyang Rd (first ~06:45) + Metro — check first-train timing",
+          "🚇 Metro Line 2 (first ~05:30) — ~75 min, ¥7"], 0),
+      ],
+      plan: {}, wishlist: [],
+    };
+    for (const [date, names] of Object.entries(ITIN)) trip.plan[date] = names.map(findPlaceId).filter(Boolean);
+    trip.wishlist = CANT_FIT.map(findPlaceId).filter(Boolean);
+    return trip;
+  }
+  function ensureTripV2() {
+    if (store.tripBuilt === "v3") return;
+    store.tripBuilt = "v3";
+    store.trips = (store.trips || []).filter(t => t.id !== "trip-shsz-2026-11"); // drop the old version
+    store.trips.push(makeTripV2());
+    save();
+  }
+
+  // ---- (legacy) original seed, kept for reference; superseded by ensureTripV2 ----
   function seedTrip() {
     if (store.seededTrip1) return;
     store.seededTrip1 = true;
@@ -1101,7 +1298,7 @@
   function renderTripDetail(t) {
     t.wishlist = t.wishlist || [];
     // opening a trip scopes the map to its places; keep any current day highlight
-    scopeTrip = t; refreshMarkers();
+    scopeTrip = t; refreshMarkers(); drawHotels(t);
     // pinned controls bar (always visible while the day list scrolls)
     document.getElementById("tripBar").innerHTML = `<div class="trip-sticky">
       <div class="seg-row">
@@ -1128,7 +1325,19 @@
       tripContent.innerHTML = h; wireTripDetail(t); return;
     }
 
-    h += `<div class="tip-note">Tap a <b>day header</b> to focus that day on the map · tap a place name to see it (map, or the 📋 Trip view). Switch 🗂 By type / 🕒 By time above.</div>`;
+    h += `<div class="tip-note">Tap a <b>day header</b> to focus that day on the map · <b>🃏</b> next to it opens that day's <b>alternatives</b> in the side panel · tap a place name and the <b>mini browser</b> on the right searches it live. Switch 🗂 By type / 🕒 By time above.</div>`;
+    // overview: what's planned + what couldn't fit
+    const plannedCount = new Set(Object.values(t.plan).flat()).size;
+    const cant = t.wishlist.filter(id => placeById(id));
+    h += `<div class="overview"><div class="ov-sum">✅ <b>${plannedCount}</b> places planned · 🚫 <b>${cant.length}</b> couldn't fit / not scheduled</div>
+      ${cant.length ? `<button class="ov-toggle" id="ovToggle">${overviewOpen ? "▲ hide" : "▼ show"} the couldn't-fit list</button>` : ""}</div>`;
+    if (overviewOpen && cant.length) {
+      h += `<div class="ov-list">`;
+      cant.forEach(id => { const p = placeById(id);
+        h += `<div class="ov-item"><span class="wname" data-fly="${p.id}">${catOf(p).emoji} ${esc(p.name)} <span class="pcn2">${esc((CITIES[p.city] || {}).name || "")}</span></span>
+          <button class="rm" data-wrm="${p.id}" title="remove">×</button></div>`; });
+      h += `</div>`;
+    }
 
     days.forEach((date, i) => {
       const seg = segForDate(t, date);
@@ -1136,9 +1345,12 @@
       const cname = (CITIES[city] || {}).name || city;
       const tint = cityTint[city] || "#6c757d";
       const focused = focusedDate === date;
+      const nAlts = t.inbound.date === date ? 0
+        : t.wishlist.map(placeById).filter(p => p && (altAllCities || (p.city || "shanghai") === city)).length;
       h += `<div class="day${focused ? " focused" : ""}">
         <div class="day-head" data-focus="${date}"><span class="dnum">D${i + 1}</span><span class="ddate">${fmtDay(date)}</span>
-          <span class="dcity" style="background:${tint}">${esc(cname)}</span><span class="focusbtn">${focused ? "◉ on map" : "◎ focus"}</span></div>
+          <span class="dcity" style="background:${tint}">${esc(cname)}</span><span class="focusbtn">${focused ? "◉ on map" : "◎ focus"}</span>
+          ${t.inbound.date === date ? "" : `<button class="altsbtn${altOpenDate === date ? " on" : ""}" data-alts="${date}" title="Show this day's alternatives in the side panel">🃏 ${nAlts}</button>`}</div>
         <div class="day-body">`;
       // arrival flight
       if (t.outbound.date === date && (t.outbound.flight || t.outbound.leg))
@@ -1156,12 +1368,24 @@
       // hotel (first night of a segment)
       if (seg && seg.start === date) {
         const si = t.segments.indexOf(seg);
-        if (seg.hotel)
-          h += `<div class="hotel"><span>🏨</span><span class="hn">${esc(seg.hotel.name)}</span><span style="color:var(--muted)">${esc(seg.hotel.area || "")}</span>
-            <span class="hlinks">${seg.hotel.link ? `<a href="${esc(seg.hotel.link)}" target="_blank" rel="noopener">link</a>` : ""}
-            <button data-edithotel="${si}">edit</button><button data-rmhotel="${si}">remove</button></span></div>`;
+        const ho = seg.hotel;
+        if (ho)
+          h += `<div class="hotelcard">
+            <div class="hc-ic">🏨</div>
+            <div class="hc-body">
+              <div class="hc-name">${esc(ho.name)}</div>
+              <div class="hc-area">${esc(ho.area || "")}</div>
+              <div class="hc-dates">🛏 ${fmtDay(seg.start)} → ${fmtDay(seg.end)} · ${nights(seg)} night${nights(seg) > 1 ? "s" : ""}</div>
+              <div class="hc-links">
+                ${typeof ho.lat === "number" ? `<button data-hotelmap="${si}">📍 Show on map</button>` : ""}
+                ${ho.link ? `<a href="${esc(ho.link)}" target="_blank" rel="noopener">🗺 Maps</a>` : ""}
+                <button data-edithotel="${si}">✎ Edit</button><button data-rmhotel="${si}">Remove</button>
+              </div>
+            </div></div>`;
         else
-          h += `<div class="hotel"><span>🏨</span><button data-addhotel="${si}" style="font-weight:600">＋ Add hotel for ${esc(cname)}</button></div>`;
+          h += `<div class="hotelcard need"><div class="hc-ic">🏨</div><div class="hc-body">
+            <div class="hc-name">No hotel booked for ${esc(cname)} (${fmtDay(seg.start)} → ${fmtDay(seg.end)})</div>
+            <div class="hc-links"><button class="btn sm" data-addhotel="${si}">＋ Add hotel</button></div></div></div>`;
       }
       // planned places — grouped by type, or sequenced by time
       const ids = t.plan[date] || [];
@@ -1195,47 +1419,13 @@
           .map(p => `<option value="${p.id}">${catOf(p).emoji} ${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
         h += `<select class="add-place-sel" data-adddate="${date}"><option value="">＋ Add a ${esc(cname)} place to this day…</option>${opts}</select>`;
       }
-      // Alternatives — a stack of "maybe" place-cards for this day's city
-      if (t.inbound.date !== date) {
-        const alts = t.wishlist.map(placeById).filter(p => p && (p.city || "shanghai") === city);
-        const open = wishOpenDate === date;
-        if (alts.length || open) {
-          h += `<div class="alts ${open ? "open" : ""}">
-            <div class="alts-label" data-wish="${date}">🃏 Alternatives — ${alts.length} in ${esc(cname)}<span class="wexpand">${open ? "▲ close" : "▼"}</span></div>`;
-          if (open) {
-            if (!alts.length) h += `<div class="day-empty">Nothing here yet. On the map, open a place → “＋ Alternative”, then drop it into a day.</div>`;
-            alts.forEach(p => {
-              const inDay = (t.plan[date] || []).includes(p.id);
-              h += `<div class="altcard">
-                <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
-                <div class="ac-body">
-                  <div class="ac-name" data-fly="${p.id}">${catOf(p).emoji} ${esc(p.name)}</div>
-                  <div class="ac-cn">${esc(p.cn || "")}</div>
-                  <div class="ac-actions">
-                    ${inDay ? `<span class="in-day">✓ already in day</span>` : `<button class="btn sm" data-wadd="${p.id}" data-date="${date}">＋ Add to day</button>`}
-                    <button class="btn sm" data-wrm="${p.id}">✕ remove</button>
-                  </div>
-                </div></div>`;
-            });
-          } else {
-            // collapsed: peek of up to 3 cards, visually stacked
-            h += `<div class="altstack" data-wish="${date}">`;
-            alts.slice(0, 3).forEach((p, i) => {
-              h += `<div class="altcard mini s${i}">
-                <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
-                <div class="ac-body"><div class="ac-name">${catOf(p).emoji} ${esc(p.name)}</div></div></div>`;
-            });
-            h += `</div>`;
-          }
-          h += `</div>`;
-        }
-      }
       h += `</div></div>`;
     });
 
     h += `<div class="trip-actions"><button class="btn sm" id="addStay">＋ Add another city stay</button></div>`;
     tripContent.innerHTML = h;
     wireTripDetail(t);
+    if (altOpenDate) renderAlts();   // keep the extended sidebar in sync with the plan
   }
 
   async function editFlights(t) {
@@ -1277,6 +1467,8 @@
     bar.querySelectorAll("[data-rv]").forEach(b => b.onclick = () => { setRightView(b.dataset.rv === "trip"); renderTripDetail(t); });
     const scopeAll = document.getElementById("scopeAll");
     if (scopeAll) scopeAll.onchange = () => { scopeShowAll = scopeAll.checked; refreshMarkers(); };
+    const ovT = document.getElementById("ovToggle");
+    if (ovT) ovT.onclick = () => { overviewOpen = !overviewOpen; renderTripDetail(t); };
     tripContent.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
       const date = b.dataset.date; t.plan[date] = (t.plan[date] || []).filter(x => x !== b.dataset.rm); save(); renderTripDetail(t);
     });
@@ -1287,24 +1479,22 @@
     tripContent.querySelectorAll("[data-addhotel]").forEach(b => b.onclick = () => editHotel(t, +b.dataset.addhotel));
     tripContent.querySelectorAll("[data-edithotel]").forEach(b => b.onclick = () => editHotel(t, +b.dataset.edithotel));
     tripContent.querySelectorAll("[data-rmhotel]").forEach(b => b.onclick = () => { t.segments[+b.dataset.rmhotel].hotel = null; save(); renderTripDetail(t); });
+    tripContent.querySelectorAll("[data-hotelmap]").forEach(b => b.onclick = () => {
+      const si = +b.dataset.hotelmap, ho = t.segments[si].hotel; if (!ho) return;
+      if (tripViewOn) setRightView(false);
+      map.flyTo([ho.lat, ho.lng], 15, { duration: .6 });
+      const m = hotelMarkers[si]; if (m) setTimeout(() => m.openPopup(), 400);
+    });
     const addStay = document.getElementById("addStay");
     if (addStay) addStay.onclick = () => addCityStay(t);
-    // wishlist: expand/collapse the stacked card (widens the sidebar when open)
-    tripContent.querySelectorAll("[data-wish]").forEach(el => el.onclick = () => {
-      const date = el.dataset.wish;
-      const opening = wishOpenDate !== date;
-      wishOpenDate = opening ? date : null;
-      if (opening) { wishPrevW = parseInt(sidebar.style.width, 10) || 440; sidebar.style.width = Math.min(760, Math.max(660, wishPrevW)) + "px"; }
-      else if (wishPrevW) { sidebar.style.width = wishPrevW + "px"; }
-      map.invalidateSize();
+    // 🃏 on a day header → that day's alternatives in the extended sidebar
+    tripContent.querySelectorAll("[data-alts]").forEach(b => b.onclick = (e) => {
+      e.stopPropagation();                       // don't also toggle the day's map focus
+      const date = b.dataset.alts;
+      if (altOpenDate === date) closeAlts(); else openAlts(date);
       renderTripDetail(t);
     });
-    tripContent.querySelectorAll("[data-wadd]").forEach(b => b.onclick = () => {
-      const date = b.dataset.date, id = b.dataset.wadd;
-      (t.plan[date] = t.plan[date] || []).push(id);          // schedule it…
-      t.wishlist = t.wishlist.filter(x => x !== id);          // …and take it out of the parking lot
-      save(); renderTripDetail(t);
-    });
+    // the couldn't-fit overview list can drop an alternative outright
     tripContent.querySelectorAll("[data-wrm]").forEach(b => b.onclick = () => {
       t.wishlist = t.wishlist.filter(x => x !== b.dataset.wrm); save(); renderTripDetail(t);
     });
@@ -1337,9 +1527,141 @@
     tvEl.hidden = !on;
     if (on) renderTripView(); else setTimeout(() => map.invalidateSize(), 60);
   }
-  function tripSelect(p) {
+  // selecting a place anywhere → highlight it, and search it in the mini browser
+  function selectPlace(p) {
+    if (!p) return;
     selectedPlaceId = p.id;
-    if (tripViewOn) renderTripView(); else focusPlace(p);
+    if (tripViewOn) renderTripView();
+    else map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 15), { duration: .5 });
+    openWeb(p);
+    if (altOpenDate) renderAlts();
+  }
+  const tripSelect = selectPlace;
+
+  // ==================================================================
+  //  EXTENDED SIDEBAR — a day's alternatives, next to the main sidebar
+  // ==================================================================
+  const altbar = () => document.getElementById("altbar");
+  function openAlts(date) {
+    altOpenDate = date;
+    altbar().hidden = false;
+    renderAlts();
+    setTimeout(() => map.invalidateSize(), 60);
+  }
+  function closeAlts() {
+    altOpenDate = null;
+    altbar().hidden = true;
+    setTimeout(() => map.invalidateSize(), 60);
+  }
+  function renderAlts() {
+    const t = (store.trips || []).find(x => x.id === openTripId);
+    const date = altOpenDate;
+    if (!t || !date) { closeAlts(); return; }
+    t.wishlist = t.wishlist || [];
+    const body = document.getElementById("alt-body"), foot = document.getElementById("alt-foot");
+    const seg = segForDate(t, date);
+    const city = seg ? seg.city : t.segments[t.segments.length - 1].city;
+    const cname = (CITIES[city] || {}).name || city;
+    const di = dateRange(t.start, t.end).indexOf(date);
+    document.getElementById("alt-sub").textContent =
+      (di >= 0 ? "D" + (di + 1) + " · " : "") + fmtDay(date) + " · " + cname;
+
+    const planned = t.plan[date] || [];
+    const alts = t.wishlist.map(placeById).filter(p => p && (altAllCities || (p.city || "shanghai") === city));
+    if (!alts.length) {
+      body.innerHTML = `<div class="day-empty">No alternatives ${altAllCities ? "parked yet" : "for " + esc(cname)}. Park one below, or open a place on the map → “＋ Add as an alternative”.</div>`;
+    } else {
+      body.innerHTML = alts.map(p => {
+        const inDay = planned.includes(p.id), d = distInfo(p);
+        return `<div class="altcard${selectedPlaceId === p.id ? " sel" : ""}" data-altsel="${p.id}">
+          <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
+          <div class="ac-body">
+            <div class="ac-name">${catOf(p).emoji} ${esc(p.name)}</div>
+            <div class="ac-cn">${esc(p.cn || catOf(p).label)}${d ? " · 📍 " + kmText(d.km) : ""}${altAllCities ? " · " + esc((CITIES[p.city] || {}).name || "") : ""}</div>
+            <div class="ac-actions">
+              ${inDay ? `<span class="in-day">✓ in this day</span>` : `<button class="btn sm" data-aadd="${p.id}">＋ Add to day</button>`}
+              <button class="btn sm" data-arm="${p.id}" title="Remove from alternatives">✕</button>
+            </div>
+          </div></div>`;
+      }).join("");
+    }
+    // footer: park another place here
+    const pool = allPlaces()
+      .filter(p => (altAllCities || (p.city || "shanghai") === city) && !t.wishlist.includes(p.id) && !planned.includes(p.id))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    foot.innerHTML = `<select id="altAdd"><option value="">＋ Park a place here as an alternative…</option>${
+      pool.map(p => `<option value="${p.id}">${catOf(p).emoji} ${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("")}</select>`;
+    document.getElementById("altAdd").onchange = (e) => { if (e.target.value) addAlternative(e.target.value); };
+    body.querySelectorAll("[data-altsel]").forEach(c => c.onclick = (e) => {
+      if (e.target.closest("button")) return;
+      const p = placeById(c.dataset.altsel); if (p) selectPlace(p);
+    });
+    body.querySelectorAll("[data-aadd]").forEach(b => b.onclick = () => {
+      const id = b.dataset.aadd;
+      (t.plan[date] = t.plan[date] || []).push(id);        // schedule it…
+      t.wishlist = t.wishlist.filter(x => x !== id);        // …and take it off the alternatives deck
+      save(); renderTripDetail(t); showHint("📅 Added to " + fmtDay(date));
+    });
+    body.querySelectorAll("[data-arm]").forEach(b => b.onclick = () => {
+      t.wishlist = t.wishlist.filter(x => x !== b.dataset.arm); save(); renderTripDetail(t);
+    });
+  }
+
+  // ==================================================================
+  //  MINI BROWSER — right side of the screen (<webview>)
+  // ==================================================================
+  let webMode = "search";
+  let webDismissed = false;   // closed by hand → don't pop back open on casual map clicks
+  function webUrl(p, mode) {
+    const term = (p.name + " " + (p.cn || "") + " " + cityName(p)).trim();
+    if (mode === "images") return "https://www.google.com/search?tbm=isch&q=" + q(term);
+    if (mode === "maps") return "https://www.google.com/maps/search/" + q(term);
+    if (mode === "red") return "https://www.xiaohongshu.com/search_result?keyword=" + q(p.cn || p.name);
+    return "https://www.google.com/search?q=" + q(term);
+  }
+  function setWeb(p) {
+    const wv = document.getElementById("miniweb");
+    if (wv) { try { wv.src = webUrl(p, webMode); } catch (e) {} }
+  }
+  function renderWeb(p) {
+    const cat = catOf(p), d = distInfo(p);
+    const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : "";
+    const cityNm = (CITIES[p.city] || {}).name || "";
+    document.getElementById("web-title").innerHTML =
+      `${cat.emoji} ${esc(p.name)}<small id="web-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${esc(cat.label)}${cityNm ? " · " + esc(cityNm) : ""}</small>`;
+    const det = document.getElementById("web-detail");
+    det.innerHTML = `
+      <div class="ext-gal">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" onerror="this.remove()">`).join("")}</div>
+      ${dName ? `<div class="ext-cn">${esc(dName)}</div>` : ""}
+      ${d ? `<span class="ext-dist">📍 ${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
+      ${p.desc ? `<p>${esc(p.desc)}</p>` : ""}
+      ${p.src ? `<div class="ext-cn">🔎 found via ${esc(p.src)}</div>` : ""}
+      <div class="ext-actions">
+        <button data-ext-alt>🃏 Add as alternative</button>
+        <button data-ext-base>🎯 Set as base</button>
+        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">🔗 Website</a>` : ""}
+      </div>`;
+    det.querySelector("[data-ext-alt]").onclick = () => addAlternative(p.id);
+    det.querySelector("[data-ext-base]").onclick = () => { store.base = p.id; save(); showHint("🎯 Base set to " + p.name); refreshMarkers(); renderWeb(p); if (openTripId) renderTrip(); };
+    setWeb(p);
+  }
+  function openWeb(p, opts) {
+    if (!p) return;
+    selectedPlaceId = p.id;
+    if (opts && opts.auto && webDismissed) return;   // respect a manual close
+    webDismissed = false;
+    document.getElementById("webpanel").hidden = false;
+    document.getElementById("webresizer").hidden = false;
+    renderWeb(p);
+    setTimeout(() => map.invalidateSize(), 60);
+  }
+  function closeWeb() {
+    webDismissed = true;
+    document.getElementById("webpanel").hidden = true;
+    document.getElementById("webresizer").hidden = true;
+    const wv = document.getElementById("miniweb");
+    if (wv) { try { wv.src = "about:blank"; } catch (e) {} }   // stop background loading
+    setTimeout(() => map.invalidateSize(), 60);
   }
   function nearbyPlaces(p, n) {
     return allPlaces().filter(x => x.id !== p.id)
@@ -1437,6 +1759,58 @@
 
   document.querySelectorAll("#nav button").forEach(b => b.onclick = () => nav(b.dataset.view));
 
+  // extended sidebar (alternatives) controls
+  document.getElementById("alt-close").onclick = () => { closeAlts(); if (openTripId) renderTrip(); };
+  document.getElementById("altAllCities").onchange = (e) => {
+    altAllCities = e.target.checked;
+    if (openTripId) renderTrip(); else renderAlts();
+  };
+
+  // mini-browser controls
+  document.getElementById("web-close").onclick = closeWeb;
+  document.querySelectorAll(".web-tabs [data-web]").forEach(b => b.onclick = () => {
+    webMode = b.dataset.web;
+    document.querySelectorAll(".web-tabs [data-web]").forEach(x => x.classList.toggle("on", x === b));
+    const p = placeById(selectedPlaceId); if (p) setWeb(p);
+  });
+  document.getElementById("web-open").onclick = () => { const p = placeById(selectedPlaceId); if (p) window.open(webUrl(p, webMode), "_blank"); };
+  const miniweb = document.getElementById("miniweb");
+  document.getElementById("web-back").onclick = () => { try { if (miniweb.canGoBack()) miniweb.goBack(); } catch (e) {} };
+  document.getElementById("web-reload").onclick = () => { try { miniweb.reload(); } catch (e) {} };
+  const webLoad = document.getElementById("web-load");
+  miniweb.addEventListener("did-start-loading", () => { webLoad.hidden = false; webLoad.textContent = "loading…"; });
+  miniweb.addEventListener("did-stop-loading", () => { webLoad.hidden = true; });
+  miniweb.addEventListener("did-fail-load", (e) => {
+    if (e.errorCode === -3) return;   // aborted (normal when switching tabs fast)
+    webLoad.hidden = false; webLoad.textContent = "⚠ couldn't load — check your connection, or ↗ open in the real browser";
+  });
+
+  // ---- mini browser is drag-resizable from its left edge ----
+  const webpanel = document.getElementById("webpanel");
+  const webresizer = document.getElementById("webresizer");
+  const WEB_MIN = 320, WEB_MAX = 900;
+  const savedWebW = parseInt(localStorage.getItem("planner-webw") || "", 10);
+  if (savedWebW) webpanel.style.flexBasis = Math.min(WEB_MAX, Math.max(WEB_MIN, savedWebW)) + "px";
+  let webDrag = false;
+  webresizer.addEventListener("mousedown", (e) => {
+    webDrag = true; webresizer.classList.add("drag"); document.body.classList.add("resizing"); e.preventDefault();
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!webDrag) return;
+    const right = document.getElementById("app").getBoundingClientRect().right;
+    webpanel.style.flexBasis = Math.min(WEB_MAX, Math.max(WEB_MIN, right - e.clientX)) + "px";
+    map.invalidateSize();
+  });
+  window.addEventListener("mouseup", () => {
+    if (!webDrag) return;
+    webDrag = false; webresizer.classList.remove("drag"); document.body.classList.remove("resizing");
+    localStorage.setItem("planner-webw", parseInt(webpanel.style.flexBasis, 10) || 470);
+    map.invalidateSize();
+  });
+  webresizer.addEventListener("dblclick", () => {
+    webpanel.style.flexBasis = "470px"; localStorage.setItem("planner-webw", "470"); map.invalidateSize();
+  });
+
   // ---- adjustable sidebar (drag the divider; width remembered) ----
   const sidebar = document.getElementById("sidebar");
   const resizer = document.getElementById("resizer");
@@ -1511,10 +1885,8 @@
   // ------------------------------------------------------------------ go
   buildDistrictOptions();
   setCity("shanghai");
-  seedTrip();
-  patchUserList();
-  cleanupHuangyan();
-  showHint("Tip: on the map, “＋ Add as an alternative”; then open a day's Alternatives stack to slot it in");
+  ensureTripV2();
+  showHint("Trip re-optimized to match your hotels — open 🧳 Trips");
   </script>
 </body>
 </html>

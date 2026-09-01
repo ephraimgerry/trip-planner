@@ -4,7 +4,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const TILE_DIR = path.join(__dirname, "..", "tiles");
+const TILE_DIR = path.join(__dirname, "..", "frontend", "tiles");
 const UA = "trip-planner-offline/0.1 (personal use)";
 const SUBS = ["a", "b", "c", "d"];
 

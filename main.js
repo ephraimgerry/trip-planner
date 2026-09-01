@@ -16,10 +16,11 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      webviewTag: true, // enables the in-app mini browser (<webview>) in the extended sidebar
     },
   });
 
-  win.loadFile(path.join(__dirname, "index.html"));
+  win.loadFile(path.join(__dirname, "frontend", "index.html"));
 
   // open external links (booking sites, RED, maps) in the real browser, not in-app
   win.webContents.setWindowOpenHandler(({ url }) => {
