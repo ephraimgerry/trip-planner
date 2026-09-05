@@ -3,20 +3,104 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trip Planner</title>
+  <title>Trip Explorer</title>
+  <!-- paint the saved theme before first render so there's no light-mode flash -->
+  <script>
+    (function () {
+      var d = { mode: "light", accent: "purple", tone: { light: "mist", dark: "graphite" } };
+      try {
+        var s = JSON.parse(localStorage.getItem("planner-theme") || "{}");
+        if (s.mode) d.mode = s.mode;
+        if (s.accent) d.accent = s.accent;
+        if (s.tone) { if (s.tone.light) d.tone.light = s.tone.light; if (s.tone.dark) d.tone.dark = s.tone.dark; }
+      } catch (e) {}
+      var r = document.documentElement;
+      r.dataset.mode = d.mode; r.dataset.tone = d.tone[d.mode]; r.dataset.accent = d.accent;
+    })();
+  </script>
   <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
   <style>
+    /* ============================================================
+       Design tokens — mode (light/dark) × tone × accent
+       Set on <html> as data-mode / data-tone / data-accent
+       ============================================================ */
     :root {
-      --bg: #f7f7f5; --panel: #ffffff; --ink: #1d2230; --muted: #6b7280;
-      --line: #e6e7eb; --accent: #e63946; --shadow: 0 1px 3px rgba(0,0,0,.08), 0 8px 24px rgba(0,0,0,.06);
+      --font: "Avenir Next", Avenir, "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      --on-accent: #ffffff;
+      --accent-soft: color-mix(in srgb, var(--accent) 14%, transparent);
+      --accent-line: color-mix(in srgb, var(--accent) 45%, var(--line));
+      /* the "LED" — a soft halo around accent-coloured chrome, never a hard ring */
+      --glow: 0 0 0 1px var(--accent-soft), 0 0 13px -3px var(--accent-glow);
+      --radius: 11px;
     }
+
+    /* ---- light tones (soft light greys) ---- */
+    html[data-mode="light"] {
+      --ink: #1f2430; --ink-2: #3a414e; --muted: #757c89;
+      --shadow: 0 1px 3px rgba(18,22,30,.07), 0 8px 24px rgba(18,22,30,.05);
+      --halo: #ffffff;
+      --chip-bg: #eceff4; --chip-ink: #4a515e;
+      --info-bg: #e9f1fb; --info-ink: #0a558c;
+      --warn-bg: #fdf5e7; --warn-line: #eedfc2; --warn-ink: #7a5200;
+      --danger-bg: #fdeceb; --danger-line: #f2c9c6;
+      --ok: #2ca24a; --ok-bg: #f0faf3;
+      --focus: #e9a825; --focus-soft: #ffeec2; --focus-ink: #46340a;
+      --hot-bg: #ffe6d9; --hot-ink: #b8420d;
+      --want-bg: #fff3cd; --want-ink: #8a5c08;
+      --plan-bg: #d9e9fb; --plan-ink: #0a558c;
+      --seen-bg: #d9f2de; --seen-ink: #1b7a34;
+    }
+    html[data-mode="light"][data-tone="mist"]  { --bg: #f1f2f5; --panel: #ffffff; --panel-2: #f7f8fa; --panel-3: #edeff3; --line: #e2e5ea; --line-2: #ced3db; --hover: #f0f2f6; }
+    html[data-mode="light"][data-tone="stone"] { --bg: #eeeeec; --panel: #fbfbfa; --panel-2: #f4f4f2; --panel-3: #e9e9e6; --line: #e0e0dc; --line-2: #cbcbc5; --hover: #efefec; }
+    html[data-mode="light"][data-tone="linen"] { --bg: #f2f0ec; --panel: #fdfcfa; --panel-2: #f7f4f0; --panel-3: #ebe8e2; --line: #e4e0d8; --line-2: #d0cbc0; --hover: #f1eee8; }
+
+    /* ---- dark tones (soft dark greys, never pure black) ---- */
+    html[data-mode="dark"] {
+      color-scheme: dark;
+      --ink: #e7e9ec; --ink-2: #c0c4cb; --muted: #8b919d;
+      --shadow: 0 1px 3px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.34);
+      --halo: #101114;
+      --chip-bg: #2f333a; --chip-ink: #b6bcc6;
+      --info-bg: #1b2733; --info-ink: #8dbdea;
+      --warn-bg: #2a2418; --warn-line: #443a24; --warn-ink: #e2be79;
+      --danger-bg: #32211f; --danger-line: #4d2c29;
+      --ok: #4cc46e; --ok-bg: #172619;
+      --focus: #d9a032; --focus-soft: rgba(217,160,50,.22); --focus-ink: #161004;
+      --hot-bg: #3a2418; --hot-ink: #ef9a6a;
+      --want-bg: #33291180; --want-ink: #e0c169;
+      --plan-bg: #17293c80; --plan-ink: #86bcf0;
+      --seen-bg: #16301d80; --seen-ink: #74d18e;
+    }
+    html[data-mode="dark"][data-tone="graphite"] { --bg: #17181a; --panel: #202225; --panel-2: #26282c; --panel-3: #2c2f34; --line: #32353a; --line-2: #454951; --hover: #2a2d32; }
+    html[data-mode="dark"][data-tone="slate"]    { --bg: #15181d; --panel: #1e222a; --panel-2: #242932; --panel-3: #2a303a; --line: #313743; --line-2: #434b5a; --hover: #282e38; }
+    html[data-mode="dark"][data-tone="umber"]    { --bg: #191716; --panel: #232120; --panel-2: #2a2725; --panel-3: #312d2a; --line: #37332f; --line-2: #4b463f; --hover: #2d2a27; }
+
+    /* ---- accents ---- */
+    html[data-accent="purple"] { --accent: #6d4bd8; --accent-glow: rgba(124,92,240,.6); }
+    html[data-mode="dark"][data-accent="purple"] { --accent: #9a7bf5; --accent-glow: rgba(154,123,245,.5); }
+    html[data-accent="orange"] { --accent: #dd6210; --accent-glow: rgba(240,116,26,.55); }
+    html[data-mode="dark"][data-accent="orange"] { --accent: #ff8b3d; --accent-glow: rgba(255,139,61,.45); }
+
     * { box-sizing: border-box; }
     html, body { height: 100%; margin: 0; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-family: var(--font); -webkit-font-smoothing: antialiased;
       color: var(--ink); background: var(--bg); overflow: hidden;
     }
+    /* controls do NOT inherit the page font by default — make them */
+    button, input, select, textarea, optgroup, option { font-family: var(--font); letter-spacing: .005em; }
+    h1, h2, h3, h4 { font-weight: 500; letter-spacing: -.005em; }
+    html, body, input, select, textarea, button { transition: background-color .25s ease, color .25s ease, border-color .25s ease; }
+
+    /* monochrome line icons — they take the colour of whatever they sit in */
+    .ic { width: 15px; height: 15px; flex: 0 0 auto; stroke: currentColor; fill: none;
+      stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; vertical-align: -2.5px; }
+    .ic.sm { width: 12.5px; height: 12.5px; vertical-align: -2px; stroke-width: 1.8; }
+    .ic.lg { width: 19px; height: 19px; vertical-align: -4px; stroke-width: 1.6; }
+    .ic-acc { color: var(--accent); filter: drop-shadow(0 0 5px var(--accent-glow)); }
+    button .ic, a .ic, label .ic { margin-right: 1px; }
     #app { display: flex; height: 100vh; }
+    .led { box-shadow: var(--glow); }
 
     /* ---------- Sidebar ---------- */
     #sidebar {
@@ -29,22 +113,70 @@
       border-right: 1px solid transparent; transition: background .12s;
     }
 
-    /* ---------- Extended sidebar: a day's ALTERNATIVES (next to the main sidebar) ---------- */
+    /* ---------- Header + settings menu ---------- */
+    header { display: flex; align-items: center; gap: 11px; padding: 16px 18px 15px; border-bottom: 1px solid var(--line); }
+    header h1 { margin: 0; font-size: 13.5px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+    .menu-btn {
+      width: 30px; height: 30px; flex: 0 0 auto; padding: 0; border-radius: 9px; cursor: pointer;
+      border: 1px solid var(--line); background: var(--panel-2);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3.5px; transition: .18s;
+    }
+    .menu-btn span { display: block; width: 13px; height: 1.5px; border-radius: 2px; background: var(--muted); transition: .18s; }
+    .menu-btn:hover { border-color: var(--accent-line); }
+    .menu-btn:hover span { background: var(--accent); }
+    .acc .an, .tone .tn, .set-label, .set-head span { letter-spacing: .04em; }
+    .menu-btn.on { border-color: var(--accent); background: var(--accent-soft); box-shadow: var(--glow); }
+    .menu-btn.on span { background: var(--accent); }
+    .menu-btn.on span:nth-child(2) { width: 8px; }
+
+    #sideBody { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+    #sideMain { position: absolute; inset: 0; display: flex; flex-direction: column;
+      transition: transform .34s cubic-bezier(.4,0,.2,1), opacity .22s ease; }
+    #settings { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; background: var(--panel);
+      transform: translateX(-101%); transition: transform .34s cubic-bezier(.4,0,.2,1); }
+    #sidebar.settings-open #sideMain { transform: translateX(15%); opacity: 0; pointer-events: none; }
+    #sidebar.settings-open #settings { transform: translateX(0); }
+    .set-head { display: flex; align-items: center; padding: 12px 17px; border-bottom: 1px solid var(--line); }
+    .set-head span { flex: 1; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
+    .set-head button { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; }
+    .set-head button:hover { color: var(--accent); }
+    .set-body { flex: 1; overflow-y: auto; padding: 20px 17px 28px; }
+    .set-group { margin-bottom: 24px; }
+    .set-label { font-size: 10.5px; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+    .set-hint { font-size: 11.5px; color: var(--muted); line-height: 1.55; margin-top: 10px; }
+    .tones { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .tone { border: 1px solid var(--line); border-radius: var(--radius); padding: 8px; cursor: pointer; background: var(--panel-2); text-align: center; transition: .16s; }
+    .tone .sw { height: 36px; border-radius: 8px; border: 1px solid var(--line); margin-bottom: 7px; }
+    .tone .tn { font-size: 11px; font-weight: 600; color: var(--muted); }
+    .tone:hover { border-color: var(--line-2); }
+    .tone.sel { border-color: var(--accent); box-shadow: var(--glow); }
+    .tone.sel .tn { color: var(--accent); }
+    .accents { display: flex; gap: 10px; }
+    .acc { flex: 1; display: flex; align-items: center; gap: 9px; border: 1px solid var(--line); border-radius: var(--radius);
+      padding: 10px 11px; cursor: pointer; background: var(--panel-2); transition: .16s; }
+    .acc .ring { width: 17px; height: 17px; border-radius: 50%; flex: 0 0 auto; }
+    .acc .an { font-size: 11.5px; font-weight: 600; color: var(--muted); line-height: 1.25; }
+    .acc:hover { border-color: var(--line-2); }
+    .acc.sel { border-color: var(--accent); box-shadow: var(--glow); }
+    .acc.sel .an { color: var(--accent); }
+
+    /* ---------- Extended sidebar: a day's ALTERNATIVES ---------- */
     #altbar { flex: 0 1 336px; min-width: 240px; height: 100%; display: flex; flex-direction: column;
-      background: #fbfaff; border-right: 1px solid var(--line); box-shadow: var(--shadow); z-index: 490; }
+      background: var(--panel-2); border-right: 1px solid var(--line); box-shadow: var(--shadow); z-index: 490; }
     #altbar[hidden] { display: none; }
-    .side-head { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-bottom: 1px solid var(--line); background: #fff; }
-    .side-head .sh-t { font-weight: 700; font-size: 14px; flex: 1; min-width: 0; }
-    .side-head .sh-t small { display: block; font-weight: 600; font-size: 11px; color: var(--muted);
+    .side-head { display: flex; align-items: center; gap: 8px; padding: 10px 13px; border-bottom: 1px solid var(--line); background: var(--panel); }
+    .side-head .sh-t { display: flex; align-items: center; gap: 7px; font-weight: 600; font-size: 14px; flex: 1; min-width: 0; }
+    .side-head .sh-t > div { min-width: 0; }
+    .side-head .sh-t small { display: block; font-weight: 500; font-size: 11px; color: var(--muted);
       margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .side-head .sh-x { border: none; background: none; font-size: 15px; cursor: pointer; color: var(--muted); line-height: 1; }
     .side-head .sh-x:hover { color: var(--accent); }
     .alt-scope { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--muted);
       padding: 8px 13px 0; cursor: pointer; }
     #alt-body { flex: 1; min-height: 0; overflow-y: auto; padding: 11px 12px; display: flex; flex-direction: column; gap: 9px; }
-    #alt-foot { flex: 0 0 auto; padding: 10px 12px; border-top: 1px solid var(--line); background: #fff; }
-    #alt-foot select { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: #fbfbfa; }
-    .altcard.sel { border-color: var(--accent); box-shadow: 0 3px 13px rgba(230,57,70,.18); }
+    #alt-foot { flex: 0 0 auto; padding: 10px 12px; border-top: 1px solid var(--line); background: var(--panel); }
+    #alt-foot select { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: var(--panel-2); }
+    .altcard.sel { border-color: var(--accent); box-shadow: var(--glow); }
 
     /* ---------- Mini browser: right side of the screen ---------- */
     #webresizer { flex: 0 0 7px; cursor: col-resize; background: transparent; z-index: 600; transition: background .12s; }
@@ -55,38 +187,34 @@
     #webpanel[hidden] { display: none; }
     #web-detail { flex: 0 0 auto; max-height: 42%; overflow-y: auto; padding: 11px 13px; border-bottom: 1px solid var(--line); }
     #web-detail .ext-gal { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 9px; }
-    #web-detail .ext-gal img { height: 104px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: #eee; }
+    #web-detail .ext-gal img { height: 104px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: var(--panel-3); }
     #web-detail .ext-cn { color: var(--muted); font-size: 12.5px; margin: 2px 0 6px; }
-    #web-detail .ext-dist { display: inline-block; font-size: 12px; background: #eef1f5; color: #445; border-radius: 999px; padding: 3px 10px; font-weight: 600; margin-bottom: 8px; }
-    #web-detail p { font-size: 12.5px; line-height: 1.5; color: #2b3240; margin: 0 0 10px; }
+    #web-detail .ext-dist { display: inline-block; font-size: 12px; background: var(--chip-bg); color: var(--chip-ink); border-radius: 999px; padding: 3px 10px; font-weight: 600; margin-bottom: 8px; }
+    #web-detail p { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); margin: 0 0 10px; }
     #web-detail .ext-actions { display: flex; flex-wrap: wrap; gap: 7px; }
-    #web-detail .ext-actions button, #web-detail .ext-actions a { font-size: 12px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; text-decoration: none; color: var(--ink); }
+    #web-detail .ext-actions button, #web-detail .ext-actions a { font-size: 12px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; text-decoration: none; color: var(--ink); }
     #web-detail .ext-actions button:hover, #web-detail .ext-actions a:hover { border-color: var(--accent); color: var(--accent); }
-    .web-tabs { display: flex; align-items: center; gap: 5px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: #fafafb; }
-    .web-tabs .navb { font-size: 12px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; color: var(--muted); }
-    .web-tabs button { font-size: 11.5px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; color: var(--muted); }
-    .web-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .web-tabs { display: flex; align-items: center; gap: 5px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
+    .web-tabs .navb { font-size: 12px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); cursor: pointer; color: var(--muted); }
+    .web-tabs button { font-size: 11.5px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); cursor: pointer; color: var(--muted); }
+    .web-tabs button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
     .web-tabs #web-open { margin-left: auto; }
     .web-sep { width: 1px; height: 16px; background: var(--line); margin: 0 3px; }
     #miniweb { flex: 1; width: 100%; border: none; background: #fff; }
-    #web-load { flex: 0 0 auto; font-size: 11px; color: var(--muted); padding: 4px 12px; border-bottom: 1px solid var(--line); background: #fff; }
+    #web-load { flex: 0 0 auto; font-size: 11px; color: var(--muted); padding: 4px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
     #web-load[hidden] { display: none; }
     #resizer:hover, #resizer.drag { background: var(--accent); opacity: .5; }
     body.resizing { user-select: none; }
     body.resizing #map, body.resizing #webpanel { pointer-events: none; }
-    header { padding: 14px 18px 10px; border-bottom: 1px solid var(--line); }
-    header h1 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
-    header h1 span { color: var(--accent); }
-    header p { margin: 3px 0 0; font-size: 11.5px; color: var(--muted); }
 
     /* ---------- Sidebar nav + panels ---------- */
-    .nav { display: flex; gap: 6px; padding: 8px 14px; border-bottom: 1px solid var(--line); }
+    .nav { display: flex; gap: 6px; padding: 9px 14px; border-bottom: 1px solid var(--line); }
     .nav button {
-      flex: 1; padding: 8px; font-size: 13px; font-weight: 600; border: 1px solid var(--line);
-      background: #fff; border-radius: 9px; cursor: pointer; color: var(--muted); transition: .12s;
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px; font-size: 12.5px; font-weight: 600; letter-spacing: .03em; border: 1px solid var(--line);
+      background: var(--panel); border-radius: 9px; cursor: pointer; color: var(--muted); transition: .14s;
     }
-    .nav button:hover { border-color: #cfd2d8; }
-    .nav button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .nav button:hover { border-color: var(--line-2); }
+    .nav button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
     .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .panel[hidden] { display: none; }
     #tripBar { flex: 0 0 auto; }
@@ -94,173 +222,147 @@
     #tripContent { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; }
 
     /* pinned controls bar in a trip */
-    .trip-sticky { padding: 9px 14px; border-bottom: 1px solid var(--line); background: #fafafb; display: flex; flex-direction: column; gap: 8px; }
+    .trip-sticky { padding: 9px 14px; border-bottom: 1px solid var(--line); background: var(--panel-2); display: flex; flex-direction: column; gap: 8px; }
     .seg-row { display: flex; gap: 8px; }
-    .seg { display: flex; flex: 1; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: #fff; }
-    .seg button { flex: 1; padding: 7px 4px; font-size: 12px; font-weight: 600; border: none; background: #fff; color: var(--muted); cursor: pointer; }
+    .seg { display: flex; flex: 1; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--panel); }
+    .seg button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 4px; font-size: 12px; font-weight: 600; letter-spacing: .03em; border: none; background: var(--panel); color: var(--muted); cursor: pointer; }
     .seg button + button { border-left: 1px solid var(--line); }
-    .seg button.on { background: var(--ink); color: #fff; }
+    .seg button.on { background: var(--accent); color: var(--on-accent); box-shadow: var(--glow); }
     .scope-toggle.sticky { margin: 0; }
 
     /* day grouping: type headers + time slots */
-    .overview { background: #f6f7f9; border-radius: 9px; padding: 9px 11px; margin-bottom: 12px; font-size: 12.5px; }
-    .overview .ov-sum { color: #2b3240; }
-    .overview .ov-toggle { margin-top: 6px; font-size: 11.5px; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; }
+    .overview { background: var(--panel-3); border-radius: 9px; padding: 9px 11px; margin-bottom: 12px; font-size: 12.5px; }
+    .overview .ov-sum { color: var(--ink-2); }
+    .overview .ov-toggle { display: inline-flex; align-items: center; gap: 5px; margin-top: 7px; font-size: 11.5px; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; }
     .ov-list { border: 1px solid var(--line); border-radius: 9px; padding: 4px 10px; margin-bottom: 12px; }
-    .ov-item { display: flex; align-items: center; gap: 8px; padding: 6px 2px; font-size: 13px; border-bottom: 1px solid #f1f1f3; }
+    .ov-item { display: flex; align-items: center; gap: 8px; padding: 6px 2px; font-size: 13px; border-bottom: 1px solid var(--line); }
     .ov-item:last-child { border-bottom: none; }
     .ov-item .wname { flex: 1; cursor: pointer; min-width: 0; }
     .ov-item .wname:hover { color: var(--accent); }
-    .type-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 8px 2px 2px; }
     .slot { display: flex; gap: 9px; align-items: flex-start; padding: 2px 0; }
-    .slot .slot-tag { flex: 0 0 92px; font-size: 11px; font-weight: 700; color: #4a3d63; padding-top: 9px; }
+    .slot .slot-tag { flex: 0 0 86px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .11em; padding-top: 10px;
+      color: color-mix(in srgb, var(--accent) 62%, var(--muted)); }
     .slot .slot-p { flex: 1; min-width: 0; }
-
-    /* Trip view (replaces the map on the right) */
-    #tripView { flex: 1 1 0; min-width: 0; height: 100%; overflow-y: auto; background: var(--bg); }
-    #tripView[hidden] { display: none; }
-    .tv { max-width: 900px; margin: 0 auto; padding: 22px 26px 40px; }
-    .tv-empty { color: var(--muted); font-size: 14px; padding: 60px 24px; text-align: center; }
-    .tv-gallery { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 14px; }
-    .tv-gallery img { height: 220px; border-radius: 12px; object-fit: cover; flex: 0 0 auto; background: #e8e8e8; }
-    .tv h1 { margin: 0 0 4px; font-size: 26px; letter-spacing: -.02em; }
-    .tv .tv-sub { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
-    .tv .tv-dist { display: inline-block; font-size: 12.5px; background: #eef1f5; color: #445; border-radius: 999px; padding: 4px 11px; margin-bottom: 12px; font-weight: 600; }
-    .tv p.tv-desc { font-size: 14px; line-height: 1.6; color: #2b3240; max-width: 640px; }
-    .tv .tv-links { display: flex; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
-    .tv .tv-links a, .tv .tv-links button { font-size: 13px; text-decoration: none; padding: 8px 13px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: #fff; cursor: pointer; }
-    .tv .tv-links a:hover, .tv .tv-links button:hover { border-color: var(--accent); color: var(--accent); }
-    .tv h2 { font-size: 15px; margin: 26px 0 12px; }
-    .tv-near { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
-    .near-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: #fff; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.05); transition: .12s; }
-    .near-card:hover { box-shadow: 0 6px 18px rgba(0,0,0,.12); transform: translateY(-2px); }
-    .near-card img { width: 100%; height: 118px; object-fit: cover; background: #e8e8e8; display: block; }
-    .near-card .nc-body { padding: 9px 11px; }
-    .near-card .nc-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .near-card .nc-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; display: flex; justify-content: space-between; gap: 6px; }
-    .near-card .nc-add { margin: 0 11px 10px; font-size: 11.5px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; background: #fff; cursor: pointer; width: calc(100% - 22px); }
-    .near-card .nc-add:hover { border-color: #9b5de5; color: #6d28a8; }
 
     /* ---------- Trips ---------- */
     .trip-actions { display: flex; gap: 8px; margin-bottom: 12px; }
     .btn { padding: 9px 12px; font-size: 13px; font-weight: 600; border: 1px solid var(--line);
-      background: #fff; border-radius: 9px; cursor: pointer; color: var(--ink); }
+      background: var(--panel); border-radius: 9px; cursor: pointer; color: var(--ink); }
     .btn:hover { border-color: var(--accent); color: var(--accent); }
-    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
-    .btn.primary:hover { color: #fff; filter: brightness(1.05); }
+    .btn.primary { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
+    .btn.primary:hover { color: var(--on-accent); filter: brightness(1.07); }
     .btn.sm { padding: 4px 9px; font-size: 11.5px; font-weight: 600; border-radius: 7px; }
-    .trip-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; }
-    .trip-card:hover { border-color: #cfd2d8; box-shadow: var(--shadow); }
-    .trip-card h3 { margin: 0 0 3px; font-size: 15px; }
+    .trip-card { border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; cursor: pointer; background: var(--panel); }
+    .trip-card:hover { border-color: var(--accent-line); box-shadow: var(--shadow); }
+    .trip-card h3 { margin: 0 0 3px; font-size: 15px; font-weight: 600; }
     .trip-card .sub { font-size: 12px; color: var(--muted); }
 
     .trip-head { margin-bottom: 12px; }
-    .trip-head h2 { margin: 6px 0 2px; font-size: 17px; }
+    .trip-head h2 { margin: 6px 0 2px; font-size: 17px; font-weight: 600; }
     .trip-head .dates { font-size: 12.5px; color: var(--muted); }
-    .flight { display: flex; gap: 10px; align-items: center; background: #eef4fb; border-radius: 10px; padding: 9px 11px; font-size: 12.5px; margin: 8px 0; }
-    .flight .fno { font-weight: 700; color: #0a558c; white-space: nowrap; }
-    .flight .leg { color: #223; }
+    .flight { display: flex; gap: 9px; align-items: center; background: var(--info-bg); border-radius: 10px; padding: 9px 11px; font-size: 12.5px; margin: 8px 0; }
+    .flight .fno { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--info-ink); white-space: nowrap; }
+    .flight .leg { color: var(--ink-2); }
 
-    .day { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; }
-    .day-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: #fafafa; border-bottom: 1px solid var(--line); }
-    .day-head .dnum { font-weight: 700; font-size: 12px; color: #fff; background: var(--ink); border-radius: 6px; padding: 2px 7px; }
+    .day { border: 1px solid var(--line); border-radius: 12px; margin-bottom: 12px; overflow: hidden; background: var(--panel); }
+    .day-head { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--panel-2); border-bottom: 1px solid var(--line); cursor: pointer; }
+    .day-head:hover { background: var(--hover); }
+    .day-head .dnum { font-weight: 700; font-size: 12px; color: var(--panel); background: var(--ink); border-radius: 6px; padding: 2px 7px; }
     .day-head .ddate { font-size: 13px; font-weight: 600; }
     .day-head .dcity { margin-left: auto; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; color: #fff; }
     .day-body { padding: 10px 12px; }
-    .day.focused { border-color: #ffb703; box-shadow: 0 0 0 2px #ffe7a8; }
-    .day-head { cursor: pointer; }
-    .day-head:hover { background: #f2f2f0; }
-    .day-head .focusbtn { margin-left: 6px; font-size: 10.5px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; background: #fff; }
-    .day.focused .day-head .focusbtn { background: #ffb703; color: #4a3500; border-color: #ffb703; }
-    .day-head .altsbtn { font-size: 10.5px; font-weight: 700; color: #6d28a8; border: 1px solid #d9cbe8; border-radius: 6px; padding: 2px 6px; background: #faf7fd; }
-    .day-head .altsbtn:hover { border-color: #9b5de5; }
-    .day-head .altsbtn.on { background: #6d28a8; color: #fff; border-color: #6d28a8; }
-    .dplace .dnum2 { flex: 0 0 auto; width: 19px; height: 19px; border-radius: 50%; background: var(--ink); color: #fff;
+    .day.focused { border-color: var(--focus); box-shadow: 0 0 0 2px var(--focus-soft), 0 0 16px -6px var(--focus); }
+    .day-head .focusbtn { display: inline-flex; align-items: center; gap: 4px; margin-left: 6px; font-size: 10.5px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 2px 6px; background: var(--panel); }
+    .day.focused .day-head .focusbtn { background: var(--focus); color: var(--focus-ink); border-color: var(--focus); box-shadow: 0 0 11px -3px var(--focus); }
+    .day-head .altsbtn { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--accent); border: 1px solid var(--accent-line); border-radius: 6px; padding: 2px 6px; background: var(--accent-soft); }
+    .day-head .altsbtn:hover { border-color: var(--accent); }
+    .day-head .altsbtn.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
+    .dplace .dnum2 { flex: 0 0 auto; width: 19px; height: 19px; border-radius: 50%; background: var(--ink); color: var(--panel);
       font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
-    .scope-toggle { display: flex; align-items: center; gap: 7px; font-size: 12.5px; background: #f3f5f8; border-radius: 9px; padding: 8px 11px; margin-bottom: 12px; cursor: pointer; }
-    .scope-toggle input { width: 15px; height: 15px; }
+    .scope-toggle { display: flex; align-items: center; gap: 7px; font-size: 12.5px; background: var(--panel-3); border-radius: 9px; padding: 8px 11px; margin-bottom: 12px; cursor: pointer; }
+    .scope-toggle input { width: 15px; height: 15px; accent-color: var(--accent); }
 
-    .transport { border: 1px dashed #c7cad1; border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; background: #fcfcfb; }
-    .transport .tt-title { font-size: 11.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .03em; }
-    .opt { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 5px; cursor: pointer; font-size: 12px; line-height: 1.35; background: #fff; }
-    .opt:hover { border-color: #cfd2d8; }
-    .opt.chosen { border-color: #2ca24a; background: #f1faf3; }
-    .opt .radio { width: 15px; height: 15px; border-radius: 50%; border: 2px solid #c7cad1; flex: 0 0 auto; margin-top: 1px; }
-    .opt.chosen .radio { border-color: #2ca24a; background: #2ca24a radial-gradient(#fff 28%, transparent 32%); }
+    .transport { border: 1px dashed var(--line-2); border-radius: 10px; padding: 8px 10px; margin-bottom: 10px; background: var(--panel-2); }
+    .transport .tt-title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--muted); margin-bottom: 7px; text-transform: uppercase; letter-spacing: .13em; }
+    .opt { display: flex; gap: 8px; align-items: flex-start; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; margin-bottom: 5px; cursor: pointer; font-size: 12px; line-height: 1.35; background: var(--panel); }
+    .opt:hover { border-color: var(--line-2); }
+    .opt.chosen { border-color: var(--ok); background: var(--ok-bg); }
+    .opt .radio { width: 15px; height: 15px; border-radius: 50%; border: 2px solid var(--line-2); flex: 0 0 auto; margin-top: 1px; }
+    .opt.chosen .radio { border-color: var(--ok); background: var(--ok) radial-gradient(var(--panel) 28%, transparent 32%); }
     .opt-add { font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; padding: 2px 0; }
 
-    .hotelcard { display: flex; gap: 10px; background: #fff7e9; border: 1px solid #f0dcb8; border-radius: 11px; padding: 10px 11px; margin-bottom: 10px; }
-    .hotelcard.need { background: #fdecec; border-color: #f3c5c5; }
-    .hotelcard .hc-ic { font-size: 20px; line-height: 1.2; }
+    .hotelcard { display: flex; gap: 10px; background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 11px; padding: 10px 11px; margin-bottom: 10px; }
+    .hotelcard.need { background: var(--danger-bg); border-color: var(--danger-line); }
+    .hotelcard .hc-ic { color: var(--warn-ink); display: flex; padding-top: 1px; }
     .hotelcard .hc-body { flex: 1; min-width: 0; }
     .hotelcard .hc-name { font-weight: 700; font-size: 13.5px; }
     .hotelcard .hc-area { font-size: 12px; color: var(--muted); margin-top: 1px; }
-    .hotelcard .hc-dates { font-size: 12px; color: #7a5200; font-weight: 600; margin-top: 4px; }
+    .hotelcard .hc-dates { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--warn-ink); font-weight: 600; margin-top: 4px; }
     .hotelcard .hc-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 7px; }
-    .hotelcard .hc-links a, .hotelcard .hc-links button { font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: none; padding: 0; }
+    .hotelcard .hc-links a, .hotelcard .hc-links button { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: none; padding: 0; }
     .hotelcard .hc-links a:hover, .hotelcard .hc-links button:hover { text-decoration: underline; }
 
     .dplace { display: flex; gap: 8px; align-items: center; padding: 6px 4px; border-radius: 8px; cursor: pointer; font-size: 13px; }
-    .dplace:hover { background: #f3f4f6; }
-    .dplace .pemoji { font-size: 15px; }
+    .dplace:hover { background: var(--hover); }
+    .dplace .pemoji { display: flex; }
     .dplace .pcn2 { color: var(--muted); font-size: 11.5px; }
-    .dplace .rm { margin-left: auto; color: #b0b3ba; background: none; border: none; cursor: pointer; font-size: 14px; }
-    .dplace .rm:hover { color: var(--accent); }
-    .add-place-sel { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: #fbfbfa; }
+    .dplace .rm { margin-left: auto; color: var(--muted); opacity: .6; background: none; border: none; cursor: pointer; font-size: 14px; }
+    .dplace .rm:hover { color: var(--accent); opacity: 1; }
+    .add-place-sel { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: var(--panel-2); }
     .day-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 2px 4px; }
-    .tip-note { font-size: 11.5px; color: var(--muted); background: #f6f7f9; border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.45; }
+    .tip-note { font-size: 11.5px; color: var(--muted); background: var(--panel-3); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.5; }
 
     /* Alternatives — place-cards, shown in the extended sidebar */
-    .altcard { display: flex; gap: 10px; align-items: center; background: #fff; border: 1px solid var(--line);
-      border-radius: 12px; box-shadow: 0 2px 9px rgba(30,30,50,.10); padding: 8px; cursor: pointer; }
-    .altcard:hover { border-color: #c7b8d8; }
-    .altcard img { width: 50px; height: 50px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: #eee; }
+    .altcard { display: flex; gap: 10px; align-items: center; background: var(--panel); border: 1px solid var(--line);
+      border-radius: 12px; box-shadow: 0 2px 9px rgba(0,0,0,.07); padding: 8px; cursor: pointer; }
+    .altcard:hover { border-color: var(--accent-line); }
+    .altcard img { width: 50px; height: 50px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: var(--panel-3); }
     .altcard .ac-body { flex: 1; min-width: 0; }
     .altcard .ac-name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .altcard:hover .ac-name { color: var(--accent); }
     .altcard .ac-cn { color: var(--muted); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .altcard .ac-actions { display: flex; gap: 6px; margin-top: 6px; }
-    .altcard .in-day { font-size: 11px; color: #1b7a34; font-weight: 700; align-self: center; }
+    .altcard .in-day { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: var(--ok); font-weight: 600; align-self: center; }
 
-    .pop .extbtn { display: block; margin-top: 8px; font-size: 12px; background: var(--ink); border: 1px solid var(--ink); color: #fff; border-radius: 7px; padding: 6px 9px; cursor: pointer; width: 100%; font-weight: 600; }
+    .pop .extbtn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 8px; font-size: 12px; background: var(--accent); border: 1px solid var(--accent); color: var(--on-accent); border-radius: 7px; padding: 6px 9px; cursor: pointer; width: 100%; font-weight: 600; box-shadow: var(--glow); }
     .pop .extbtn:hover { filter: brightness(1.1); }
-    .pop .wishbtn { display: block; margin-top: 6px; font-size: 11.5px; background: #faf7fd; border: 1px solid #c7b8d8; color: #4a3d63; border-radius: 7px; padding: 5px 9px; cursor: pointer; width: 100%; }
-    .pop .wishbtn:hover { border-color: #9b5de5; color: #6d28a8; }
+    .pop .wishbtn { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 6px; font-size: 11.5px; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent); border-radius: 7px; padding: 5px 9px; cursor: pointer; width: 100%; }
+    .pop .wishbtn:hover { border-color: var(--accent); }
 
-    /* ---------- Modal (replaces prompt/confirm; Electron-safe) ---------- */
-    .modal-back { position: fixed; inset: 0; background: rgba(20,24,34,.42); display: flex; align-items: center; justify-content: center; z-index: 4000; }
-    .modal { width: min(420px, 92vw); background: var(--panel); border-radius: 14px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
-    .modal h3 { margin: 0 0 4px; font-size: 17px; }
-    .modal .mmsg { margin: 0 0 12px; font-size: 13px; color: #374151; line-height: 1.5; }
+    /* ---------- Modal ---------- */
+    .modal-back { position: fixed; inset: 0; background: rgba(12,14,20,.5); display: flex; align-items: center; justify-content: center; z-index: 4000; }
+    .modal { width: min(420px, 92vw); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .modal h3 { margin: 0 0 4px; font-size: 17px; font-weight: 600; }
+    .modal .mmsg { margin: 0 0 12px; font-size: 13px; color: var(--ink-2); line-height: 1.5; }
     .mfield { display: block; margin: 12px 0; }
     .mfield span { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
-    .mfield input, .mfield select { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; background: #fff; color: var(--ink); }
-    .mfield input:focus, .mfield select:focus { border-color: var(--accent); outline: none; }
+    .mfield input, .mfield select { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; background: var(--panel-2); color: var(--ink); font-family: inherit; }
+    .mfield input:focus, .mfield select:focus { border-color: var(--accent); outline: none; box-shadow: var(--glow); }
     .mbtns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 
     .controls { padding: 12px 18px; border-bottom: 1px solid var(--line); }
     #search {
-      width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px;
-      font-size: 14px; outline: none; background: #fbfbfa;
+      width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; font-family: inherit;
+      font-size: 14px; outline: none; background: var(--panel-2); color: var(--ink);
     }
-    #search:focus { border-color: var(--accent); background: #fff; }
+    #search:focus { border-color: var(--accent); background: var(--panel); box-shadow: var(--glow); }
 
     .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .chip {
       display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; font-size: 12.5px;
-      border: 1px solid var(--line); border-radius: 999px; background: #fff; cursor: pointer;
-      user-select: none; transition: .12s;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--panel); cursor: pointer;
+      user-select: none; transition: .14s;
     }
-    .chip .dot { width: 9px; height: 9px; border-radius: 50%; }
-    .chip.off { opacity: .38; }
-    .chip:hover { border-color: #cfd2d8; }
+    .chip.off { opacity: .35; }
+    .chip:hover { border-color: var(--line-2); }
 
     .row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
     .row select {
-      flex: 1; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px;
-      background: #fff; font-size: 13px; color: var(--ink);
+      flex: 1; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit;
+      background: var(--panel); font-size: 13px; color: var(--ink);
     }
     .toggle { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+    .toggle input, .alt-scope input { accent-color: var(--accent); }
 
     /* ---------- List ---------- */
     #list { flex: 1; overflow-y: auto; padding: 6px 10px 20px; }
@@ -270,45 +372,67 @@
       position: sticky; top: 0; background: var(--panel); z-index: 2;
     }
     .district-head .swatch { width: 10px; height: 10px; border-radius: 3px; align-self: center; }
-    .district-head b { font-size: 13.5px; }
+    .district-head b { font-size: 13.5px; font-weight: 600; }
     .district-head small { color: var(--muted); font-size: 11.5px; }
     .district-head .count { margin-left: auto; color: var(--muted); font-size: 11.5px; }
-    .district-blurb { font-size: 11.5px; color: var(--muted); margin: 0 6px 6px; line-height: 1.4; }
+    .district-blurb { font-size: 11.5px; color: var(--muted); margin: 0 6px 6px; line-height: 1.45; }
 
     .place {
       display: flex; gap: 10px; padding: 9px 8px; border-radius: 10px; cursor: pointer;
       align-items: flex-start; border: 1px solid transparent;
     }
-    .place:hover { background: #f3f4f6; }
-    .place.active { background: #fff; border-color: var(--line); box-shadow: var(--shadow); }
-    .place .pin { font-size: 16px; line-height: 1.4; }
+    .place:hover { background: var(--hover); }
+    .place.active { background: var(--panel); border-color: var(--accent-line); box-shadow: var(--glow); }
+    .place .pin { display: flex; padding-top: 3px; }
     .place .body { flex: 1; min-width: 0; }
     .place .title { font-size: 13.5px; font-weight: 600; display: flex; gap: 6px; align-items: center; }
     .place .title .cn { font-weight: 400; color: var(--muted); font-size: 12px; }
-    .place .desc { font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: 2px;
+    .place .desc { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 2px;
       display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .place .meta { display: flex; gap: 6px; margin-top: 5px; align-items: center; flex-wrap: wrap; }
     .status-badge { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; font-weight: 600; }
-    .s-want    { background: #fff3cd; color: #92610a; }
-    .s-planned { background: #d5eaff; color: #0a558c; }
-    .s-visited { background: #d8f5dd; color: #1b7a34; }
+    .s-want    { background: var(--want-bg); color: var(--want-ink); }
+    .s-planned { background: var(--plan-bg); color: var(--plan-ink); }
+    .s-visited { background: var(--seen-bg); color: var(--seen-ink); }
     .note-tag  { font-size: 10.5px; color: var(--muted); }
 
     .empty { text-align: center; color: var(--muted); font-size: 13px; padding: 40px 20px; }
 
     footer { padding: 10px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; font-size: 12px; }
-    footer button { flex: 1; padding: 8px; border: 1px solid var(--line); background: #fff; border-radius: 8px; cursor: pointer; font-size: 12px; }
-    footer button:hover { border-color: #cfd2d8; background: #fafafa; }
+    footer button { flex: 1; padding: 8px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; cursor: pointer; font-size: 12px; }
+    footer button:hover { border-color: var(--line-2); background: var(--panel-2); }
 
     /* ---------- Map ---------- */
-    #map { flex: 1 1 0; min-width: 0; height: 100%; z-index: 1; }
+    #mapWrap { position: relative; flex: 1 1 0; min-width: 0; height: 100%; }
+    #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
+    /* floating control over the map, top centre */
+    #mapOverlay { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 620; }
+    #mapOverlay[hidden] { display: none; }
+    .map-toggle {
+      display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
+      font-size: 12.5px; letter-spacing: .01em; color: var(--ink);
+      background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(10px);
+      border: 1px solid var(--line); border-radius: 999px; padding: 8px 15px 8px 12px; box-shadow: var(--shadow);
+      transition: border-color .16s, box-shadow .16s;
+    }
+    .map-toggle:hover { border-color: var(--accent-line); }
+    .map-toggle:has(input:checked) { border-color: var(--accent); box-shadow: var(--glow), var(--shadow); }
+    .map-toggle input { accent-color: var(--accent); width: 14px; height: 14px; }
+    /* dark mode: tone the raster basemap down instead of blinding white */
+    html[data-mode="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.86) contrast(.9) saturate(.72); }
+    html[data-mode="dark"] .leaflet-popup-content-wrapper,
+    html[data-mode="dark"] .leaflet-popup-tip,
+    html[data-mode="dark"] .leaflet-control-zoom a,
+    html[data-mode="dark"] .leaflet-control-attribution { background: var(--panel); color: var(--ink); }
+    html[data-mode="dark"] .leaflet-control-zoom a { border-color: var(--line); }
+    html[data-mode="dark"] .leaflet-control-attribution a { color: var(--muted); }
     .leaflet-popup-content { margin: 12px 14px; font-family: inherit; }
-    .pop h3 { margin: 0 0 2px; font-size: 15px; }
+    .pop h3 { display: flex; align-items: center; gap: 7px; margin: 0 0 2px; font-size: 15px; font-weight: 600; }
     .pop .pcn { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
-    .pop p { margin: 0 0 8px; font-size: 12.5px; color: #374151; line-height: 1.45; }
+    .pop p { margin: 0 0 8px; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
     .pop .statusbtns { display: flex; gap: 5px; margin-bottom: 8px; }
     .pop .statusbtns button {
-      flex: 1; padding: 5px 4px; border: 1px solid var(--line); background: #fff;
+      flex: 1; padding: 5px 4px; border: 1px solid var(--line); background: var(--panel); color: var(--ink);
       border-radius: 7px; cursor: pointer; font-size: 11px; font-weight: 600;
     }
     .pop .statusbtns button.sel { color: #fff; border-color: transparent; }
@@ -316,15 +440,15 @@
     .pop .statusbtns button.sel.planned { background: #2b7fd6; }
     .pop .statusbtns button.sel.visited { background: #2ca24a; }
     .pop textarea {
-      width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 7px;
+      width: 100%; min-height: 46px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel-2); color: var(--ink);
       padding: 6px 8px; font-family: inherit; font-size: 12px; resize: vertical; outline: none;
     }
     .pop textarea:focus { border-color: var(--accent); }
-    .pop .photo { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: #eee; }
+    .pop .photo { width: 100%; height: 130px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: var(--panel-3); }
     .pop .links { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 4px; }
     .pop .links a {
       font-size: 11px; text-decoration: none; padding: 4px 8px; border: 1px solid var(--line);
-      border-radius: 7px; color: var(--ink); background: #fff; white-space: nowrap;
+      border-radius: 7px; color: var(--ink); background: var(--panel); white-space: nowrap;
     }
     .pop .links a:hover { border-color: var(--accent); color: var(--accent); }
     .pop .srcline { font-size: 11px; color: var(--muted); margin: -2px 0 8px; line-height: 1.4; }
@@ -332,37 +456,39 @@
 
     /* hover image tooltip on markers (multi-image gallery) */
     .leaflet-tooltip.place-tt {
-      padding: 0; border: none; background: #fff; border-radius: 10px; overflow: hidden;
-      box-shadow: 0 6px 20px rgba(0,0,0,.28); max-width: 320px;
+      padding: 0; border: none; background: var(--panel); border-radius: 10px; overflow: hidden;
+      box-shadow: 0 6px 20px rgba(0,0,0,.3); max-width: 320px; color: var(--ink);
     }
     .leaflet-tooltip.place-tt::before { display: none; }
     .place-tt .gal { display: flex; }
-    .place-tt .gal img { display: block; width: 104px; height: 96px; object-fit: cover; background: #eee; }
+    .place-tt .gal img { display: block; width: 104px; height: 96px; object-fit: cover; background: var(--panel-3); }
     .place-tt .gal.solo img { width: 220px; height: 130px; }
     .place-tt .gal.duo img { width: 145px; height: 110px; }
     .place-tt .ttname { padding: 6px 9px; font-size: 12.5px; font-weight: 600; line-height: 1.25; }
     .place-tt .ttname small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
-    .place-tt .ttdist { padding: 0 9px 7px; font-size: 11px; color: var(--muted); }
+    .place-tt .ttdist { display: flex; align-items: center; gap: 5px; padding: 0 9px 7px; font-size: 11px; color: var(--muted); }
+    .place-tt .ttname { display: flex; align-items: flex-start; gap: 6px; }
+    .place-tt .ttname > div { min-width: 0; }
 
     /* photo strip in popup */
     .pop .strip { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 2px; }
-    .pop .strip img { height: 110px; border-radius: 7px; object-fit: cover; flex: 0 0 auto; background: #eee; }
+    .pop .strip img { height: 110px; border-radius: 7px; object-fit: cover; flex: 0 0 auto; background: var(--panel-3); }
 
     /* city tabs */
     .city-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
     .city-tabs button {
       flex: 1; padding: 8px 4px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line);
-      background: #fff; border-radius: 9px; cursor: pointer; color: var(--muted); transition: .12s;
+      background: var(--panel); border-radius: 9px; cursor: pointer; color: var(--muted); transition: .14s;
     }
     .city-tabs button small { font-weight: 400; opacity: .7; }
-    .city-tabs button:hover { border-color: #cfd2d8; }
-    .city-tabs button.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+    .city-tabs button:hover { border-color: var(--line-2); }
+    .city-tabs button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
 
     /* distance badges */
-    .dist-badge { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: #eef1f5; color: #445; font-weight: 600; }
-    .pop .distline { font-size: 12px; color: #374151; background: #f3f5f8; border-radius: 8px; padding: 6px 9px; margin-bottom: 8px; }
+    .dist-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--chip-bg); color: var(--chip-ink); font-weight: 600; }
+    .pop .distline { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); background: var(--panel-3); border-radius: 8px; padding: 6px 9px; margin-bottom: 8px; }
     .pop .distline b { color: var(--ink); }
-    .base-tag { font-size: 10.5px; padding: 2px 7px; border-radius: 999px; background: #ffe9b8; color: #7a5200; font-weight: 700; }
+    .base-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-weight: 700; box-shadow: var(--glow); }
     .setbase { font-size: 11px; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; margin-top: 4px; }
 
     .marker-ring { border-radius: 50%; box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0,0,0,.4); position: relative; }
@@ -372,29 +498,29 @@
     .marker-ring .mnum { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
       color: #fff; font-size: 13px; font-weight: 800; text-shadow: 0 1px 2px rgba(0,0,0,.5); }
     .marker-ring.focus::after { content: ""; position: absolute; inset: -7px; border-radius: 50%;
-      border: 2px solid #ffb703; animation: ping 1.5s ease-out infinite; }
+      border: 2px solid var(--focus); box-shadow: 0 0 12px -2px var(--focus); animation: ping 1.5s ease-out infinite; }
     @keyframes ping { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(2.1); opacity: 0; } }
 
     .zone-label {
       font-weight: 700; font-size: 12px; white-space: nowrap; text-align: center;
       line-height: 1.05; transform: translate(-50%, -50%);
-      text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 5px #fff, 0 0 8px #fff;
+      text-shadow: 0 0 3px var(--halo), 0 0 3px var(--halo), 0 0 5px var(--halo), 0 0 9px var(--halo);
       pointer-events: none;
     }
     .zone-label span { display: block; font-weight: 500; font-size: 10px; opacity: .8; }
 
     .add-btn {
-      width: 100%; margin-top: 10px; padding: 9px; font-size: 13px; font-weight: 600;
-      border: 1px dashed #c7cad1; border-radius: 9px; background: #fbfbfa; color: var(--ink);
-      cursor: pointer; transition: .12s;
+      width: 100%; display: flex; align-items: center; justify-content: center; gap: 7px; margin-top: 10px; padding: 9px; font-size: 12.5px; font-weight: 600; letter-spacing: .03em;
+      border: 1px dashed var(--line-2); border-radius: 9px; background: var(--panel-2); color: var(--ink);
+      cursor: pointer; transition: .14s;
     }
     .add-btn:hover { border-color: var(--accent); color: var(--accent); }
-    .add-btn.armed { background: var(--accent); color: #fff; border-style: solid; border-color: var(--accent); }
-    .hot-badge { font-size: 10px; padding: 1px 5px; border-radius: 999px; background: #ffe3d6; color: #c1440e; font-weight: 700; }
+    .add-btn.armed { background: var(--accent); color: var(--on-accent); border-style: solid; border-color: var(--accent); box-shadow: var(--glow); }
+    .hot-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; padding: 2px 6px; border-radius: 999px; background: var(--hot-bg); color: var(--hot-ink); font-weight: 700; }
 
     .hint {
       position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
-      background: rgba(29,34,48,.9); color: #fff; padding: 7px 14px; border-radius: 999px;
+      background: color-mix(in srgb, var(--ink) 93%, transparent); color: var(--bg); padding: 7px 14px; border-radius: 999px;
       font-size: 12px; z-index: 600; pointer-events: none; opacity: 0; transition: .3s;
     }
     .hint.show { opacity: 1; }
@@ -402,7 +528,7 @@
     @media (max-width: 720px) {
       #app { flex-direction: column; }
       #sidebar { width: 100%; min-width: 0; height: 46%; }
-      #map { height: 54%; }
+      #mapWrap { height: 54%; }
     }
   </style>
 </head>
@@ -410,13 +536,15 @@
   <div id="app">
     <aside id="sidebar">
       <header>
-        <h1>沪苏杭 <span>Trip Planner</span></h1>
-        <p>Browse places on the map, or plan a multi-city trip in Trips.</p>
+        <button id="menuBtn" class="menu-btn" title="Menu · appearance"><span></span><span></span><span></span></button>
+        <h1>Trip Explorer</h1>
       </header>
 
+      <div id="sideBody">
+      <div id="sideMain">
       <nav class="nav" id="nav">
-        <button data-view="map" class="on">🗺 Map</button>
-        <button data-view="trip">🧳 Trips</button>
+        <button data-view="map" class="on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6.5v13L9 17l6 2.5 5.5-2.5v-13L15 9 9 6.5Z"/><path d="M9 6.5V17M15 9v10.5"/></svg>Map</button>
+        <button data-view="trip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9"/></svg>Trips</button>
       </nav>
 
       <div id="mapPanel" class="panel">
@@ -431,14 +559,14 @@
           <div class="row">
             <select id="statusFilter">
               <option value="">Any status</option>
-              <option value="want">⭐ Want to go</option>
-              <option value="planned">📅 Planned</option>
-              <option value="visited">✅ Visited</option>
+              <option value="want">Want to go</option>
+              <option value="planned">Planned</option>
+              <option value="visited">Visited</option>
               <option value="marked">Any I've marked</option>
             </select>
             <label class="toggle"><input type="checkbox" id="listToggle" /> My list only</label>
           </div>
-          <button id="addBtn" class="add-btn">＋ Add a place</button>
+          <button id="addBtn" class="add-btn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>Add a place</button>
         </div>
         <div id="list"></div>
       </div>
@@ -447,6 +575,30 @@
         <div id="tripBar"></div>
         <div id="tripContent"></div>
       </div>
+      </div><!-- /sideMain -->
+
+      <!-- configuration menu — slides in over the sidebar -->
+      <div id="settings">
+        <div class="set-head"><span>Settings</span><button id="set-close" title="Back"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button></div>
+        <div class="set-body">
+          <div class="set-group">
+            <div class="set-label">Appearance</div>
+            <div class="seg" id="modeSeg">
+              <button data-tmode="light"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>Light</button><button data-tmode="dark"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"/></svg>Dark</button>
+            </div>
+          </div>
+          <div class="set-group">
+            <div class="set-label">Tone</div>
+            <div class="tones" id="toneRow"></div>
+          </div>
+          <div class="set-group">
+            <div class="set-label">Accent</div>
+            <div class="accents" id="accentRow"></div>
+            <div class="set-hint">Accent-coloured controls carry a soft LED halo. Text stays plain.</div>
+          </div>
+        </div>
+      </div>
+      </div><!-- /sideBody -->
 
     </aside>
     <div id="resizer" title="Drag to resize the sidebar"></div>
@@ -454,34 +606,38 @@
     <!-- extended sidebar: alternatives for the selected day -->
     <aside id="altbar" hidden>
       <div class="side-head">
-        <span class="sh-t">🃏 Alternatives<small id="alt-sub"></small></span>
-        <button class="sh-x" id="alt-close" title="Close">✕</button>
+        <span class="sh-t"><svg class="ic ic-acc" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.5 8.5 4.3-8.5 4.3-8.5-4.3 8.5-4.3Z"/><path d="m3.5 12.8 8.5 4.3 8.5-4.3"/></svg><div>Alternatives<small id="alt-sub"></small></div></span>
+        <button class="sh-x" id="alt-close" title="Close"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button>
       </div>
       <label class="alt-scope"><input type="checkbox" id="altAllCities"> Show alternatives from every city</label>
       <div id="alt-body"></div>
       <div id="alt-foot"></div>
     </aside>
 
-    <div id="map"></div>
-    <div id="tripView" hidden></div>
+    <div id="mapWrap">
+      <div id="map"></div>
+      <div id="mapOverlay" hidden>
+        <label class="map-toggle"><input type="checkbox" id="scopeAll"> Show other places nearby</label>
+      </div>
+    </div>
 
     <!-- mini browser, right side of the screen -->
     <div id="webresizer" title="Drag to resize the mini browser" hidden></div>
     <aside id="webpanel" hidden>
       <div class="side-head">
-        <span class="sh-t" id="web-title">Place<small id="web-sub"></small></span>
-        <button class="sh-x" id="web-close" title="Close">✕</button>
+        <span class="sh-t" id="web-title"><div>Place<small id="web-sub"></small></div></span>
+        <button class="sh-x" id="web-close" title="Close"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button>
       </div>
       <div id="web-detail"></div>
       <div class="web-tabs">
-        <button class="navb" id="web-back" title="Back">◀</button>
-        <button class="navb" id="web-reload" title="Reload">⟳</button>
+        <button class="navb" id="web-back" title="Back"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 5.5 8 12l6.8 6.5"/></svg></button>
+        <button class="navb" id="web-reload" title="Reload"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 12a8.2 8.2 0 1 1-2.6-6"/><path d="M20.2 3.8v5h-5"/></svg></button>
         <span class="web-sep"></span>
         <button data-web="search" class="on">Search</button>
         <button data-web="images">Images</button>
         <button data-web="maps">Maps</button>
         <button data-web="red">RED</button>
-        <button id="web-open" title="Open in real browser">↗</button>
+        <button id="web-open" title="Open in real browser"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h5.5v5.5M20 4l-8.5 8.5"/><path d="M18 14.5V19a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 19V8.2a1.6 1.6 0 0 1 1.6-1.6H10"/></svg></button>
       </div>
       <div id="web-load" hidden>loading…</div>
       <webview id="miniweb" src="about:blank" partition="persist:miniweb"
@@ -497,6 +653,61 @@
   <script src="data.js"></script>
   <script src="api/client.js"></script>
   <script>
+  // ------------------------------------------------------------------ icons
+  // Monochrome line icons; they inherit currentColor, so they follow the
+  // accent (or whatever colour the element they sit in uses).
+  const ICONS = {
+    map: '<path d="M9 4 3.5 6.5v13L9 17l6 2.5 5.5-2.5v-13L15 9 9 6.5Z"/><path d="M9 6.5V17M15 9v10.5"/>',
+    trip: '<rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9"/>',
+    sun: '<circle cx="12" cy="12" r="3.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/>',
+    moon: '<path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"/>',
+    target: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>',
+    layers: '<path d="m12 3.5 8.5 4.3-8.5 4.3-8.5-4.3 8.5-4.3Z"/><path d="m3.5 12.8 8.5 4.3 8.5-4.3"/>',
+    x: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
+    plus: '<path d="M12 5.5v13M5.5 12h13"/>',
+    trash: '<path d="M4.5 6.5h15M10 6.5V4.8h4v1.7M6.8 6.5l.9 13.2h8.6l.9-13.2"/>',
+    pencil: '<path d="M4.5 19.5h4L20 8a2.1 2.1 0 0 0-3-3L5.5 16.5v3Z"/>',
+    external: '<path d="M14.5 4h5.5v5.5M20 4l-8.5 8.5"/><path d="M18 14.5V19a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 19V8.2a1.6 1.6 0 0 1 1.6-1.6H10"/>',
+    bed: '<path d="M3.5 19v-8.5M3.5 13.5h17V19M20.5 15.2v-1.7a2.6 2.6 0 0 0-2.6-2.6H10.5v3"/><circle cx="7.2" cy="9.7" r="1.9"/>',
+    plane: '<path d="M21 3.2 2.8 10.6l7 2.6 2.6 7L21 3.2Z"/><path d="M9.8 13.2 21 3.2"/>',
+    train: '<rect x="5.5" y="3.5" width="13" height="12.2" rx="3.2"/><path d="M5.5 10.4h13M8.8 20l1.7-2.6M15.2 20l-1.7-2.6"/><circle cx="9.3" cy="13" r=".9"/><circle cx="14.7" cy="13" r=".9"/>',
+    pin: '<path d="M12 21s6.8-5.9 6.8-11a6.8 6.8 0 1 0-13.6 0C5.2 15.1 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/>',
+    calendar: '<rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 10.2h17M8 3v4.2M16 3v4.2"/>',
+    check: '<path d="m5 12.6 4.6 4.6L19 7.4"/>',
+    search: '<circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/>',
+    back: '<path d="M14.8 5.5 8 12l6.8 6.5"/>',
+    refresh: '<path d="M20.2 12a8.2 8.2 0 1 1-2.6-6"/><path d="M20.2 3.8v5h-5"/>',
+    up: '<path d="m6.5 14.5 5.5-5.5 5.5 5.5"/>',
+    down: '<path d="m6.5 9.5 5.5 5.5 5.5-5.5"/>',
+    globe: '<circle cx="12" cy="12" r="8.2"/><path d="M3.8 12h16.4"/><path d="M12 3.8c2.1 2.3 3.2 5.1 3.2 8.2S14.1 17.9 12 20.2c-2.1-2.3-3.2-5.1-3.2-8.2S9.9 6.1 12 3.8Z"/>',
+    camera: '<path d="M3.5 8.5h3.2l1.4-2.2h7.8l1.4 2.2h3.2v10.2a1.5 1.5 0 0 1-1.5 1.5H5a1.5 1.5 0 0 1-1.5-1.5V8.5Z"/><circle cx="12" cy="13.4" r="3.4"/>',
+    bookmark: '<path d="M6.5 3.8h11v16.4L12 16.1l-5.5 4.1V3.8Z"/>',
+    flame: '<path d="M12 21c3.5 0 6-2.3 6-5.5 0-3.6-3.3-5.2-3.3-8.7 0 0-2.3 1-2.9 3.5-1-1-1.2-3-1.2-3S6 8.6 6 15.5C6 18.7 8.5 21 12 21Z"/>',
+    note: '<path d="M4.8 4.5h14.4v10.6l-4.2 4.4H4.8V4.5Z"/><path d="M19.2 15.1h-4.2v4.4"/>',
+    // categories
+    sight: '<path d="M4 20.5h16M6.2 20.5V10.2l5.8-3.7 5.8 3.7v10.3M10.3 20.5v-4.8h3.4v4.8"/>',
+    food: '<path d="M7 3.2v6.4a2.1 2.1 0 0 0 4.2 0V3.2M9.1 9.6v11.2"/><path d="M17.2 3.2c-1.6 1.3-2.4 3.2-2.4 5.3 0 1.9.9 3.2 2.4 3.7v8.6"/>',
+    coffee: '<path d="M4.2 8.4h12.6v5.9a4.2 4.2 0 0 1-4.2 4.2H8.4a4.2 4.2 0 0 1-4.2-4.2V8.4Z"/><path d="M16.8 9.9h1.6a2.5 2.5 0 0 1 0 5h-1.6"/><path d="M7.4 5.6V3.5M10.5 5.6V3.5M13.6 5.6V3.5"/>',
+    matcha: '<path d="M4.6 19.4C4.6 11.2 10.2 5.8 19.8 4.6c1 9.4-4.4 15-12.6 15a3.6 3.6 0 0 1-2.6-.2Z"/><path d="M8.8 15.2c2.4-3 5.4-5 8.8-6"/>',
+    culture: '<path d="M3.5 20.5h17M5.4 20.5V10.4M9.6 20.5V10.4M14.4 20.5V10.4M18.6 20.5V10.4M3.2 10.4h17.6L12 4.2 3.2 10.4Z"/>',
+    shopping: '<path d="M5.6 7.8h12.8l1.1 12.7H4.5L5.6 7.8Z"/><path d="M9 9.9V6.6a3 3 0 0 1 6 0v3.3"/>',
+    nature: '<path d="M12 20.8v-4.6"/><path d="M12 16.2a5.4 5.4 0 0 0 1.4-10.6 4 4 0 0 0-6.8 1.7 4.2 4.2 0 0 0 .6 8.9H12Z"/>',
+    nightlife: '<path d="M4 5h16l-8 8.2L4 5Z"/><path d="M12 13.2v7.3M8.6 20.5h6.8"/>',
+    custom: '<path d="M12 21s6.8-5.9 6.8-11a6.8 6.8 0 1 0-13.6 0C5.2 15.1 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/>',
+  };
+  // ic("plus")            -> plain icon
+  // ic("pin", "sm")       -> smaller
+  // ic("bed", "", "#c00") -> forced colour
+  function ic(name, cls, color) {
+    const body = ICONS[name] || ICONS.pin;
+    return '<svg class="ic ' + (cls || "") + '" viewBox="0 0 24 24" aria-hidden="true"' +
+      (color ? ' style="color:' + color + '"' : "") + ">" + body + "</svg>";
+  }
+  const CAT_ICON = { sight: "sight", food: "food", coffee: "coffee", matcha: "matcha", culture: "culture",
+    shopping: "shopping", nature: "nature", nightlife: "nightlife", custom: "custom" };
+  // a place's category icon, tinted with that category's colour
+  const catIc = (p, cls) => ic(CAT_ICON[(catOf(p) === CATEGORIES.custom ? "custom" : p.c)] || "custom", cls, catOf(p).color);
+
   // ------------------------------------------------------------------ state
   const LS_KEY = "shanghai-planner-v1";
   const store = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
@@ -537,11 +748,11 @@
   const districtGeom   = {};   // key -> geojson feature (for point-in-polygon)
   const zoneGroup  = L.layerGroup().addTo(map);
   const labelGroup = L.layerGroup().addTo(map);
-  const hotelLayer = L.layerGroup().addTo(map);   // distinct 🏨 markers for where you stay
+  const hotelLayer = L.layerGroup().addTo(map);   // distinct hotel markers for where you stay
 
   const hotelIcon = () => L.divIcon({
     className: "", iconSize: [34, 34], iconAnchor: [17, 30],
-    html: `<div class="hotel-pin">🏨</div>`,
+    html: `<div class="hotel-pin">${ic("bed", "lg")}</div>`,
   });
   const hotelMarkers = {};
   function drawHotels(t) {
@@ -552,11 +763,11 @@
       const ho = s.hotel; if (!ho || typeof ho.lat !== "number") return;
       const m = L.marker([ho.lat, ho.lng], { icon: hotelIcon(), zIndexOffset: 1000 }).addTo(hotelLayer);
       hotelMarkers[si] = m;
-      m.bindPopup(`<div class="pop"><h3>🏨 ${(ho.name || "").replace(/</g, "&lt;")}</h3>
+      m.bindPopup(`<div class="pop"><h3>${ic("bed")}${(ho.name || "").replace(/</g, "&lt;")}</h3>
         <div class="pcn">${(ho.area || "").replace(/</g, "&lt;")}</div>
-        <div class="distline">🛏 Stay ${fmtDay(s.start)} → ${fmtDay(s.end)}</div>
-        ${ho.link ? `<div class="links"><a href="${ho.link}" target="_blank" rel="noopener">🗺 Open in Maps</a></div>` : ""}</div>`, { minWidth: 200 });
-      m.bindTooltip(`🏨 ${(ho.name || "")}`, { direction: "top", offset: [0, -26] });
+        <div class="distline">${ic("calendar", "sm")}Stay ${fmtDay(s.start)} → ${fmtDay(s.end)}</div>
+        ${ho.link ? `<div class="links"><a href="${ho.link}" target="_blank" rel="noopener">${ic("map", "sm")}Open in Maps</a></div>` : ""}</div>`, { minWidth: 200 });
+      m.bindTooltip(`${(ho.name || "")}`, { direction: "top", offset: [0, -26] });
     });
   }
 
@@ -671,10 +882,10 @@
     const km = haversine(base, p);
     const sameCity = (base.city || "shanghai") === (p.city || "shanghai");
     let est;
-    if (!sameCity) est = "🚄 intercity — high-speed rail";
-    else if (km < 1.3) est = "🚶 ~" + Math.max(1, Math.round(km / 5 * 60)) + " min walk";
-    else if (km < 4) est = "🚶 ~" + Math.round(km / 5 * 60) + " min / 🚕 ~" + Math.max(5, Math.round(km / 22 * 60)) + " min";
-    else est = "🚕 ~" + Math.round(km / 22 * 60) + " min by car";
+    if (!sameCity) est = "intercity · high-speed rail";
+    else if (km < 1.3) est = "~" + Math.max(1, Math.round(km / 5 * 60)) + " min walk";
+    else if (km < 4) est = "~" + Math.round(km / 5 * 60) + " min walk / ~" + Math.max(5, Math.round(km / 22 * 60)) + " min by car";
+    else est = "~" + Math.round(km / 22 * 60) + " min by car";
     return { km, sameCity, est, base };
   }
 
@@ -718,10 +929,10 @@
   function linksHtml(p) {
     const term = (p.name + " " + (p.cn || "") + " " + cityName(p)).trim();
     const parts = [];
-    if (p.link) parts.push(`<a href="${p.link}" target="_blank" rel="noopener">🔗 Website</a>`);
-    parts.push(`<a href="https://www.google.com/maps/search/?api=1&query=${q(term)}" target="_blank" rel="noopener">🗺 Map</a>`);
-    parts.push(`<a href="https://www.google.com/search?tbm=isch&q=${q(term)}" target="_blank" rel="noopener">📷 Photos</a>`);
-    parts.push(`<a href="https://www.xiaohongshu.com/search_result?keyword=${q(p.cn || p.name)}" target="_blank" rel="noopener">📕 RED</a>`);
+    if (p.link) parts.push(`<a href="${p.link}" target="_blank" rel="noopener">${ic("globe", "sm")}Website</a>`);
+    parts.push(`<a href="https://www.google.com/maps/search/?api=1&query=${q(term)}" target="_blank" rel="noopener">${ic("map", "sm")}Map</a>`);
+    parts.push(`<a href="https://www.google.com/search?tbm=isch&q=${q(term)}" target="_blank" rel="noopener">${ic("camera", "sm")}Photos</a>`);
+    parts.push(`<a href="https://www.xiaohongshu.com/search_result?keyword=${q(p.cn || p.name)}" target="_blank" rel="noopener">${ic("bookmark", "sm")}RED</a>`);
     return `<div class="links">${parts.join("")}</div>`;
   }
   function tooltipHtml(p) {
@@ -729,14 +940,14 @@
     const cls = imgs.length === 1 ? "solo" : imgs.length === 2 ? "duo" : "";
     const d = distInfo(p);
     return `<div><div class="gal ${cls}">${imgs.map(u => `<img src="${u}" loading="lazy" alt="">`).join("")}</div>
-      <div class="ttname">${catOf(p).emoji} ${p.name}${p.hot ? " 🔥" : ""}<small>${p.cn || ""}</small></div>
-      ${d ? `<div class="ttdist">📍 ${kmText(d.km)} from ${d.base.name} · ${d.est}</div>` : ""}</div>`;
+      <div class="ttname">${catIc(p)}<div>${p.name}<small>${p.cn || ""}</small></div></div>
+      ${d ? `<div class="ttdist">${ic("pin", "sm")}${kmText(d.km)} from ${d.base.name} · ${d.est}</div>` : ""}</div>`;
   }
   function distHtml(p) {
     if (store.base === p.id)
-      return `<div class="distline"><span class="base-tag">🎯 Your base</span> &nbsp;distances are measured from here</div>`;
+      return `<div class="distline"><span class="base-tag">${ic("target", "sm")}Your base</span> distances are measured from here</div>`;
     const d = distInfo(p);
-    return d ? `<div class="distline">📍 <b>${kmText(d.km)}</b> from ${d.base.name} · ${d.est}</div>` : "";
+    return d ? `<div class="distline">${ic("pin", "sm")}<b>${kmText(d.km)}</b> from ${d.base.name} · ${d.est}</div>` : "";
   }
 
   function markerIcon(p) {
@@ -763,19 +974,19 @@
     const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : (p.d || "");
     return `<div class="pop">
       <div class="strip">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" alt="" onerror="this.remove()">`).join("")}</div>
-      <h3>${cat.emoji} ${p.name}${p.hot?' <span class="hot-badge">🔥</span>':''}</h3>
+      <h3>${catIc(p)}${p.name}${p.hot?' <span class="hot-badge">'+ic('flame','sm')+'Trending</span>':''}</h3>
       <div class="pcn">${p.cn || ""} · ${cat.label}${dName?(" · "+dName):""}${p.city&&CITIES[p.city]?(" · "+CITIES[p.city].name):""}</div>
       ${distHtml(p)}
       ${p.desc?`<p>${p.desc}</p>`:""}
-      ${p.src?`<div class="srcline">🔎 found via ${p.src}</div>`:""}
+      ${p.src?`<div class="srcline">found via ${p.src}</div>`:""}
       ${linksHtml(p)}
       <div class="statusbtns">
-        ${btn("want","⭐ Want")}${btn("planned","📅 Plan")}${btn("visited","✅ Been")}
+        ${btn("want","Want")}${btn("planned","Plan")}${btn("visited","Been")}
       </div>
       <textarea placeholder="Your notes…">${note.replace(/</g,"&lt;")}</textarea>
-      <button class="extbtn">🔎 Details &amp; live web</button>
-      <button class="wishbtn">＋ Add as an alternative</button>
-      ${store.base===p.id?"":`<button class="setbase">🎯 Set as base for distances</button>`}
+      <button class="extbtn">${ic("search", "sm")}Details &amp; live web</button>
+      <button class="wishbtn">${ic("layers", "sm")}Add as an alternative</button>
+      ${store.base===p.id?"":`<button class="setbase">Set as base for distances</button>`}
       ${p.custom?`<button class="del">Delete this pin</button>`:""}
     </div>`;
   }
@@ -801,13 +1012,13 @@
     const ta = el.querySelector("textarea");
     if (ta) ta.oninput = () => { store.notes[p.id] = ta.value; save(); renderList(); };
     const sb = el.querySelector(".setbase");
-    if (sb) sb.onclick = () => { store.base = p.id; save(); refresh(); showHint("🎯 Base set to " + p.name); };
+    if (sb) sb.onclick = () => { store.base = p.id; save(); refresh(); showHint("Base set to " + p.name); };
     const eb = el.querySelector(".extbtn");
     if (eb) eb.onclick = () => { markers[p.id] && markers[p.id].closePopup(); selectPlace(p); };
     const wb = el.querySelector(".wishbtn");
     if (wb) wb.onclick = () => {
       const t = (store.trips || []).find(x => x.id === openTripId) || (store.trips || [])[0];
-      if (!t) { showHint("Create a trip first (🧳 Trips tab)"); return; }
+      if (!t) { showHint("Create a trip first — open the Trips tab"); return; }
       t.wishlist = t.wishlist || [];
       if (t.wishlist.includes(p.id)) { showHint("Already an alternative in " + t.name); return; }
       t.wishlist.push(p.id); save();
@@ -905,15 +1116,15 @@
     const row = document.createElement("div");
     row.className = "place" + (activeId === p.id ? " active" : "");
     row.innerHTML = `
-      <div class="pin">${cat.emoji}</div>
+      <div class="pin">${catIc(p)}</div>
       <div class="body">
         <div class="title">${p.name} <span class="cn">${p.cn||""}</span></div>
         ${p.desc?`<div class="desc">${p.desc}</div>`:""}
         <div class="meta">
-          ${store.base===p.id?`<span class="base-tag">🎯 Base</span>`:(distInfo(p)?`<span class="dist-badge">📍 ${kmText(distInfo(p).km)}</span>`:"")}
-          ${p.hot?`<span class="hot-badge">🔥 Trending</span>`:""}
-          ${st?`<span class="status-badge s-${st}">${st==='want'?'⭐ Want':st==='planned'?'📅 Planned':'✅ Visited'}</span>`:""}
-          ${note?`<span class="note-tag">📝 ${note.slice(0,30)}${note.length>30?'…':''}</span>`:""}
+          ${store.base===p.id?`<span class="base-tag">${ic("target","sm")}Base</span>`:(distInfo(p)?`<span class="dist-badge">${ic("pin","sm")}${kmText(distInfo(p).km)}</span>`:"")}
+          ${p.hot?`<span class="hot-badge">${ic("flame","sm")}Trending</span>`:""}
+          ${st?`<span class="status-badge s-${st}">${st==='want'?'Want':st==='planned'?'Planned':'Visited'}</span>`:""}
+          ${note?`<span class="note-tag">${ic('note','sm')} ${note.slice(0,30)}${note.length>30?'…':''}</span>`:""}
         </div>
       </div>`;
     row.onclick = () => focusPlace(p);
@@ -935,7 +1146,7 @@
   for (const [key, c] of Object.entries(CATEGORIES)) {
     const chip = document.createElement("div");
     chip.className = "chip"; chip.dataset.cat = key;
-    chip.innerHTML = `<span class="dot" style="background:${c.color}"></span>${c.emoji} ${c.label}`;
+    chip.innerHTML = ic(key, "sm", c.color) + " " + c.label;
     chip.onclick = () => {
       if (activeCats.has(key)) activeCats.delete(key); else activeCats.add(key);
       chip.classList.toggle("off", !activeCats.has(key));
@@ -988,7 +1199,7 @@
   function setAddMode(on) {
     addMode = on;
     document.getElementById("addBtn").classList.toggle("armed", on);
-    document.getElementById("addBtn").textContent = on ? "✕ Cancel — click the map" : "＋ Add a place";
+    document.getElementById("addBtn").innerHTML = on ? ic("x") + "Cancel — click the map" : ic("plus") + "Add a place";
     map.getContainer().style.cursor = on ? "crosshair" : "";
     if (on) showHint("Click anywhere on the map to drop your pin");
   }
@@ -1009,7 +1220,7 @@
     store.custom.push(p); save();
     addMarker(p); renderList();
     focusPlace(p);
-    showHint("📍 Pin added — set status & notes in its popup");
+    showHint("Pin added — set status & notes in its popup");
   }
   map.on("click", (e) => { if (addMode) addPinAt(e.latlng); });
 
@@ -1071,12 +1282,9 @@
   let focusedDate = null;
   let altOpenDate = null;    // which day's alternatives the extended sidebar is showing
   let altAllCities = false;  // extended sidebar: only this day's city, or every city
-  let dayView = "type";      // "type" | "time"
-  let tripViewOn = false;    // right side shows place-detail instead of the map
   let selectedPlaceId = null;
   let overviewOpen = false;  // couldn't-fit list expanded
 
-  const CAT_ORDER = ["sight", "culture", "nature", "food", "coffee", "matcha", "shopping", "nightlife", "custom"];
   const isCafe = p => p.c === "coffee" || p.c === "matcha" || p.sub === "coffee" || p.sub === "matcha";
   // arrange a day's places into a rough time-of-day sequence
   function sequenceDay(places) {
@@ -1086,18 +1294,18 @@
     const see = places.filter(p => ["sight", "culture", "nature", "shopping"].includes(p.c));
     const custom = places.filter(p => p.c === "custom");
     const seq = [];
-    if (cafe[0]) seq.push({ slot: "☕ Morning", p: cafe[0] });
-    if (food.length >= 3) seq.push({ slot: "🍳 Breakfast", p: food.shift() });
+    if (cafe[0]) seq.push({ slot: "Morning", p: cafe[0] });
+    if (food.length >= 3) seq.push({ slot: "Breakfast", p: food.shift() });
     const half = Math.ceil(see.length / 2);
-    see.slice(0, half).forEach(p => seq.push({ slot: "🏙️ Morning", p }));
-    if (food[0]) seq.push({ slot: "🍜 Lunch", p: food.shift() });
-    see.slice(half).forEach(p => seq.push({ slot: "🎨 Afternoon", p }));
-    if (cafe[1]) seq.push({ slot: "🍵 Afternoon", p: cafe[1] });
-    custom.forEach(p => seq.push({ slot: "📍 Anytime", p }));
-    if (food[0]) seq.push({ slot: "🍽️ Dinner", p: food.shift() });
-    food.forEach(p => seq.push({ slot: "🥟 Snack", p }));
-    cafe.slice(2).forEach(p => seq.push({ slot: "☕ Coffee", p }));
-    night.forEach(p => seq.push({ slot: "🍸 Evening", p }));
+    see.slice(0, half).forEach(p => seq.push({ slot: "Morning", p }));
+    if (food[0]) seq.push({ slot: "Lunch", p: food.shift() });
+    see.slice(half).forEach(p => seq.push({ slot: "Afternoon", p }));
+    if (cafe[1]) seq.push({ slot: "Afternoon", p: cafe[1] });
+    custom.forEach(p => seq.push({ slot: "Anytime", p }));
+    if (food[0]) seq.push({ slot: "Dinner", p: food.shift() });
+    food.forEach(p => seq.push({ slot: "Snack", p }));
+    cafe.slice(2).forEach(p => seq.push({ slot: "Coffee", p }));
+    night.forEach(p => seq.push({ slot: "Evening", p }));
     return seq;
   }
 
@@ -1123,10 +1331,15 @@
     if (view === "map") { clearScope(); renderList(); }
     if (view === "trip") renderTrip();
   }
-  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); setRightView(false); closeAlts(); refreshMarkers(); }
+  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); showMapOverlay(false); closeAlts(); refreshMarkers(); }
 
   // ---- v2 trip: rebuilt to match the booked hotels, then re-optimized ----
   const mapsLink = q2 => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q2);
+  // last Shanghai stay, 16–21 Nov — on the Bund itself (中山东二路15号, Waitan)
+  const urcove = () => ({
+    name: "UrCove by Hyatt Shanghai on the Bund", area: "15 Zhongshan East 2nd Rd 中山东二路15号, Waitan, Huangpu · 200002",
+    link: mapsLink("UrCove by Hyatt Shanghai on the Bund 15 Zhongshan East 2nd Road"), lat: 31.2344, lng: 121.4881,
+  });
   function makeTripV2() {
     const L = (from, to, date, options, chosen) => ({ from, to, date, options, chosen });
     const ITIN = {
@@ -1145,7 +1358,8 @@
       "2026-11-15": ["Longjing Tea Village", "Meijiawu Tea Village", "Grandma's Home"],
       // Hangzhou morning → Fuxing after lunch → Shanghai evening
       "2026-11-16": ["Leifeng Pagoda", "Xintiandi", "Tianzifang", "Polux by Paul Pairet"],
-      "2026-11-17": ["West Bund", "Long Museum", "Tank Shanghai", "Power Station of Art"],
+      // art day down the river — dinner on the way home at the Dapu Rd skewer joint
+      "2026-11-17": ["West Bund", "Long Museum", "Tank Shanghai", "Power Station of Art", "很久以前羊肉串 (Long Time Ago Skewers)"],
       "2026-11-18": ["Columbia Circle", "Sinan Mansions", "TX Huaihai", "Matcha Wang", "Speak Low"],
       "2026-11-19": ["Zhujiajiao Water Town"],
       "2026-11-20": ["Shanghai Museum", "People's Square", "Wei Xiang Zhai", "Aujeong", "The Bund"],
@@ -1164,32 +1378,32 @@
         { city: "suzhou",   start: "2026-11-12", end: "2026-11-13", hotel: { name: "Ji Hotel Suzhou Guanqian St · Pingjiang", area: "66 Luoguqiao Xiatang, Lindun Rd, Gusu", link: mapsLink("Ji Hotel Suzhou Guanqian Street Pingjiang Lindun Road"), lat: 31.3135, lng: 120.6270 } },
         { city: "hangzhou", start: "2026-11-13", end: "2026-11-15", hotel: { name: "Atour Hotel Hangzhou Pinghai Rd · Hubin", area: "Pinghai Rd, Hubin, by West Lake", link: mapsLink("Atour Hotel Hangzhou Pinghai Road Hubin West Lake"), lat: 30.2530, lng: 120.1640 } },
         { city: "hangzhou", start: "2026-11-15", end: "2026-11-16", hotel: { name: "Club Med Urban Oasis Hangzhou", area: "Longwu area, Xihu (approx)", link: mapsLink("Club Med Urban Oasis Hangzhou Longwu"), lat: 30.1470, lng: 120.0900 } },
-        { city: "shanghai", start: "2026-11-16", end: "2026-11-21", hotel: null }, // ⚠ no hotel booked yet
+        { city: "shanghai", start: "2026-11-16", end: "2026-11-21", hotel: urcove() },
       ],
       legs: [
         L("Pudong Airport", "Shanghai (Amara)", "2026-11-07", [
-          "🚕 Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
-          "🚄 Maglev to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — bullet-speed welcome if still running",
-          "🚇 Metro Line 2 — ~70 min, ¥7 (last train ~22:00)"], 0),
+          "Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
+          "Maglev to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — bullet-speed welcome if still running",
+          "Metro Line 2 — ~70 min, ¥7 (last train ~22:00)"], 0),
         L("Shanghai", "Suzhou", "2026-11-12", [
-          "🚄 Fuxing (复兴号) bullet, Shanghai Hongqiao → Suzhou — depart after lunch (~14:00), 25–30 min, ¥40; roomier Fuxing seats",
-          "🚄 any G-train from Shanghai Railway Stn — ~30 min, ¥26–40",
-          "🚕 Private car — ~1h20, ≈¥350"], 0),
+          "Fuxing (复兴号) bullet, Shanghai Hongqiao → Suzhou — depart after lunch (~14:00), 25–30 min, ¥40; roomier Fuxing seats",
+          "any G-train from Shanghai Railway Stn — ~30 min, ¥26–40",
+          "Private car — ~1h20, ≈¥350"], 0),
         L("Suzhou", "Hangzhou", "2026-11-13", [
-          "🚄 Fuxing (复兴号) bullet, Suzhou N → Hangzhou — depart mid-afternoon (~15:30) so you finish the gardens first; ~1h25, ¥120–160; extra legroom",
-          "🚄 G via Shanghai Hongqiao (1 change) — ~1h50, more departures",
-          "🚕 Private car — ~2h, ≈¥600"], 0),
+          "Fuxing (复兴号) bullet, Suzhou N → Hangzhou — depart mid-afternoon (~15:30) so you finish the gardens first; ~1h25, ¥120–160; extra legroom",
+          "G via Shanghai Hongqiao (1 change) — ~1h50, more departures",
+          "Private car — ~2h, ≈¥600"], 0),
         L("Hangzhou (Hubin)", "Club Med Longwu", "2026-11-15", [
-          "🚕 Taxi / Didi across town to Longwu — ~35–45 min, ≈¥70",
-          "🚇 Metro + short taxi — ~1h"], 0),
+          "Taxi / Didi across town to Longwu — ~35–45 min, ≈¥70",
+          "Metro + short taxi — ~1h"], 0),
         L("Hangzhou", "Shanghai", "2026-11-16", [
-          "🚄 Fuxing (复兴号) bullet, Hangzhou East → Shanghai Hongqiao — depart after lunch (~14:00), ~1h, ¥73–120; roomy Fuxing seats",
-          "🚄 any G-train to Shanghai Railway Stn (central) — ~1h, ¥73",
-          "🚕 Private car — ~2h, ≈¥600"], 0),
+          "Fuxing (复兴号) bullet, Hangzhou East → Shanghai Hongqiao — depart after lunch (~14:00), ~1h, ¥73–120; roomy Fuxing seats",
+          "any G-train to Shanghai Railway Stn (central) — ~1h, ¥73",
+          "Private car — ~2h, ≈¥600"], 0),
         L("Shanghai", "Pudong Airport", "2026-11-21", [
-          "🚕 Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
-          "🚄 Maglev from Longyang Rd (first ~06:45) + Metro — check first-train timing",
-          "🚇 Metro Line 2 (first ~05:30) — ~75 min, ¥7"], 0),
+          "Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
+          "Maglev from Longyang Rd (first ~06:45) + Metro — check first-train timing",
+          "Metro Line 2 (first ~05:30) — ~75 min, ¥7"], 0),
       ],
       plan: {}, wishlist: [],
     };
@@ -1223,29 +1437,29 @@
       ],
       legs: [
         T("Pudong Airport", "Shanghai city", "2026-11-07", [
-          "🚕 Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
-          "🚄 Maglev 磁悬浮 to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — a bullet-speed welcome, if trains still running",
-          "🚇 Metro Line 2 to city — ~70 min, ¥7 (last train ~22:00, tight)",
+          "Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
+          "Maglev 磁悬浮 to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — a bullet-speed welcome, if trains still running",
+          "Metro Line 2 to city — ~70 min, ¥7 (last train ~22:00, tight)",
         ], 0),
         T("Shanghai", "Suzhou", "2026-11-13", [
-          "🚄 G high-speed 'bullet' train, Shanghai Hongqiao → Suzhou — 23–35 min, ¥40, very frequent",
-          "🚄 D/G from Shanghai Railway Stn → Suzhou — ~30 min, ¥26–40",
-          "🚕 Private car / Didi intercity — ~1h20, ≈¥350",
+          "G high-speed 'bullet' train, Shanghai Hongqiao → Suzhou — 23–35 min, ¥40, very frequent",
+          "D/G from Shanghai Railway Stn → Suzhou — ~30 min, ¥26–40",
+          "Private car / Didi intercity — ~1h20, ≈¥350",
         ], 0),
         T("Suzhou", "Hangzhou", "2026-11-16", [
-          "🚄 G high-speed train direct, Suzhou N → Hangzhou — ~1h20–1h45, ¥120–160",
-          "🚄 G via Shanghai Hongqiao (1 change) — ~1h50, ¥110–150, more departures",
-          "🚕 Private car — ~2h, ≈¥600",
+          "G high-speed train direct, Suzhou N → Hangzhou — ~1h20–1h45, ¥120–160",
+          "G via Shanghai Hongqiao (1 change) — ~1h50, ¥110–150, more departures",
+          "Private car — ~2h, ≈¥600",
         ], 0),
         T("Hangzhou", "Shanghai", "2026-11-19", [
-          "🚄 G high-speed train, Hangzhou East → Shanghai Hongqiao — 45–65 min, ¥73–120",
-          "🚄 G → Shanghai Railway Stn (central) — ~1h, ¥73",
-          "🚕 Private car — ~2h, ≈¥600",
+          "G high-speed train, Hangzhou East → Shanghai Hongqiao — 45–65 min, ¥73–120",
+          "G → Shanghai Railway Stn (central) — ~1h, ¥73",
+          "Private car — ~2h, ≈¥600",
         ], 0),
         T("Shanghai city", "Pudong Airport", "2026-11-21", [
-          "🚕 Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
-          "🚄 Maglev from Longyang Rd (first ~06:45) + Metro — fun but check first-train timing",
-          "🚇 Metro Line 2 (first ~05:30) — ~75 min, ¥7, earliest but slow",
+          "Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
+          "Maglev from Longyang Rd (first ~06:45) + Metro — fun but check first-train timing",
+          "Metro Line 2 (first ~05:30) — ~75 min, ¥7, earliest but slow",
         ], 0),
       ],
       plan: {}, wishlist: [],
@@ -1279,7 +1493,7 @@
   function renderTripList() {
     clearScope();
     document.getElementById("tripBar").innerHTML = "";
-    let h = `<div class="trip-actions"><button class="btn primary" id="newTripBtn">＋ New trip</button></div>`;
+    let h = `<div class="trip-actions"><button class="btn primary" id="newTripBtn">${ic("plus", "sm")}New trip</button></div>`;
     if (!store.trips.length) h += `<div class="tip-note">No trips yet. Create one, add city stays with dates, pick transport between them, add hotels, and drop places into each day. Everything saves in your browser.</div>`;
     store.trips.forEach(t => {
       const cities = [...new Set(t.segments.map(s => (CITIES[s.city] || {}).name || s.city))].join(" → ");
@@ -1299,42 +1513,35 @@
     t.wishlist = t.wishlist || [];
     // opening a trip scopes the map to its places; keep any current day highlight
     scopeTrip = t; refreshMarkers(); drawHotels(t);
-    // pinned controls bar (always visible while the day list scrolls)
-    document.getElementById("tripBar").innerHTML = `<div class="trip-sticky">
-      <div class="seg-row">
-        <div class="seg" id="dayViewSeg"><button data-dv="type" class="${dayView === "type" ? "on" : ""}">🗂 By type</button><button data-dv="time" class="${dayView === "time" ? "on" : ""}">🕒 By time</button></div>
-        <div class="seg" id="rightViewSeg"><button data-rv="map" class="${tripViewOn ? "" : "on"}">🗺 Map</button><button data-rv="trip" class="${tripViewOn ? "on" : ""}">📋 Trip view</button></div>
-      </div>
-      <label class="scope-toggle sticky"><input type="checkbox" id="scopeAll" ${scopeShowAll ? "checked" : ""}> Show other places nearby (off = only my trip's spots)</label>
-    </div>`;
+    showMapOverlay(true);   // "show other places nearby" floats over the map while a trip is open
     const days = dateRange(t.start, t.end);
     let h = `<div class="trip-actions">
       <button class="btn sm" id="backTrips">← Trips</button>
-      <button class="btn sm" id="delTrip" style="margin-left:auto">🗑 Delete</button>
+      <button class="btn sm" id="delTrip" style="margin-left:auto">${ic("trash", "sm")}Delete</button>
     </div>
     <div class="trip-head">
       <h2>${esc(t.name)}</h2>
-      <div class="dates">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days · <button class="btn sm" id="editFlights" style="padding:2px 7px">✈ Flights</button></div>
-      ${(t.outbound.flight || t.outbound.leg) ? `<div class="flight"><span class="fno">✈ ${esc(t.outbound.flight)}</span><span class="leg">${esc(t.outbound.leg)}</span></div>` : ""}
-      ${(t.inbound.flight || t.inbound.leg) ? `<div class="flight"><span class="fno">✈ ${esc(t.inbound.flight)}</span><span class="leg">${esc(t.inbound.leg)}</span></div>` : ""}
+      <div class="dates">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days · <button class="btn sm" id="editFlights" style="padding:2px 7px">${ic("plane", "sm")}Flights</button></div>
+      ${(t.outbound.flight || t.outbound.leg) ? `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.outbound.flight)}</span><span class="leg">${esc(t.outbound.leg)}</span></div>` : ""}
+      ${(t.inbound.flight || t.inbound.leg) ? `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.inbound.flight)}</span><span class="leg">${esc(t.inbound.leg)}</span></div>` : ""}
     </div>`;
 
     if (!t.segments.length) {
       h += `<div class="tip-note">This trip has no city stays yet. Add one to build a day-by-day plan.</div>
-        <div class="trip-actions"><button class="btn primary" id="addStay">＋ Add first city stay</button></div>`;
+        <div class="trip-actions"><button class="btn primary" id="addStay">${ic("plus", "sm")}Add first city stay</button></div>`;
       tripContent.innerHTML = h; wireTripDetail(t); return;
     }
 
-    h += `<div class="tip-note">Tap a <b>day header</b> to focus that day on the map · <b>🃏</b> next to it opens that day's <b>alternatives</b> in the side panel · tap a place name and the <b>mini browser</b> on the right searches it live. Switch 🗂 By type / 🕒 By time above.</div>`;
+    h += `<div class="tip-note">Tap a <b>day header</b> to focus that day on the map. The ${ic("layers", "sm")} button beside it opens that day's <b>alternatives</b> in the side panel, and tapping a place searches it live in the mini browser on the right.</div>`;
     // overview: what's planned + what couldn't fit
     const plannedCount = new Set(Object.values(t.plan).flat()).size;
     const cant = t.wishlist.filter(id => placeById(id));
-    h += `<div class="overview"><div class="ov-sum">✅ <b>${plannedCount}</b> places planned · 🚫 <b>${cant.length}</b> couldn't fit / not scheduled</div>
-      ${cant.length ? `<button class="ov-toggle" id="ovToggle">${overviewOpen ? "▲ hide" : "▼ show"} the couldn't-fit list</button>` : ""}</div>`;
+    h += `<div class="overview"><div class="ov-sum"><b>${plannedCount}</b> places planned · <b>${cant.length}</b> couldn't fit / not scheduled</div>
+      ${cant.length ? `<button class="ov-toggle" id="ovToggle">${overviewOpen ? ic("up", "sm") + "hide" : ic("down", "sm") + "show"} the couldn't-fit list</button>` : ""}</div>`;
     if (overviewOpen && cant.length) {
       h += `<div class="ov-list">`;
       cant.forEach(id => { const p = placeById(id);
-        h += `<div class="ov-item"><span class="wname" data-fly="${p.id}">${catOf(p).emoji} ${esc(p.name)} <span class="pcn2">${esc((CITIES[p.city] || {}).name || "")}</span></span>
+        h += `<div class="ov-item"><span class="wname" data-fly="${p.id}">${catIc(p, "sm")} ${esc(p.name)} <span class="pcn2">${esc((CITIES[p.city] || {}).name || "")}</span></span>
           <button class="rm" data-wrm="${p.id}" title="remove">×</button></div>`; });
       h += `</div>`;
     }
@@ -1349,21 +1556,21 @@
         : t.wishlist.map(placeById).filter(p => p && (altAllCities || (p.city || "shanghai") === city)).length;
       h += `<div class="day${focused ? " focused" : ""}">
         <div class="day-head" data-focus="${date}"><span class="dnum">D${i + 1}</span><span class="ddate">${fmtDay(date)}</span>
-          <span class="dcity" style="background:${tint}">${esc(cname)}</span><span class="focusbtn">${focused ? "◉ on map" : "◎ focus"}</span>
-          ${t.inbound.date === date ? "" : `<button class="altsbtn${altOpenDate === date ? " on" : ""}" data-alts="${date}" title="Show this day's alternatives in the side panel">🃏 ${nAlts}</button>`}</div>
+          <span class="dcity" style="background:${tint}">${esc(cname)}</span><span class="focusbtn">${ic("target", "sm")}${focused ? "on map" : "focus"}</span>
+          ${t.inbound.date === date ? "" : `<button class="altsbtn${altOpenDate === date ? " on" : ""}" data-alts="${date}" title="Show this day's alternatives in the side panel">${ic("layers", "sm")}${nAlts}</button>`}</div>
         <div class="day-body">`;
       // arrival flight
       if (t.outbound.date === date && (t.outbound.flight || t.outbound.leg))
-        h += `<div class="flight"><span class="fno">✈ ${esc(t.outbound.flight)}</span><span class="leg">arrive ${esc(t.outbound.leg.split("→").pop().trim())}</span></div>`;
+        h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.outbound.flight)}</span><span class="leg">arrive ${esc(t.outbound.leg.split("→").pop().trim())}</span></div>`;
       // transport leg
       const li = t.legs.findIndex(l => l.date === date);
       if (li >= 0) {
         const l = t.legs[li];
-        h += `<div class="transport"><div class="tt-title">🚆 ${esc(l.from)} → ${esc(l.to)}</div>`;
+        h += `<div class="transport"><div class="tt-title">${ic("train", "sm")}${esc(l.from)} → ${esc(l.to)}</div>`;
         l.options.forEach((o, oi) => {
           h += `<div class="opt ${l.chosen === oi ? "chosen" : ""}" data-leg="${li}" data-opt="${oi}"><span class="radio"></span><span>${esc(o)}</span></div>`;
         });
-        h += `<button class="opt-add" data-addopt="${li}">＋ add option</button></div>`;
+        h += `<button class="opt-add" data-addopt="${li}">${ic("plus", "sm")}add option</button></div>`;
       }
       // hotel (first night of a segment)
       if (seg && seg.start === date) {
@@ -1371,58 +1578,47 @@
         const ho = seg.hotel;
         if (ho)
           h += `<div class="hotelcard">
-            <div class="hc-ic">🏨</div>
+            <div class="hc-ic">${ic("bed", "lg")}</div>
             <div class="hc-body">
               <div class="hc-name">${esc(ho.name)}</div>
               <div class="hc-area">${esc(ho.area || "")}</div>
-              <div class="hc-dates">🛏 ${fmtDay(seg.start)} → ${fmtDay(seg.end)} · ${nights(seg)} night${nights(seg) > 1 ? "s" : ""}</div>
+              <div class="hc-dates">${ic("calendar", "sm")}${fmtDay(seg.start)} → ${fmtDay(seg.end)} · ${nights(seg)} night${nights(seg) > 1 ? "s" : ""}</div>
               <div class="hc-links">
-                ${typeof ho.lat === "number" ? `<button data-hotelmap="${si}">📍 Show on map</button>` : ""}
-                ${ho.link ? `<a href="${esc(ho.link)}" target="_blank" rel="noopener">🗺 Maps</a>` : ""}
-                <button data-edithotel="${si}">✎ Edit</button><button data-rmhotel="${si}">Remove</button>
+                ${typeof ho.lat === "number" ? `<button data-hotelmap="${si}">${ic("pin", "sm")}Show on map</button>` : ""}
+                ${ho.link ? `<a href="${esc(ho.link)}" target="_blank" rel="noopener">${ic("map", "sm")}Maps</a>` : ""}
+                <button data-edithotel="${si}">${ic("pencil", "sm")}Edit</button><button data-rmhotel="${si}">Remove</button>
               </div>
             </div></div>`;
         else
-          h += `<div class="hotelcard need"><div class="hc-ic">🏨</div><div class="hc-body">
+          h += `<div class="hotelcard need"><div class="hc-ic">${ic("bed", "lg")}</div><div class="hc-body">
             <div class="hc-name">No hotel booked for ${esc(cname)} (${fmtDay(seg.start)} → ${fmtDay(seg.end)})</div>
-            <div class="hc-links"><button class="btn sm" data-addhotel="${si}">＋ Add hotel</button></div></div></div>`;
+            <div class="hc-links"><button class="btn sm" data-addhotel="${si}">${ic("plus", "sm")}Add hotel</button></div></div></div>`;
       }
       // planned places — grouped by type, or sequenced by time
       const ids = t.plan[date] || [];
       const dayPlaces = ids.map(placeById).filter(Boolean);
-      const prow = (p) => `<div class="dplace" data-fly="${p.id}"><span class="pemoji">${catOf(p).emoji}</span>
+      const prow = (p) => `<div class="dplace" data-fly="${p.id}"><span class="pemoji">${catIc(p, "sm")}</span>
         <span>${esc(p.name)} <span class="pcn2">${esc(p.cn || "")}</span></span>
         <button class="rm" data-rm="${p.id}" data-date="${date}" title="remove">×</button></div>`;
-      if (dayView === "time") {
-        sequenceDay(dayPlaces).forEach(({ slot, p }) => {
-          h += `<div class="slot"><div class="slot-tag">${slot}</div><div class="slot-p">${prow(p)}</div></div>`;
-        });
-      } else {
-        const byCat = {};
-        dayPlaces.forEach(p => { (byCat[p.c] = byCat[p.c] || []).push(p); });
-        CAT_ORDER.forEach(c => {
-          const arr = byCat[c]; if (!arr || !arr.length) return;
-          const m = CATEGORIES[c] || CATEGORIES.custom;
-          h += `<div class="type-head">${m.emoji} ${m.label} · ${arr.length}</div>`;
-          arr.forEach(p => { h += prow(p); });
-        });
-      }
+      sequenceDay(dayPlaces).forEach(({ slot, p }) => {
+        h += `<div class="slot"><div class="slot-tag">${slot}</div><div class="slot-p">${prow(p)}</div></div>`;
+      });
       // departure flight
       if (t.inbound.date === date && (t.inbound.flight || t.inbound.leg))
-        h += `<div class="flight"><span class="fno">✈ ${esc(t.inbound.flight)}</span><span class="leg">depart ${esc(t.inbound.leg)}</span></div>`;
+        h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.inbound.flight)}</span><span class="leg">depart ${esc(t.inbound.leg)}</span></div>`;
       // add-place dropdown
       if (t.inbound.date !== date) {
         if (!ids.length && t.outbound.date !== date && li < 0)
           h += `<div class="day-empty">Free day — nothing planned yet.</div>`;
         const opts = allPlaces().filter(p => (p.city || "shanghai") === city && !ids.includes(p.id))
           .sort((a, b) => a.name.localeCompare(b.name))
-          .map(p => `<option value="${p.id}">${catOf(p).emoji} ${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
-        h += `<select class="add-place-sel" data-adddate="${date}"><option value="">＋ Add a ${esc(cname)} place to this day…</option>${opts}</select>`;
+          .map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
+        h += `<select class="add-place-sel" data-adddate="${date}"><option value="">Add a ${esc(cname)} place to this day…</option>${opts}</select>`;
       }
       h += `</div></div>`;
     });
 
-    h += `<div class="trip-actions"><button class="btn sm" id="addStay">＋ Add another city stay</button></div>`;
+    h += `<div class="trip-actions"><button class="btn sm" id="addStay">${ic("plus", "sm")}Add another city stay</button></div>`;
     tripContent.innerHTML = h;
     wireTripDetail(t);
     if (altOpenDate) renderAlts();   // keep the extended sidebar in sync with the plan
@@ -1452,7 +1648,7 @@
     });
     tripContent.querySelectorAll("[data-addopt]").forEach(b => b.onclick = async () => {
       const v = await showModal({ title: "Add transport option", okText: "Add", fields: [
-        { key: "s", label: "Describe the option", placeholder: "🚄 G-train ~30 min ¥40" }]});
+        { key: "s", label: "Describe the option", placeholder: "G-train ~30 min ¥40" }]});
       if (!v || !v.s) return;
       t.legs[+b.dataset.addopt].options.push(v.s); save(); renderTripDetail(t);
     });
@@ -1461,12 +1657,6 @@
       const p = placeById(d.dataset.fly); if (p) tripSelect(p);   // map fly, or Trip-view detail
     });
     tripContent.querySelectorAll("[data-focus]").forEach(el => el.onclick = () => focusDay(t, el.dataset.focus));
-    // pinned bar controls
-    const bar = document.getElementById("tripBar");
-    bar.querySelectorAll("[data-dv]").forEach(b => b.onclick = () => { dayView = b.dataset.dv; renderTripDetail(t); });
-    bar.querySelectorAll("[data-rv]").forEach(b => b.onclick = () => { setRightView(b.dataset.rv === "trip"); renderTripDetail(t); });
-    const scopeAll = document.getElementById("scopeAll");
-    if (scopeAll) scopeAll.onchange = () => { scopeShowAll = scopeAll.checked; refreshMarkers(); };
     const ovT = document.getElementById("ovToggle");
     if (ovT) ovT.onclick = () => { overviewOpen = !overviewOpen; renderTripDetail(t); };
     tripContent.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
@@ -1481,7 +1671,6 @@
     tripContent.querySelectorAll("[data-rmhotel]").forEach(b => b.onclick = () => { t.segments[+b.dataset.rmhotel].hotel = null; save(); renderTripDetail(t); });
     tripContent.querySelectorAll("[data-hotelmap]").forEach(b => b.onclick = () => {
       const si = +b.dataset.hotelmap, ho = t.segments[si].hotel; if (!ho) return;
-      if (tripViewOn) setRightView(false);
       map.flyTo([ho.lat, ho.lng], 15, { duration: .6 });
       const m = hotelMarkers[si]; if (m) setTimeout(() => m.openPopup(), 400);
     });
@@ -1502,13 +1691,12 @@
 
   function focusDay(t, date) {
     focusedDate = (focusedDate === date) ? null : date;   // tap again to unfocus
-    let ordered = t.plan[date] || [];
-    if (dayView === "time") ordered = sequenceDay(ordered.map(placeById).filter(Boolean)).map(s => s.p.id);
+    const ordered = sequenceDay((t.plan[date] || []).map(placeById).filter(Boolean)).map(s => s.p.id);
     const ids = focusedDate ? ordered.filter(id => placeById(id)) : [];
     dayFocusIds = new Set(ids);
     dayFocusOrder = {}; ids.forEach((id, i) => dayFocusOrder[id] = i + 1);
     renderTripDetail(t);   // marks the focused day + refreshMarkers() re-icons highlights
-    if (!focusedDate || tripViewOn) return;   // map is hidden in Trip view
+    if (!focusedDate) return;
     const pts = ids.map(id => { const p = placeById(id); return [p.lat, p.lng]; });
     if (pts.length > 1) map.fitBounds(pts, { padding: [70, 70], maxZoom: 15 });
     else if (pts.length === 1) map.flyTo(pts[0], 15, { duration: .6 });
@@ -1518,21 +1706,19 @@
     showHint(pts.length ? (pts.length + " spots highlighted for this day") : "No places planned for this day yet");
   }
 
-  // ---- Trip view: right side shows the selected place + nearby (with photos) ----
-  function setRightView(on) {
-    tripViewOn = on;
-    const mapEl = document.getElementById("map"), tvEl = document.getElementById("tripView");
-    if (!mapEl || !tvEl) return;
-    mapEl.style.display = on ? "none" : "";
-    tvEl.hidden = !on;
-    if (on) renderTripView(); else setTimeout(() => map.invalidateSize(), 60);
+  // the floating "show other places nearby" control over the map
+  function showMapOverlay(on) {
+    const el = document.getElementById("mapOverlay");
+    if (!el) return;
+    el.hidden = !on;
+    const cb = document.getElementById("scopeAll");
+    if (cb) cb.checked = scopeShowAll;
   }
   // selecting a place anywhere → highlight it, and search it in the mini browser
   function selectPlace(p) {
     if (!p) return;
     selectedPlaceId = p.id;
-    if (tripViewOn) renderTripView();
-    else map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 15), { duration: .5 });
+    map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 15), { duration: .5 });
     openWeb(p);
     if (altOpenDate) renderAlts();
   }
@@ -1569,18 +1755,18 @@
     const planned = t.plan[date] || [];
     const alts = t.wishlist.map(placeById).filter(p => p && (altAllCities || (p.city || "shanghai") === city));
     if (!alts.length) {
-      body.innerHTML = `<div class="day-empty">No alternatives ${altAllCities ? "parked yet" : "for " + esc(cname)}. Park one below, or open a place on the map → “＋ Add as an alternative”.</div>`;
+      body.innerHTML = `<div class="day-empty">No alternatives ${altAllCities ? "parked yet" : "for " + esc(cname)}. Park one below, or open a place on the map and choose “Add as an alternative”.</div>`;
     } else {
       body.innerHTML = alts.map(p => {
         const inDay = planned.includes(p.id), d = distInfo(p);
         return `<div class="altcard${selectedPlaceId === p.id ? " sel" : ""}" data-altsel="${p.id}">
           <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
           <div class="ac-body">
-            <div class="ac-name">${catOf(p).emoji} ${esc(p.name)}</div>
-            <div class="ac-cn">${esc(p.cn || catOf(p).label)}${d ? " · 📍 " + kmText(d.km) : ""}${altAllCities ? " · " + esc((CITIES[p.city] || {}).name || "") : ""}</div>
+            <div class="ac-name">${catIc(p, "sm")} ${esc(p.name)}</div>
+            <div class="ac-cn">${esc(p.cn || catOf(p).label)}${d ? " · " + kmText(d.km) : ""}${altAllCities ? " · " + esc((CITIES[p.city] || {}).name || "") : ""}</div>
             <div class="ac-actions">
-              ${inDay ? `<span class="in-day">✓ in this day</span>` : `<button class="btn sm" data-aadd="${p.id}">＋ Add to day</button>`}
-              <button class="btn sm" data-arm="${p.id}" title="Remove from alternatives">✕</button>
+              ${inDay ? `<span class="in-day">${ic("check", "sm")}in this day</span>` : `<button class="btn sm" data-aadd="${p.id}">${ic("plus", "sm")}Add to day</button>`}
+              <button class="btn sm" data-arm="${p.id}" title="Remove from alternatives">${ic("x", "sm")}</button>
             </div>
           </div></div>`;
       }).join("");
@@ -1589,8 +1775,8 @@
     const pool = allPlaces()
       .filter(p => (altAllCities || (p.city || "shanghai") === city) && !t.wishlist.includes(p.id) && !planned.includes(p.id))
       .sort((a, b) => a.name.localeCompare(b.name));
-    foot.innerHTML = `<select id="altAdd"><option value="">＋ Park a place here as an alternative…</option>${
-      pool.map(p => `<option value="${p.id}">${catOf(p).emoji} ${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("")}</select>`;
+    foot.innerHTML = `<select id="altAdd"><option value="">Park a place here as an alternative…</option>${
+      pool.map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("")}</select>`;
     document.getElementById("altAdd").onchange = (e) => { if (e.target.value) addAlternative(e.target.value); };
     body.querySelectorAll("[data-altsel]").forEach(c => c.onclick = (e) => {
       if (e.target.closest("button")) return;
@@ -1600,7 +1786,7 @@
       const id = b.dataset.aadd;
       (t.plan[date] = t.plan[date] || []).push(id);        // schedule it…
       t.wishlist = t.wishlist.filter(x => x !== id);        // …and take it off the alternatives deck
-      save(); renderTripDetail(t); showHint("📅 Added to " + fmtDay(date));
+      save(); renderTripDetail(t); showHint("Added to " + fmtDay(date));
     });
     body.querySelectorAll("[data-arm]").forEach(b => b.onclick = () => {
       t.wishlist = t.wishlist.filter(x => x !== b.dataset.arm); save(); renderTripDetail(t);
@@ -1628,21 +1814,21 @@
     const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : "";
     const cityNm = (CITIES[p.city] || {}).name || "";
     document.getElementById("web-title").innerHTML =
-      `${cat.emoji} ${esc(p.name)}<small id="web-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${esc(cat.label)}${cityNm ? " · " + esc(cityNm) : ""}</small>`;
+      `${catIc(p)}<div>${esc(p.name)}<small id="web-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${esc(cat.label)}${cityNm ? " · " + esc(cityNm) : ""}</small></div>`;
     const det = document.getElementById("web-detail");
     det.innerHTML = `
       <div class="ext-gal">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" onerror="this.remove()">`).join("")}</div>
       ${dName ? `<div class="ext-cn">${esc(dName)}</div>` : ""}
-      ${d ? `<span class="ext-dist">📍 ${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
+      ${d ? `<span class="ext-dist">${ic("pin", "sm")}${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
       ${p.desc ? `<p>${esc(p.desc)}</p>` : ""}
-      ${p.src ? `<div class="ext-cn">🔎 found via ${esc(p.src)}</div>` : ""}
+      ${p.src ? `<div class="ext-cn">found via ${esc(p.src)}</div>` : ""}
       <div class="ext-actions">
-        <button data-ext-alt>🃏 Add as alternative</button>
-        <button data-ext-base>🎯 Set as base</button>
-        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">🔗 Website</a>` : ""}
+        <button data-ext-alt>${ic("layers", "sm")}Add as alternative</button>
+        <button data-ext-base>${ic("target", "sm")}Set as base</button>
+        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${ic("globe", "sm")}Website</a>` : ""}
       </div>`;
     det.querySelector("[data-ext-alt]").onclick = () => addAlternative(p.id);
-    det.querySelector("[data-ext-base]").onclick = () => { store.base = p.id; save(); showHint("🎯 Base set to " + p.name); refreshMarkers(); renderWeb(p); if (openTripId) renderTrip(); };
+    det.querySelector("[data-ext-base]").onclick = () => { store.base = p.id; save(); showHint("Base set to " + p.name); refreshMarkers(); renderWeb(p); if (openTripId) renderTrip(); };
     setWeb(p);
   }
   function openWeb(p, opts) {
@@ -1663,57 +1849,6 @@
     if (wv) { try { wv.src = "about:blank"; } catch (e) {} }   // stop background loading
     setTimeout(() => map.invalidateSize(), 60);
   }
-  function nearbyPlaces(p, n) {
-    return allPlaces().filter(x => x.id !== p.id)
-      .map(x => ({ x, km: haversine(p, x) })).sort((a, b) => a.km - b.km).slice(0, n || 12);
-  }
-  function addAlternative(id) {
-    const t = (store.trips || []).find(x => x.id === openTripId) || (store.trips || [])[0];
-    if (!t) { showHint("Create a trip first"); return; }
-    t.wishlist = t.wishlist || [];
-    if (!t.wishlist.includes(id)) { t.wishlist.push(id); save(); showHint("🃏 Added as alternative"); if (openTripId === t.id) renderTrip(); }
-    else showHint("Already an alternative");
-  }
-  function renderTripView() {
-    const tv = document.getElementById("tripView");
-    const p = placeById(selectedPlaceId);
-    if (!p) { tv.innerHTML = `<div class="tv-empty">Tap a place name in your trip (or a nearby card) to see its photos, details and nearby spots here.</div>`; return; }
-    const cat = catOf(p), d = distInfo(p);
-    const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : "";
-    const cityNm = (CITIES[p.city] || {}).name || "";
-    const term = p.name + " " + (p.cn || "") + " " + cityName(p);
-    let h = `<div class="tv">
-      <div class="tv-gallery">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" onerror="this.remove()">`).join("")}</div>
-      <h1>${cat.emoji} ${esc(p.name)}${p.hot ? " 🔥" : ""}</h1>
-      <div class="tv-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${cat.label}${dName ? " · " + esc(dName) : ""}${cityNm ? " · " + esc(cityNm) : ""}</div>
-      ${d ? `<span class="tv-dist">📍 ${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
-      ${p.desc ? `<p class="tv-desc">${esc(p.desc)}</p>` : ""}
-      ${p.src ? `<div class="tv-sub" style="margin-top:8px">🔎 found via ${esc(p.src)}</div>` : ""}
-      <div class="tv-links">
-        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">🔗 Website</a>` : ""}
-        <a href="https://www.google.com/maps/search/?api=1&query=${q(term)}" target="_blank" rel="noopener">🗺 Map</a>
-        <a href="https://www.google.com/search?tbm=isch&q=${q(term)}" target="_blank" rel="noopener">📷 Photos</a>
-        <a href="https://www.xiaohongshu.com/search_result?keyword=${q(p.cn || p.name)}" target="_blank" rel="noopener">📕 RED</a>
-        <button data-tvalt="${p.id}">＋ Add as alternative</button>
-      </div>
-      <h2>Nearby places</h2>
-      <div class="tv-near">`;
-    nearbyPlaces(p, 12).forEach(({ x, km }) => {
-      h += `<div class="near-card" data-tvsel="${x.id}">
-        <img src="${imageFor(x)}" loading="lazy" onerror="this.style.visibility='hidden'">
-        <div class="nc-body"><div class="nc-name">${catOf(x).emoji} ${esc(x.name)}</div>
-          <div class="nc-meta"><span>${esc(catOf(x).label)}</span><span>${kmText(km)}</span></div></div>
-        <button class="nc-add" data-tvalt="${x.id}">＋ Alternative</button></div>`;
-    });
-    h += `</div></div>`;
-    tv.innerHTML = h;
-    tv.querySelectorAll("[data-tvsel]").forEach(c => c.onclick = (e) => {
-      if (e.target.classList.contains("nc-add")) return;
-      selectedPlaceId = c.dataset.tvsel; renderTripView(); tv.scrollTop = 0;
-    });
-    tv.querySelectorAll("[data-tvalt]").forEach(b => b.onclick = (e) => { e.stopPropagation(); addAlternative(b.dataset.tvalt); });
-  }
-
   async function editHotel(t, si) {
     const seg = t.segments[si]; const cur = seg.hotel || {};
     const v = await showModal({ title: "Hotel", okText: "Save", fields: [
@@ -1722,8 +1857,9 @@
       { key: "link", label: "Booking / map link (optional)", value: cur.link || "" },
     ]});
     if (v == null) return;
-    seg.hotel = v.name ? { name: v.name, area: v.area, link: v.link } : null;
-    save(); renderTripDetail(t);
+    // keep the map pin when only the text fields are edited
+    seg.hotel = v.name ? { name: v.name, area: v.area, link: v.link, lat: cur.lat, lng: cur.lng } : null;
+    save(); renderTripDetail(t); drawHotels(t);
   }
 
   async function addCityStay(t) {
@@ -1737,7 +1873,7 @@
     if (!v || !CITIES[v.city] || !v.start || !v.end) return;
     t.segments.push({ city: v.city, start: v.start, end: v.end, hotel: null });
     if (last) t.legs.push({ from: (CITIES[last.city] || {}).name || last.city, to: (CITIES[v.city] || {}).name || v.city, date: v.start,
-      options: ["🚄 High-speed train (add time & price)", "🚕 Private car"], chosen: 0 });
+      options: ["High-speed train (add time & price)", "Private car"], chosen: 0 });
     if (v.end > t.end) t.end = v.end;
     if (v.start < t.start) t.start = v.start;
     save(); renderTripDetail(t);
@@ -1758,6 +1894,9 @@
   }
 
   document.querySelectorAll("#nav button").forEach(b => b.onclick = () => nav(b.dataset.view));
+
+  // "show other places nearby" — floats over the map, top centre
+  document.getElementById("scopeAll").onchange = (e) => { scopeShowAll = e.target.checked; refreshMarkers(); };
 
   // extended sidebar (alternatives) controls
   document.getElementById("alt-close").onclick = () => { closeAlts(); if (openTripId) renderTrip(); };
@@ -1782,7 +1921,7 @@
   miniweb.addEventListener("did-stop-loading", () => { webLoad.hidden = true; });
   miniweb.addEventListener("did-fail-load", (e) => {
     if (e.errorCode === -3) return;   // aborted (normal when switching tabs fast)
-    webLoad.hidden = false; webLoad.textContent = "⚠ couldn't load — check your connection, or ↗ open in the real browser";
+    webLoad.hidden = false; webLoad.textContent = "Couldn't load — check your connection, or open it in the real browser.";
   });
 
   // ---- mini browser is drag-resizable from its left edge ----
@@ -1810,6 +1949,68 @@
   webresizer.addEventListener("dblclick", () => {
     webpanel.style.flexBasis = "470px"; localStorage.setItem("planner-webw", "470"); map.invalidateSize();
   });
+
+  // ==================================================================
+  //  APPEARANCE — mode × tone × accent, in a slide-in settings panel
+  // ==================================================================
+  const TONES = {
+    light: [
+      { id: "mist",  name: "Mist",  sw: "linear-gradient(140deg,#ffffff 48%,#e2e5ea 48%)" },
+      { id: "stone", name: "Stone", sw: "linear-gradient(140deg,#fbfbfa 48%,#e0e0dc 48%)" },
+      { id: "linen", name: "Linen", sw: "linear-gradient(140deg,#fdfcfa 48%,#e4e0d8 48%)" },
+    ],
+    dark: [
+      { id: "graphite", name: "Graphite", sw: "linear-gradient(140deg,#26282c 48%,#17181a 48%)" },
+      { id: "slate",    name: "Slate",    sw: "linear-gradient(140deg,#242932 48%,#15181d 48%)" },
+      { id: "umber",    name: "Umber",    sw: "linear-gradient(140deg,#2a2725 48%,#191716 48%)" },
+    ],
+  };
+  const ACCENTS = [
+    { id: "purple", name: "Royal purple",  light: "#6d4bd8", dark: "#9a7bf5" },
+    { id: "orange", name: "Sunset orange", light: "#dd6210", dark: "#ff8b3d" },
+  ];
+  const theme = { mode: "light", accent: "purple", tone: { light: "mist", dark: "graphite" } };
+  try {
+    const s = JSON.parse(localStorage.getItem("planner-theme") || "{}");
+    if (s.mode === "light" || s.mode === "dark") theme.mode = s.mode;
+    if (ACCENTS.some(a => a.id === s.accent)) theme.accent = s.accent;
+    if (s.tone) { if (s.tone.light) theme.tone.light = s.tone.light; if (s.tone.dark) theme.tone.dark = s.tone.dark; }
+  } catch (e) {}
+
+  function applyTheme() {
+    const r = document.documentElement;
+    if (!TONES[theme.mode].some(t => t.id === theme.tone[theme.mode])) theme.tone[theme.mode] = TONES[theme.mode][0].id;
+    r.dataset.mode = theme.mode;
+    r.dataset.tone = theme.tone[theme.mode];
+    r.dataset.accent = theme.accent;
+    localStorage.setItem("planner-theme", JSON.stringify(theme));
+    renderSettings();
+  }
+  function renderSettings() {
+    document.querySelectorAll("#modeSeg [data-tmode]").forEach(b => b.classList.toggle("on", b.dataset.tmode === theme.mode));
+    const tr = document.getElementById("toneRow");
+    tr.innerHTML = TONES[theme.mode].map(t =>
+      `<div class="tone${theme.tone[theme.mode] === t.id ? " sel" : ""}" data-tone="${t.id}">
+         <div class="sw" style="background:${t.sw}"></div><div class="tn">${t.name}</div></div>`).join("");
+    tr.querySelectorAll("[data-tone]").forEach(el => el.onclick = () => { theme.tone[theme.mode] = el.dataset.tone; applyTheme(); });
+    const ar = document.getElementById("accentRow");
+    ar.innerHTML = ACCENTS.map(a =>
+      `<div class="acc${theme.accent === a.id ? " sel" : ""}" data-acc="${a.id}">
+         <span class="ring" style="background:${a[theme.mode]}"></span><span class="an">${a.name}</span></div>`).join("");
+    ar.querySelectorAll("[data-acc]").forEach(el => el.onclick = () => { theme.accent = el.dataset.acc; applyTheme(); });
+  }
+  document.querySelectorAll("#modeSeg [data-tmode]").forEach(b => b.onclick = () => { theme.mode = b.dataset.tmode; applyTheme(); });
+
+  // ---- the menu itself: hover to peek, click to pin ----
+  const sidebarEl = document.getElementById("sidebar");
+  const menuBtn = document.getElementById("menuBtn");
+  let menuPinned = false;
+  function openMenu()  { sidebarEl.classList.add("settings-open"); menuBtn.classList.add("on"); }
+  function closeMenu() { sidebarEl.classList.remove("settings-open"); menuBtn.classList.remove("on"); menuPinned = false; }
+  menuBtn.addEventListener("mouseenter", openMenu);
+  menuBtn.addEventListener("click", () => { menuPinned = !menuPinned; menuPinned ? openMenu() : closeMenu(); });
+  sidebarEl.addEventListener("mouseleave", () => { if (!menuPinned) closeMenu(); });
+  document.getElementById("set-close").onclick = closeMenu;
 
   // ---- adjustable sidebar (drag the divider; width remembered) ----
   const sidebar = document.getElementById("sidebar");
@@ -1871,6 +2072,31 @@
     add("2026-11-20", ["aujeong-chicken"]);                             // last day
     save();
   }
+  // one-time patch for the trip already saved in localStorage:
+  //   · the Dapu Rd skewer joint as dinner on the art day
+  //   · UrCove by Hyatt on the Bund for the last Shanghai stay (16–21 Nov)
+  function patchNov2026b() {
+    if (store.patchNov2026c) return;
+    store.patchNov2026c = true;
+    const t = (store.trips || []).find(x => x.id === "trip-shsz-2026-11");
+    if (!t) return;
+    if (!Object.values(t.plan || {}).some(ids => ids.includes("lamb-skewers-hjyq"))) {
+      t.plan["2026-11-17"] = t.plan["2026-11-17"] || [];
+      t.plan["2026-11-17"].push("lamb-skewers-hjyq");
+    }
+    // replace the earlier (wrong) UrCove Jing'an pin, but never clobber a hotel you set yourself
+    const seg = (t.segments || []).find(s => s.city === "shanghai" && s.start === "2026-11-16");
+    if (seg && (!seg.hotel || /^UrCove/i.test(seg.hotel.name || ""))) seg.hotel = urcove();
+    save();
+  }
+  // one-time cleanup: transport options were seeded with pictographs; the UI is icon-only now
+  function plainLegs() {
+    if (store.plainLegs1) return;
+    store.plainLegs1 = true;
+    const strip = o => String(o).replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]+\s*/u, "");
+    (store.trips || []).forEach(t => (t.legs || []).forEach(l => { l.options = (l.options || []).map(strip); }));
+    save();
+  }
   // one-time cleanup: drop Huangyan Quarry from any saved trip
   function cleanupHuangyan() {
     if (store.rmHuangyan1) return;
@@ -1885,8 +2111,11 @@
   // ------------------------------------------------------------------ go
   buildDistrictOptions();
   setCity("shanghai");
+  applyTheme();
   ensureTripV2();
-  showHint("Trip re-optimized to match your hotels — open 🧳 Trips");
+  patchNov2026b();
+  plainLegs();
+  showHint("Trip ready — UrCove on the Bund (16–21 Nov) and the Dapu Rd skewers on 17 Nov are in.");
   </script>
 </body>
 </html>
