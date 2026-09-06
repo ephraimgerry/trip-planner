@@ -1,43 +1,101 @@
-const crypto = require("crypto");
 const db = require("../../core/db");
+const { id } = require("../../core/ids");
+const now = db.now;
 
-const toPlace = (r) => r && ({ ...r, image_urls: r.image_urls ? JSON.parse(r.image_urls) : [] });
-const COLS = "id,name,name_cn,category,sub,city,district,lat,lng,link,description,source,image_urls,created_at";
+const COLS = `id,kind,name,name_local,category,country_code,area_id,district_id,
+              lat,lng,address,link,description,source,attrs,visibility,created_by,created_at`;
 
-function list({ city, category, q, limit = 2000 } = {}) {
-  let sql = "SELECT * FROM places WHERE 1=1"; const args = [];
-  if (city) { sql += " AND city = ?"; args.push(city); }
-  if (category) { sql += " AND category = ?"; args.push(category); }
-  if (q) { sql += " AND (name LIKE ? OR name_cn LIKE ?)"; args.push("%" + q + "%", "%" + q + "%"); }
-  sql += " ORDER BY name LIMIT ?"; args.push(Number(limit));
-  return db.prepare(sql).all(...args).map(toPlace);
-}
-const get = (id) => toPlace(db.prepare("SELECT * FROM places WHERE id = ?").get(id));
+// attrs is stored as text; every caller wants it as an object
+const hydrate = (p) => {
+  if (!p) return p;
+  let attrs = {};
+  try { attrs = JSON.parse(p.attrs || "{}"); } catch (e) {}
+  return { ...p, attrs };
+};
 
-function rowOf(p, id) {
-  return {
-    id, name: p.name, name_cn: p.name_cn || "", category: p.category, sub: p.sub || null,
-    city: p.city || null, district: p.district || null, lat: p.lat, lng: p.lng,
-    link: p.link || null, description: p.description || null, source: p.source || null,
-    image_urls: JSON.stringify(p.image_urls || []), created_at: p.created_at || new Date().toISOString(),
-  };
+// A user sees the public catalogue plus their own private pins — never anyone else's.
+const visibleTo = (userId) => db.prepare(
+  `SELECT ${COLS} FROM places WHERE visibility = 'public' OR created_by = ? ORDER BY name`
+).all(userId || "").map(hydrate);
+
+const byId = (pid) => hydrate(db.prepare(`SELECT ${COLS} FROM places WHERE id = ?`).get(pid));
+
+const imagesFor = (pid) => db.prepare(
+  "SELECT url FROM place_images WHERE place_id = ? ORDER BY ord").all(pid).map(r => r.url);
+const allImages = () => {
+  const out = {};
+  for (const r of db.prepare("SELECT place_id,url FROM place_images ORDER BY place_id, ord").all())
+    (out[r.place_id] ||= []).push(r.url);
+  return out;
+};
+
+function create(p, userId) {
+  const pid = p.id || id(p.kind === "lodging" ? "htl" : "plc");
+  db.prepare(`INSERT INTO places (id,kind,name,name_local,category,country_code,area_id,district_id,
+                lat,lng,address,link,description,source,attrs,visibility,created_by,created_at,updated_at)
+              VALUES (@id,@kind,@name,@name_local,@category,@country_code,@area_id,@district_id,
+                @lat,@lng,@address,@link,@description,@source,@attrs,@visibility,@created_by,@ts,@ts)`)
+    .run({
+      id: pid, kind: p.kind || "poi", name: p.name, name_local: p.nameLocal || null,
+      category: p.category || null, country_code: p.countryCode || null, area_id: p.areaId || null,
+      district_id: p.districtId || null, lat: p.lat ?? null, lng: p.lng ?? null,
+      address: p.address || null, link: p.link || null, description: p.description || null,
+      source: p.source || null, visibility: p.visibility || "public",
+      attrs: JSON.stringify(p.attrs || {}),
+      created_by: userId || null, ts: now(),
+    });
+  if (p.images) setImages(pid, p.images);
+  return byId(pid);
 }
-function create(p) {
-  const id = p.id || "p-" + crypto.randomUUID().slice(0, 8);
-  db.prepare(`INSERT INTO places(${COLS}) VALUES(@${COLS.split(",").join(",@")})`).run(rowOf(p, id));
-  return get(id);
+
+const FIELDS = { name: "name", nameLocal: "name_local", category: "category", kind: "kind",
+  countryCode: "country_code", areaId: "area_id", districtId: "district_id", lat: "lat", lng: "lng",
+  address: "address", link: "link", description: "description", source: "source", visibility: "visibility" };
+
+function update(pid, patch) {
+  const sets = [], vals = [];
+  for (const [k, col] of Object.entries(FIELDS))
+    if (patch[k] !== undefined) { sets.push(`${col} = ?`); vals.push(patch[k]); }
+  if (sets.length) {
+    sets.push("updated_at = ?"); vals.push(now(), pid);
+    db.prepare(`UPDATE places SET ${sets.join(", ")} WHERE id = ?`).run(...vals);
+  }
+  if (patch.attrs !== undefined)
+    db.prepare("UPDATE places SET attrs = ?, updated_at = ? WHERE id = ?")
+      .run(JSON.stringify(patch.attrs || {}), now(), pid);
+  if (patch.images) setImages(pid, patch.images);
+  return byId(pid);
 }
-function update(id, patch) {
-  const cur = get(id); if (!cur) return null;
-  const n = { ...cur, ...patch };
-  db.prepare(`UPDATE places SET name=@name,name_cn=@name_cn,category=@category,sub=@sub,city=@city,
-    district=@district,lat=@lat,lng=@lng,link=@link,description=@description,source=@source,image_urls=@image_urls
-    WHERE id=@id`).run(rowOf(n, id));
-  return get(id);
+
+function setImages(pid, urls) {
+  db.prepare("DELETE FROM place_images WHERE place_id = ?").run(pid);
+  const ins = db.prepare("INSERT INTO place_images (id,place_id,url,ord) VALUES (?,?,?,?)");
+  urls.forEach((u, i) => ins.run(id("img"), pid, u, i));
 }
-const remove = (id) => db.prepare("DELETE FROM places WHERE id = ?").run(id).changes > 0;
-function bulkInsert(places) {
-  const stmt = db.prepare(`INSERT OR IGNORE INTO places(${COLS}) VALUES(@${COLS.split(",").join(",@")})`);
-  db.transaction((rows) => rows.forEach((r) => stmt.run(r)))(places.map((p) => rowOf(p, p.id)));
+
+const remove = (pid) => db.prepare("DELETE FROM places WHERE id = ?").run(pid);
+
+// ---- what this user thinks of places ----
+const userPlaces = (userId) => db.prepare(
+  "SELECT place_id,status,note,rating,visited_at FROM user_places WHERE user_id = ?").all(userId);
+
+function setUserPlace(userId, placeId, { status, note, rating }) {
+  const visitedAt = status === "visited" ? now() : null;
+  db.prepare(`INSERT INTO user_places (user_id,place_id,status,note,rating,visited_at,updated_at)
+              VALUES (?,?,?,?,?,?,?)
+              ON CONFLICT(user_id,place_id) DO UPDATE SET
+                status = COALESCE(excluded.status, user_places.status),
+                note   = COALESCE(excluded.note, user_places.note),
+                rating = COALESCE(excluded.rating, user_places.rating),
+                visited_at = CASE WHEN excluded.status = 'visited' THEN excluded.visited_at
+                                  WHEN excluded.status IS NOT NULL THEN NULL
+                                  ELSE user_places.visited_at END,
+                updated_at = excluded.updated_at`)
+    .run(userId, placeId, status ?? null, note ?? null, rating ?? null, visitedAt, now());
+  return db.prepare("SELECT * FROM user_places WHERE user_id = ? AND place_id = ?").get(userId, placeId);
 }
-module.exports = { list, get, create, update, remove, bulkInsert };
+const clearUserPlace = (userId, placeId) =>
+  db.prepare("DELETE FROM user_places WHERE user_id = ? AND place_id = ?").run(userId, placeId);
+
+module.exports = { visibleTo, byId, create, update, remove, setImages, imagesFor, allImages,
+                   userPlaces, setUserPlace, clearUserPlace };

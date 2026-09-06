@@ -86,6 +86,7 @@
     body {
       font-family: var(--font); -webkit-font-smoothing: antialiased;
       color: var(--ink); background: var(--bg); overflow: hidden;
+      display: flex; flex-direction: column;
     }
     /* controls do NOT inherit the page font by default — make them */
     button, input, select, textarea, optgroup, option { font-family: var(--font); letter-spacing: .005em; }
@@ -99,12 +100,12 @@
     .ic.lg { width: 19px; height: 19px; vertical-align: -4px; stroke-width: 1.6; }
     .ic-acc { color: var(--accent); filter: drop-shadow(0 0 5px var(--accent-glow)); }
     button .ic, a .ic, label .ic { margin-right: 1px; }
-    #app { display: flex; height: 100vh; }
+    #app { display: flex; flex: 1; min-height: 0; position: relative; }
     .led { box-shadow: var(--glow); }
 
     /* ---------- Sidebar ---------- */
     #sidebar {
-      width: 440px; flex: 0 0 auto; height: 100%; background: var(--panel);
+      width: 400px; flex: 0 0 auto; height: 100%; background: var(--panel);
       border-right: 1px solid var(--line); display: flex; flex-direction: column;
       box-shadow: var(--shadow); z-index: 500;
     }
@@ -113,9 +114,21 @@
       border-right: 1px solid transparent; transition: background .12s;
     }
 
-    /* ---------- Header + settings menu ---------- */
-    header { display: flex; align-items: center; gap: 11px; padding: 16px 18px 15px; border-bottom: 1px solid var(--line); }
-    header h1 { margin: 0; font-size: 13.5px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+    /* ---------- Top bar ---------- */
+    #topbar {
+      flex: 0 0 auto; display: flex; align-items: center; gap: 14px; padding: 11px 16px;
+      background: var(--panel); border-bottom: 1px solid var(--line); z-index: 700; box-shadow: var(--shadow);
+    }
+    #topbar h1 { margin: 0; font-size: 13.5px; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; color: var(--ink); white-space: nowrap; }
+    #topbar .nav { border: none; padding: 0; margin-left: 2px; }
+    #topbar .nav::before { content: ""; align-self: stretch; width: 1px; background: var(--line); margin: 2px 12px 2px 0; }
+    .webtog {
+      margin-left: auto; width: 30px; height: 30px; flex: 0 0 auto; padding: 0; border-radius: 9px; cursor: pointer;
+      border: 1px solid var(--line); background: var(--panel-2); color: var(--muted);
+      display: flex; align-items: center; justify-content: center; transition: .18s;
+    }
+    .webtog:hover { border-color: var(--accent-line); color: var(--ink); }
+    .webtog.on { color: var(--accent); border-color: var(--accent-line); background: var(--accent-soft); box-shadow: var(--glow); }
     .menu-btn {
       width: 30px; height: 30px; flex: 0 0 auto; padding: 0; border-radius: 9px; cursor: pointer;
       border: 1px solid var(--line); background: var(--panel-2);
@@ -132,10 +145,18 @@
     #sideBody { position: relative; flex: 1; min-height: 0; overflow: hidden; }
     #sideMain { position: absolute; inset: 0; display: flex; flex-direction: column;
       transition: transform .34s cubic-bezier(.4,0,.2,1), opacity .22s ease; }
-    #settings { position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; background: var(--panel);
-      transform: translateX(-101%); transition: transform .34s cubic-bezier(.4,0,.2,1); }
-    #sidebar.settings-open #sideMain { transform: translateX(15%); opacity: 0; pointer-events: none; }
-    #sidebar.settings-open #settings { transform: translateX(0); }
+    /* the settings drawer floats over whatever view you're in */
+    #settings {
+      position: absolute; top: 0; left: 0; bottom: 0; width: min(360px, 86vw); z-index: 920;
+      display: flex; flex-direction: column; background: var(--panel);
+      border-right: 1px solid var(--line); box-shadow: var(--shadow);
+      transform: translateX(-101%); transition: transform .34s cubic-bezier(.4,0,.2,1);
+    }
+    body.settings-open #settings { transform: translateX(0); }
+    #scrim { position: absolute; inset: 0; z-index: 910; background: color-mix(in srgb, #000 26%, transparent);
+      opacity: 0; transition: opacity .28s ease; }
+    #scrim[hidden] { display: none; }
+    body.settings-open #scrim { opacity: 1; }
     .set-head { display: flex; align-items: center; padding: 12px 17px; border-bottom: 1px solid var(--line); }
     .set-head span { flex: 1; font-size: 10.5px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
     .set-head button { border: none; background: none; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; }
@@ -194,6 +215,11 @@
     #web-detail .ext-actions { display: flex; flex-wrap: wrap; gap: 7px; }
     #web-detail .ext-actions button, #web-detail .ext-actions a { font-size: 12px; padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; text-decoration: none; color: var(--ink); }
     #web-detail .ext-actions button:hover, #web-detail .ext-actions a:hover { border-color: var(--accent); color: var(--accent); }
+    .web-qrow { display: flex; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--panel); }
+    .web-qrow input { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px;
+      background: var(--panel-2); color: var(--ink); font-size: 12.5px; outline: none; }
+    .web-qrow input:focus { border-color: var(--accent); box-shadow: var(--glow); }
+    .web-qrow .iconbtn { width: 32px; }
     .web-tabs { display: flex; align-items: center; gap: 5px; padding: 7px 10px; border-bottom: 1px solid var(--line); background: var(--panel-2); }
     .web-tabs .navb { font-size: 12px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); cursor: pointer; color: var(--muted); }
     .web-tabs button { font-size: 11.5px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); cursor: pointer; color: var(--muted); }
@@ -205,21 +231,28 @@
     #web-load[hidden] { display: none; }
     #resizer:hover, #resizer.drag { background: var(--accent); opacity: .5; }
     body.resizing { user-select: none; }
+    .fatal { max-width: 460px; margin: 18vh auto; padding: 0 24px; text-align: center; font-family: var(--font); }
+    .fatal h1 { font-size: 19px; font-weight: 500; letter-spacing: -.01em; margin: 0 0 10px; }
+    .fatal p { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin: 0 0 8px; }
+    .fatal code { font-size: 12.5px; background: var(--panel-3); border-radius: 6px; padding: 2px 7px; }
     body.resizing #map, body.resizing #webpanel { pointer-events: none; }
 
     /* ---------- Sidebar nav + panels ---------- */
-    .nav { display: flex; gap: 6px; padding: 9px 14px; border-bottom: 1px solid var(--line); }
+    .nav { display: flex; gap: 0; align-items: stretch; }
     .nav button {
-      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px; padding: 9px; font-size: 12.5px; font-weight: 600; letter-spacing: .03em; border: 1px solid var(--line);
-      background: var(--panel); border-radius: 9px; cursor: pointer; color: var(--muted); transition: .14s;
+      position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 8px 17px; font-size: 12.5px; font-weight: 600; letter-spacing: .04em;
+      border: none; background: none; border-radius: 0; cursor: pointer; color: var(--muted); transition: color .14s;
     }
-    .nav button:hover { border-color: var(--line-2); }
-    .nav button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
+    .nav button + button::before { content: ""; position: absolute; left: 0; top: 24%; bottom: 24%; width: 1px; background: var(--line); }
+    .nav button:hover { color: var(--ink); }
+    .nav button.on { color: var(--accent); }
+    .nav button.on::after {
+      content: ""; position: absolute; left: 13px; right: 13px; bottom: -12px; height: 2px;
+      border-radius: 2px; background: var(--accent); box-shadow: var(--glow);
+    }
     .panel { flex: 1; min-height: 0; display: flex; flex-direction: column; }
     .panel[hidden] { display: none; }
-    #tripBar { flex: 0 0 auto; }
-    #tripBar:empty { display: none; }
-    #tripContent { flex: 1; min-height: 0; overflow-y: auto; padding: 14px; }
 
     /* pinned controls bar in a trip */
     .trip-sticky { padding: 9px 14px; border-bottom: 1px solid var(--line); background: var(--panel-2); display: flex; flex-direction: column; gap: 8px; }
@@ -306,8 +339,7 @@
     .dplace:hover { background: var(--hover); }
     .dplace .pemoji { display: flex; }
     .dplace .pcn2 { color: var(--muted); font-size: 11.5px; }
-    .dplace .rm { margin-left: auto; color: var(--muted); opacity: .6; background: none; border: none; cursor: pointer; font-size: 14px; }
-    .dplace .rm:hover { color: var(--accent); opacity: 1; }
+    .dplace .pname { flex: 1; min-width: 0; }
     .add-place-sel { width: 100%; margin-top: 6px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-size: 12.5px; color: var(--muted); background: var(--panel-2); }
     .day-empty { font-size: 12px; color: var(--muted); font-style: italic; padding: 2px 4px; }
     .tip-note { font-size: 11.5px; color: var(--muted); background: var(--panel-3); border-radius: 8px; padding: 8px 10px; margin-bottom: 12px; line-height: 1.5; }
@@ -339,8 +371,29 @@
     .mfield input, .mfield select { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; font-size: 14px; background: var(--panel-2); color: var(--ink); font-family: inherit; }
     .mfield input:focus, .mfield select:focus { border-color: var(--accent); outline: none; box-shadow: var(--glow); }
     .mbtns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+    .modal.wide { width: min(540px, 94vw); }
+    .mgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+    .mgrid .mfield.full { grid-column: 1 / -1; }
+    .mfield textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px;
+      font-size: 13.5px; background: var(--panel-2); color: var(--ink); font-family: inherit; resize: vertical; min-height: 54px; }
+    .mfield textarea:focus { border-color: var(--accent); outline: none; box-shadow: var(--glow); }
+    .mhelp { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+    .mhelp.ok { color: var(--ok); font-weight: 600; }
+    .mhelp.bad { color: var(--warn-ink); font-weight: 600; }
+    .mrow { display: flex; gap: 8px; align-items: center; }
+    .mrow .btn { flex: 0 0 auto; }
 
-    .controls { padding: 12px 18px; border-bottom: 1px solid var(--line); }
+    .controls { padding: 12px 16px; border-bottom: 1px solid var(--line); }
+    #countrySel { width: 100%; margin-bottom: 9px; padding: 7px 9px; border: 1px solid var(--line);
+      border-radius: 8px; background: var(--panel); color: var(--ink); font-size: 12.5px; }
+    .searchrow { display: flex; gap: 7px; align-items: stretch; }
+    .searchrow #search { flex: 1; }
+    .iconbtn { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+      width: 36px; border: 1px solid var(--line); border-radius: 9px; background: var(--panel);
+      color: var(--muted); cursor: pointer; transition: .14s; }
+    .iconbtn:hover { border-color: var(--accent); color: var(--accent); box-shadow: var(--glow); }
+    .row .add-btn { margin-top: 0; }
+    .row .add-btn:last-child { flex: 0 0 34%; }
     #search {
       width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 9px; font-family: inherit;
       font-size: 14px; outline: none; background: var(--panel-2); color: var(--ink);
@@ -404,20 +457,232 @@
 
     /* ---------- Map ---------- */
     #mapWrap { position: relative; flex: 1 1 0; min-width: 0; height: 100%; }
+    /* in Trips the map becomes a drawer that slides in from the right */
+    /* Trips has no left sidebar — the plan panel IS the sidebar, and the map slides in beside it */
+    body[data-view="trip"] #sidebar, body[data-view="trip"] #resizer { display: none; }
+    body[data-view="trip"] #stage {
+      flex: 0 1 100%; transition: flex-basis .34s cubic-bezier(.4,0,.2,1);
+    }
+    body.resizing[data-view="trip"] #stage { transition: none; }
+    body[data-view="trip"].map-open #stage { flex-basis: var(--stagew, 44%); }
+    body[data-view="trip"] #mapWrap { flex: 1 1 0; min-width: 0; border-left: 1px solid transparent; overflow: hidden; }
+    body[data-view="trip"].map-open #mapWrap { border-left-color: var(--line); }
+    /* the plan panel absorbs the squeeze, so the mini browser keeps the width you gave it */
+    body[data-view="trip"] #webpanel { flex-shrink: 0; }
+    #stageResizer { flex: 0 0 7px; cursor: col-resize; background: transparent; z-index: 600; transition: background .12s; }
+    #stageResizer[hidden] { display: none; }
+    #stageResizer:hover, #stageResizer.drag { background: var(--accent); opacity: .5; }
+    body[data-view="map"] #stage { display: none; }
+    .mapx {
+      position: absolute; top: 14px; right: 14px; z-index: 630; width: 30px; height: 30px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; color: var(--muted);
+      background: color-mix(in srgb, var(--panel) 90%, transparent); backdrop-filter: blur(10px);
+      border: 1px solid var(--line); border-radius: 9px; box-shadow: var(--shadow);
+    }
+    .mapx:hover { color: var(--accent); border-color: var(--accent-line); }
+    .mapx[hidden] { display: none; }
+
+    /* ---------- Centre stage: trip overview / day view ---------- */
+    #stage { flex: 1 1 0; min-width: 0; height: 100%; overflow-y: auto; background: var(--bg); }
+    .stage-in { max-width: 780px; margin: 0 auto; padding: 26px 30px 48px; }
+    /* once the map is out, the plan reads as a side panel: flush left, tighter gutters */
+    body.map-open[data-view="trip"] .stage-in { max-width: none; margin: 0; padding: 22px 22px 42px; }
+    .st-head { display: flex; align-items: flex-start; gap: 14px; }
+    .st-head .st-head-b { flex: 1; min-width: 0; }
+    .st-head .btn { flex: 0 0 auto; }
+    .st-crumb { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .st-crumb .btn { padding: 5px 11px; font-size: 12px; }
+    .st-crumb .spacer { margin-left: auto; }
+    .st-crumb2 { display: flex; gap: 8px; margin: 16px 0 6px; }
+    .st-tabs { display: flex; align-items: stretch; }
+    .st-tabs button {
+      position: relative; padding: 7px 15px 9px; font-size: 12.5px; font-weight: 600; letter-spacing: .03em;
+      border: none; background: none; color: var(--muted); cursor: pointer; transition: color .14s;
+    }
+    .st-tabs button + button::before { content: ""; position: absolute; left: 0; top: 22%; bottom: 30%; width: 1px; background: var(--line); }
+    .st-tabs button:hover { color: var(--ink); }
+    .st-tabs button.on { color: var(--accent); }
+    .st-tabs button.on::after {
+      content: ""; position: absolute; left: 13px; right: 13px; bottom: 0; height: 2px;
+      border-radius: 2px; background: var(--accent); box-shadow: var(--glow);
+    }
+    .h3btn { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: 11px;
+      letter-spacing: .02em; text-transform: none; font-weight: 600; color: var(--accent);
+      background: none; border: none; cursor: pointer; padding: 0; }
+    .h3btn:hover { text-decoration: underline; }
+
+    /* trip cards on the stage */
+    .trip-card .tc-meta { font-size: 11.5px; color: var(--muted); margin-top: 5px; }
+    .trip-card .tc-acts { display: flex; gap: 8px; margin-top: 11px; }
+
+    /* plan accordion */
+    .dsec { border: 1px solid var(--line); border-radius: 13px; background: var(--panel); margin-bottom: 9px; overflow: hidden; }
+    .dsec.cur { border-color: var(--accent-line); box-shadow: var(--glow); }
+    .dsec-h { display: flex; align-items: center; gap: 11px; padding: 11px 14px; cursor: pointer; user-select: none; }
+    .dsec-h:hover { background: var(--hover); }
+    .dsec-cv { display: flex; color: var(--muted); transform: rotate(-90deg); transition: transform .2s; }
+    .dsec.open .dsec-cv { transform: none; }
+    .dsec .dnum { font-weight: 700; font-size: 11.5px; color: var(--panel); background: var(--ink); border-radius: 6px; padding: 2px 7px; }
+    .dsec.cur .dnum { background: var(--accent); color: var(--on-accent); }
+    .dsec-date { font-size: 13px; font-weight: 600; min-width: 104px; }
+    .dsec-city { font-size: 11.5px; color: var(--muted); flex: 1; min-width: 0; }
+    .dsec-n { font-size: 11.5px; color: var(--muted); }
+    .dsec-acts { display: flex; gap: 2px; }
+    .dsec-acts button { display: flex; padding: 5px; border: none; background: none; color: var(--muted); cursor: pointer; border-radius: 7px; }
+    .dsec-acts button:hover { color: var(--accent); background: var(--accent-soft); }
+    .dsec-acts button.on { color: var(--accent); background: var(--accent-soft); box-shadow: var(--glow); }
+    /* the day's city (or cities) — same weight whether it's one or three */
+    .dsec-city { display: flex; align-items: center; gap: 0; flex-wrap: wrap; }
+    .dsec-city .dcity { white-space: nowrap; font-weight: 600; color: var(--ink); font-size: 12.5px; }
+    .dsec-city .darrow { color: var(--accent); margin: 0 6px; font-weight: 600; }
+    .dsec.twocity .dnum { background: var(--accent); color: var(--on-accent); }
+    .dsec-city .dr-flag { margin-left: 8px; }
+
+    /* the add row the header "+" reveals */
+    .addrow { display: flex; flex-direction: column; gap: 7px; padding: 10px; margin: 10px 0 4px;
+      border: 1px solid var(--accent-line); border-radius: 10px; background: var(--accent-soft); }
+    .addrow .seg { flex: 0 0 auto; }
+    .addrow .seg button { padding: 6px 4px; font-size: 11.5px; }
+    .addrow .add-place-sel { margin-top: 0; background: var(--panel); color: var(--ink); }
+    .addrow-new { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start;
+      font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; padding: 0 2px; }
+    .addrow-new:hover { text-decoration: underline; }
+
+    /* which night of which stay this card is */
+    .hc-role { margin-left: 8px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; vertical-align: middle; }
+    .hotelcard.leaving { opacity: .82; }
+    .hotelcard.leaving .hc-role { color: var(--warn-ink); border-color: var(--danger-line); }
+    .dplace .pcity { font-size: 10.5px; color: var(--muted); flex: 0 0 auto; margin-left: 6px; }
+    .dsec:not(.twocity) .dplace .pcity { display: none; }
+    .dsec-b { padding: 0 14px; }
+    .dsec.open .dsec-b { padding: 2px 14px 14px; border-top: 1px solid var(--line); }
+    .dsec:not(.open) .dsec-b { display: none; }
+
+    /* two-step delete: drag the row left (or tap the grip) to reveal Remove */
+    .swipe { position: relative; overflow: hidden; border-radius: 9px; margin: 2px 0; }
+    .swipe .sw-back {
+      position: absolute; inset: 0; display: flex; justify-content: flex-end; align-items: stretch;
+      background: var(--danger-bg); border-radius: 9px;
+    }
+    .swipe .sw-del {
+      display: inline-flex; align-items: center; gap: 5px; width: 96px; justify-content: center;
+      border: none; background: none; color: var(--warn-ink); font-size: 11.5px; font-weight: 600; cursor: pointer;
+    }
+    .swipe .sw-del:hover { background: color-mix(in srgb, var(--danger-line) 45%, transparent); }
+    .swipe .sw-front { position: relative; background: var(--panel); touch-action: pan-y; transition: transform .22s cubic-bezier(.4,0,.2,1); }
+    .swipe .sw-front.ov-item { border-bottom: none; padding: 8px 6px; }
+    .swipe .sw-hint { margin-left: auto; display: flex; color: var(--muted); opacity: .45; padding: 2px; border-radius: 6px; cursor: pointer; }
+    .swipe .sw-front:hover .sw-hint { opacity: 1; }
+    .swipe .sw-hint:hover { color: var(--accent); }
+    .swipe.open .sw-hint { color: var(--accent); opacity: 1; transform: rotate(180deg); }
+    .st-title { font-size: 25px; font-weight: 500; letter-spacing: -.015em; margin: 0 0 5px; }
+    .st-sub { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
+    .st-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+    .geo-chip { font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 11px;
+      background: var(--chip-bg); color: var(--chip-ink); }
+    .geo-chip.country { background: var(--accent-soft); color: var(--accent); box-shadow: var(--glow); }
+    .st-sec { margin-top: 30px; }
+    .st-sec > h3 { display: flex; align-items: center; gap: 8px; font-size: 10.5px; font-weight: 600;
+      letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 11px; }
+    .st-sec > h3 .cnt { margin-left: auto; letter-spacing: .02em; text-transform: none; font-weight: 500; }
+    .st-empty { font-size: 13px; color: var(--muted); padding: 34px 0; text-align: center; }
+
+    /* booking rows — the "what have I not booked yet" view */
+    .bk { display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--line); border-radius: 12px;
+      background: var(--panel); padding: 12px 14px; margin-bottom: 9px; }
+    .bk.missing { border-color: var(--danger-line); background: var(--danger-bg); }
+    .bk .bk-ic { color: var(--muted); display: flex; padding-top: 2px; }
+    .bk.missing .bk-ic { color: var(--warn-ink); }
+    .bk .bk-b { flex: 1; min-width: 0; }
+    .bk .bk-when { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .bk .bk-name { font-size: 14px; font-weight: 600; margin-top: 3px; }
+    .bk .bk-meta { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.45; }
+    .bk .bk-acts { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 8px; }
+    .bk .bk-acts a, .bk .bk-acts button { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px;
+      color: var(--accent); background: none; border: none; cursor: pointer; text-decoration: none; padding: 0; }
+    .bk .bk-acts a:hover, .bk .bk-acts button:hover { text-decoration: underline; }
+    .bk .tag { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+      border-radius: 999px; padding: 3px 9px; background: var(--seen-bg); color: var(--seen-ink); }
+    .bk .tag.no { background: color-mix(in srgb, var(--danger-line) 55%, transparent); color: var(--warn-ink); }
+
+    /* the bed, as one line — detail lives on the overview */
+    .hrow { display: flex; align-items: center; gap: 9px; padding: 7px 10px; margin: 6px 0;
+      border: 1px solid var(--line); border-radius: 9px; background: var(--panel-2); font-size: 12.5px; }
+    .hrow .hr-ic { display: flex; color: var(--muted); flex: 0 0 auto; }
+    .hrow .hr-name { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; }
+    .hrow .hr-when { flex: 0 0 auto; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+    .hrow .hr-acts { display: flex; gap: 1px; flex: 0 0 auto; }
+    .hrow .hr-acts button { display: flex; padding: 4px; border: none; background: none;
+      color: var(--muted); cursor: pointer; border-radius: 6px; }
+    .hrow .hr-acts button:hover { color: var(--accent); background: var(--accent-soft); }
+    .hrow.leaving { opacity: .78; }
+    .hrow.need { border-color: var(--danger-line); background: var(--danger-bg); }
+    .hrow.need .hr-when, .hrow.need .hr-ic { color: var(--warn-ink); }
+
+    /* what a place means on this particular day */
+    .dplace .ptime { flex: 0 0 auto; font-size: 11px; font-weight: 600; color: var(--accent);
+      background: var(--accent-soft); border-radius: 999px; padding: 2px 8px; margin-left: 6px; }
+    .dplace .pnote { display: flex; color: var(--muted); opacity: .7; margin-left: 5px; }
+    .swipe .sw-edit { flex: 0 0 auto; display: flex; padding: 3px; margin-left: 4px; border: none;
+      background: none; color: var(--muted); opacity: .45; cursor: pointer; border-radius: 6px; }
+    .swipe .sw-front:hover .sw-edit { opacity: 1; }
+    .swipe .sw-edit:hover { color: var(--accent); background: var(--accent-soft); }
+
+    /* per-type detail on a transport row */
+    .bk .attr { display: inline-block; margin-right: 12px; white-space: nowrap; }
+    .bk .attr i { font-style: normal; color: var(--muted); opacity: .75; margin-right: 3px;
+      font-size: 10.5px; text-transform: uppercase; letter-spacing: .06em; }
+
+    /* who's coming */
+    .person { display: flex; align-items: center; gap: 11px; border: 1px solid var(--line);
+      border-radius: 11px; background: var(--panel); padding: 9px 13px; margin-bottom: 7px; }
+    .person .pav { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; display: flex;
+      align-items: center; justify-content: center; font-size: 12px; font-weight: 700;
+      background: var(--accent-soft); color: var(--accent); text-transform: uppercase; }
+    .person .pb { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .person .pn { font-size: 13.5px; font-weight: 600; }
+    .person .ptag { margin-left: 8px; font-size: 10px; font-weight: 700; letter-spacing: .06em;
+      text-transform: uppercase; color: var(--accent); background: var(--accent-soft);
+      border-radius: 999px; padding: 2px 8px; }
+    .person .pw { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+    .person .pacts { display: flex; gap: 2px; }
+    .person .pacts button { display: flex; padding: 5px; border: none; background: none;
+      color: var(--muted); cursor: pointer; border-radius: 7px; }
+    .person .pacts button:hover { color: var(--accent); background: var(--accent-soft); }
+
+    /* day rows on the overview */
+    .dayrow { display: flex; align-items: center; gap: 11px; border: 1px solid var(--line); border-radius: 11px;
+      background: var(--panel); padding: 10px 13px; margin-bottom: 7px; cursor: pointer; transition: .14s; }
+    .dayrow:hover { border-color: var(--accent-line); transform: translateX(2px); }
+    .dayrow .dnum { font-weight: 700; font-size: 11.5px; color: var(--panel); background: var(--ink); border-radius: 6px; padding: 2px 7px; }
+    .dayrow .dr-date { font-size: 13px; font-weight: 600; min-width: 104px; }
+    .dayrow .dr-city { font-size: 11.5px; color: var(--muted); flex: 1; min-width: 0; }
+    .dayrow .dr-n { font-size: 11.5px; color: var(--muted); }
+    .dayrow .dr-go { color: var(--muted); display: flex; }
+    .dayrow:hover .dr-go { color: var(--accent); }
+    .dayrow .dr-flag { font-size: 10.5px; font-weight: 700; color: var(--warn-ink); }
+
     #map { position: absolute; inset: 0; z-index: 1; background: var(--bg); }
     /* floating control over the map, top centre */
     #mapOverlay { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 620; }
     #mapOverlay[hidden] { display: none; }
-    .map-toggle {
-      display: inline-flex; align-items: center; gap: 8px; cursor: pointer; user-select: none;
-      font-size: 12.5px; letter-spacing: .01em; color: var(--ink);
+    .map-scope {
+      display: inline-flex; align-items: center; gap: 8px; user-select: none;
+      font-size: 12.5px; letter-spacing: .01em; color: var(--muted);
       background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(10px);
-      border: 1px solid var(--line); border-radius: 999px; padding: 8px 15px 8px 12px; box-shadow: var(--shadow);
+      border: 1px solid var(--line); border-radius: 999px; padding: 6px 8px 6px 15px; box-shadow: var(--shadow);
       transition: border-color .16s, box-shadow .16s;
     }
-    .map-toggle:hover { border-color: var(--accent-line); }
-    .map-toggle:has(input:checked) { border-color: var(--accent); box-shadow: var(--glow), var(--shadow); }
-    .map-toggle input { accent-color: var(--accent); width: 14px; height: 14px; }
+    .map-scope:hover { border-color: var(--accent-line); }
+    .map-scope:has(select:focus) { border-color: var(--accent); box-shadow: var(--glow), var(--shadow); }
+    .map-scope select {
+      border: none; background: none; color: var(--ink); font-size: 12.5px; font-weight: 600;
+      padding: 3px 4px; cursor: pointer; max-width: 250px;
+    }
+    .map-scope select:focus { outline: none; }
+    body:not(.scope-trip) .map-scope { opacity: .96; }
     /* dark mode: tone the raster basemap down instead of blinding white */
     html[data-mode="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.86) contrast(.9) saturate(.72); }
     html[data-mode="dark"] .leaflet-popup-content-wrapper,
@@ -532,25 +797,54 @@
     }
   </style>
 </head>
-<body>
-  <div id="app">
-    <aside id="sidebar">
-      <header>
-        <button id="menuBtn" class="menu-btn" title="Menu · appearance"><span></span><span></span><span></span></button>
-        <h1>Trip Explorer</h1>
-      </header>
+<body data-view="map">
+  <div id="topbar">
+    <button id="menuBtn" class="menu-btn" title="Settings"><span></span><span></span><span></span></button>
+    <h1>Trip Explorer</h1>
+    <nav class="nav" id="nav">
+      <button data-view="map" class="on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6.5v13L9 17l6 2.5 5.5-2.5v-13L15 9 9 6.5Z"/><path d="M9 6.5V17M15 9v10.5"/></svg>Explore</button>
+      <button data-view="trip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9"/></svg>Trips</button>
+    </nav>
+    <button id="webToggle" class="webtog" title="Mini browser"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><path d="M3.6 12h16.8M12 3.6c2.2 2.4 3.3 5.3 3.3 8.4s-1.1 6-3.3 8.4c-2.2-2.4-3.3-5.3-3.3-8.4s1.1-6 3.3-8.4Z"/></svg></button>
+  </div>
 
+  <div id="app">
+    <!-- Settings is a drawer over the whole app, not part of the sidebar:
+         the Trips view hides the sidebar, and the menu has to keep working. -->
+    <div id="scrim" hidden></div>
+    <div id="settings">
+      <div class="set-head"><span>Settings</span><button id="set-close" title="Back"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button></div>
+      <div class="set-body">
+        <div class="set-group">
+          <div class="set-label">Appearance</div>
+          <div class="seg" id="modeSeg">
+            <button data-tmode="light"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>Light</button><button data-tmode="dark"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"/></svg>Dark</button>
+          </div>
+        </div>
+        <div class="set-group">
+          <div class="set-label">Tone</div>
+          <div class="tones" id="toneRow"></div>
+        </div>
+        <div class="set-group">
+          <div class="set-label">Accent</div>
+          <div class="accents" id="accentRow"></div>
+          <div class="set-hint">Accent-coloured controls carry a soft LED halo. Text stays plain.</div>
+        </div>
+      </div>
+    </div>
+
+    <aside id="sidebar">
       <div id="sideBody">
       <div id="sideMain">
-      <nav class="nav" id="nav">
-        <button data-view="map" class="on"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6.5v13L9 17l6 2.5 5.5-2.5v-13L15 9 9 6.5Z"/><path d="M9 6.5V17M15 9v10.5"/></svg>Map</button>
-        <button data-view="trip"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7.5" width="18" height="12.5" rx="2.5"/><path d="M8.5 7.5V5.6A1.6 1.6 0 0 1 10.1 4h3.8a1.6 1.6 0 0 1 1.6 1.6v1.9"/></svg>Trips</button>
-      </nav>
 
       <div id="mapPanel" class="panel">
         <div class="controls">
+          <select id="countrySel"></select>
           <div class="city-tabs" id="cityTabs"></div>
-          <input id="search" type="search" placeholder="Search places…" autocomplete="off" />
+          <div class="searchrow">
+            <input id="search" type="search" placeholder="Search places…" autocomplete="off" />
+            <button id="webSearchBtn" class="iconbtn" title="Search the web for this"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/></svg></button>
+          </div>
           <div class="chips" id="catChips"></div>
           <div class="row">
             <select id="districtFilter"><option value="">All districts</option></select>
@@ -566,38 +860,16 @@
             </select>
             <label class="toggle"><input type="checkbox" id="listToggle" /> My list only</label>
           </div>
-          <button id="addBtn" class="add-btn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>Add a place</button>
+          <div class="row">
+            <button id="addBtn" class="add-btn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>Add a place</button>
+            <button id="addAreaBtn" class="add-btn"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg>Area</button>
+          </div>
         </div>
         <div id="list"></div>
       </div>
 
-      <div id="tripPanel" class="panel" hidden>
-        <div id="tripBar"></div>
-        <div id="tripContent"></div>
-      </div>
       </div><!-- /sideMain -->
 
-      <!-- configuration menu — slides in over the sidebar -->
-      <div id="settings">
-        <div class="set-head"><span>Settings</span><button id="set-close" title="Back"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button></div>
-        <div class="set-body">
-          <div class="set-group">
-            <div class="set-label">Appearance</div>
-            <div class="seg" id="modeSeg">
-              <button data-tmode="light"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.8"/><path d="M12 2.5v2.2M12 19.3v2.2M4.9 4.9l1.6 1.6M17.5 17.5l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.9 19.1l1.6-1.6M17.5 6.5l1.6-1.6"/></svg>Light</button><button data-tmode="dark"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.3A8.6 8.6 0 0 1 9.7 3.5a8.6 8.6 0 1 0 10.8 10.8Z"/></svg>Dark</button>
-            </div>
-          </div>
-          <div class="set-group">
-            <div class="set-label">Tone</div>
-            <div class="tones" id="toneRow"></div>
-          </div>
-          <div class="set-group">
-            <div class="set-label">Accent</div>
-            <div class="accents" id="accentRow"></div>
-            <div class="set-hint">Accent-coloured controls carry a soft LED halo. Text stays plain.</div>
-          </div>
-        </div>
-      </div>
       </div><!-- /sideBody -->
 
     </aside>
@@ -614,11 +886,20 @@
       <div id="alt-foot"></div>
     </aside>
 
+    <div id="stage"></div>
+    <div id="stageResizer" title="Drag to resize the plan panel" hidden></div>
+
     <div id="mapWrap">
       <div id="map"></div>
       <div id="mapOverlay" hidden>
-        <label class="map-toggle"><input type="checkbox" id="scopeAll"> Show other places nearby</label>
+        <label class="map-scope"><span>Show</span><select id="scopeSel">
+          <option value="day">this day only</option>
+          <option value="trip">everything in this trip</option>
+          <option value="unvisited">this trip + places I haven't visited</option>
+          <option value="all">all places</option>
+        </select></label>
       </div>
+      <button id="mapHide" class="mapx" title="Hide the map" hidden><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button>
     </div>
 
     <!-- mini browser, right side of the screen -->
@@ -629,6 +910,10 @@
         <button class="sh-x" id="web-close" title="Close"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/></svg></button>
       </div>
       <div id="web-detail"></div>
+      <div class="web-qrow">
+        <input id="web-q" type="search" placeholder="Search the web for a place…" autocomplete="off" />
+        <button id="web-add" class="iconbtn" title="Add what you found as a new place"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5v13M5.5 12h13"/></svg></button>
+      </div>
       <div class="web-tabs">
         <button class="navb" id="web-back" title="Back"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.8 5.5 8 12l6.8 6.5"/></svg></button>
         <button class="navb" id="web-reload" title="Reload"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 12a8.2 8.2 0 1 1-2.6-6"/><path d="M20.2 3.8v5h-5"/></svg></button>
@@ -646,13 +931,33 @@
   </div>
   <div class="hint" id="hint"></div>
 
+
   <script src="vendor/leaflet/leaflet.js"></script>
-  <script src="districts-geo.js"></script>
-  <script src="cities.js"></script>
-  <script src="images.js"></script>
-  <script src="data.js"></script>
+  <script src="config.js"></script>
   <script src="api/client.js"></script>
   <script>
+  // ===========================================================================
+  //  Everything below runs after the database has answered. There is no local
+  //  copy of the trip: boot() is the single source of truth for this session.
+  // ===========================================================================
+  (async function main() {
+  let BOOT;
+  try {
+    BOOT = await PlannerAPI.boot();
+  } catch (e) {
+    document.body.innerHTML = `<div class="fatal">
+      <h1>Can't reach the trip server</h1>
+      <p>${String(e.message).replace(/</g, "&lt;")}</p>
+      <p class="hintline">Start it with <code>cd backend &amp;&amp; npm start</code>, then reload.</p></div>`;
+    return;
+  }
+  const { Repo } = PlannerAPI;
+  const PLACES = BOOT.PLACES;
+  const COUNTRIES = BOOT.COUNTRIES;
+  const CITIES = BOOT.CITIES;
+  const DISTRICTS = BOOT.DISTRICTS;
+  const SH_DISTRICTS_GEO = BOOT.GEOJSON;
+
   // ------------------------------------------------------------------ icons
   // Monochrome line icons; they inherit currentColor, so they follow the
   // accent (or whatever colour the element they sit in uses).
@@ -665,6 +970,12 @@
     layers: '<path d="m12 3.5 8.5 4.3-8.5 4.3-8.5-4.3 8.5-4.3Z"/><path d="m3.5 12.8 8.5 4.3 8.5-4.3"/>',
     x: '<path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5"/>',
     plus: '<path d="M12 5.5v13M5.5 12h13"/>',
+    car: '<path d="M4.4 15.5h15.2M6 15.5V19a1 1 0 0 1-1 1H4.4a1 1 0 0 1-1-1v-3.5l1.7-4.6A2 2 0 0 1 7 9.5h10a2 2 0 0 1 1.9 1.4l1.7 4.6V19a1 1 0 0 1-1 1H19a1 1 0 0 1-1-1v-3.5"/><circle cx="7.2" cy="12.9" r=".9"/><circle cx="16.8" cy="12.9" r=".9"/>',
+    bus: '<rect x="4.5" y="4" width="15" height="13" rx="2.4"/><path d="M4.5 11h15M7.5 20v-3M16.5 20v-3"/><circle cx="8" cy="14" r=".9"/><circle cx="16" cy="14" r=".9"/>',
+    ferry: '<path d="M3.5 17.5c1.6 0 1.6 1.4 3.2 1.4s1.6-1.4 3.3-1.4 1.6 1.4 3.2 1.4 1.7-1.4 3.3-1.4 1.6 1.4 3.2 1.4"/><path d="M5.6 14.2 12 4l6.4 10.2"/><path d="M8.4 9.6h7.2"/>',
+    metro: '<rect x="6" y="3.5" width="12" height="12.5" rx="3"/><path d="M6 11h12M8.5 20l1.7-4M15.5 20l-1.7-4"/><circle cx="9.2" cy="13.4" r=".8"/><circle cx="14.8" cy="13.4" r=".8"/>',
+    walk: '<circle cx="13" cy="4.6" r="1.7"/><path d="M11 20.5l1.6-5.2-2.3-2.1.9-4.4 3.1 2 2.3 1M9.3 12.2 8 15.4M14.4 15.3l1.9 5.2"/>',
+    users: '<circle cx="9" cy="8.2" r="3.2"/><path d="M3.6 19.5a5.4 5.4 0 0 1 10.8 0"/><path d="M16.2 5.4a3.2 3.2 0 0 1 0 5.9M17.6 14.6a5.4 5.4 0 0 1 2.8 4.9"/>',
     trash: '<path d="M4.5 6.5h15M10 6.5V4.8h4v1.7M6.8 6.5l.9 13.2h8.6l.9-13.2"/>',
     pencil: '<path d="M4.5 19.5h4L20 8a2.1 2.1 0 0 0-3-3L5.5 16.5v3Z"/>',
     external: '<path d="M14.5 4h5.5v5.5M20 4l-8.5 8.5"/><path d="M18 14.5V19a1.6 1.6 0 0 1-1.6 1.6H5.6A1.6 1.6 0 0 1 4 19V8.2a1.6 1.6 0 0 1 1.6-1.6H10"/>',
@@ -709,16 +1020,87 @@
   const catIc = (p, cls) => ic(CAT_ICON[(catOf(p) === CATEGORIES.custom ? "custom" : p.c)] || "custom", cls, catOf(p).color);
 
   // ------------------------------------------------------------------ state
-  const LS_KEY = "shanghai-planner-v1";
-  const store = JSON.parse(localStorage.getItem(LS_KEY) || "{}");
-  store.status  = store.status  || {};   // id -> "want"|"planned"|"visited"
-  store.notes   = store.notes   || {};   // id -> string
-  store.custom  = store.custom  || [];   // user-added places
-  store.base    = store.base    || "the-bund";  // reference point for distances
-  const save = () => localStorage.setItem(LS_KEY, JSON.stringify(store));
+  // An in-memory projection of the database for this session. Reads come from
+  // here; every write goes back to the server through save() / Repo.
+  const store = {
+    status: BOOT.status,          // placeId -> "want" | "planned" | "visited"
+    notes: BOOT.notes,            // placeId -> string
+    trips: BOOT.trips,
+    base: BOOT.prefs.basePlaceId || "the-bund",
+    prefs: BOOT.prefs || {},
+    me: BOOT.me,
+  };
+
+  // ---- persistence -----------------------------------------------------------
+  // save() is called from ~30 mutation sites. Rather than make each one async,
+  // it marks the open trip dirty and flushes shortly after; a burst of edits
+  // becomes one atomic plan write. Errors surface as a hint, never silently.
+  let saveTimer = null, lastPushed = {}, saving = false;
+  function save() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(flush, 350);
+  }
+  async function flush() {
+    if (saving) { save(); return; }          // a flush is already in the air
+    saving = true;
+    try {
+      for (const t of store.trips) {
+        const snap = JSON.stringify(PlannerAPI.toPlanDoc(t)) + "|" + t.name + t.start + t.end;
+        if (lastPushed[t.id] === snap) continue;
+        const doc = await Repo.saveTrip(t);
+        // the server re-derives where each day was and whether it counts as
+        // travel; take its answer rather than guessing locally
+        if (doc) {
+          t.areasByDay = (doc.days || []).reduce((a, d) => { a[d.date] = d.areaIds; return a; }, {});
+          t.travelDays = (doc.days || []).reduce((a, d) => { if (d.travel) a[d.date] = true; return a; }, {});
+          t.commutesByDay = (doc.days || []).reduce((a, d) => { a[d.date] = d.commuteIds; return a; }, {});
+          (doc.stays || []).forEach((s, n) => { if (t.segments[n]) t.segments[n].stayId = s.id; });
+        }
+        lastPushed[t.id] = snap;
+      }
+    } catch (e) {
+      showHint("Couldn't save: " + e.message);
+      console.error("[save]", e);
+    } finally { saving = false; }
+  }
+  // A pending edit must not die with the window.
+  window.addEventListener("beforeunload", () => { if (saveTimer) { clearTimeout(saveTimer); flush(); } });
+
+  async function savePrefs(patch) {
+    store.prefs = Object.assign({}, store.prefs, patch);
+    try { await Repo.savePrefs(store.prefs); } catch (e) { console.warn("[prefs]", e.message); }
+  }
+
+  // ------------------------------------------------------------------ geography
+  // Three levels: country -> area (a city, province or any region) -> district.
+  // Seeded areas live in cities.js; anything you add yourself lives in the store,
+  // so a trip can reach a new province or a new country without touching the data files.
+  // COUNTRIES / CITIES came from the database at boot; anything created during
+  // the session is written server-side first, then merged into these maps.
+  const allCountries = () => COUNTRIES;
+  const allAreas = () => CITIES;
+  const areaOf = id => allAreas()[id] || null;
+  const areaName = id => (areaOf(id) || {}).name || id || "";
+  const countryOf = areaId => (areaOf(areaId) || {}).country || "cn";
+  const countryName = id => (allCountries()[id] || {}).name || id || "";
+  const slug = s => String(s).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 32);
+
+  // "31.2, 121.4" or any Google Maps URL you paste in
+  function parseLatLng(str) {
+    if (!str) return null;
+    const s2 = String(str);
+    let m = s2.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/)
+         || s2.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/)
+         || s2.match(/[?&](?:q|query|ll|center)=(-?\d+(?:\.\d+)?)(?:,|%2C)(-?\d+(?:\.\d+)?)/i)
+         || s2.match(/(-?\d{1,2}(?:\.\d+)?)\s*[,/]\s*(-?\d{1,3}(?:\.\d+)?)/);
+    if (!m) return null;
+    const lat = +m[1], lng = +m[2];
+    if (!isFinite(lat) || !isFinite(lng) || Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+    return { lat, lng };
+  }
 
   const activeCats = new Set(Object.keys(CATEGORIES));
-  const ui = { search: "", district: "", status: "", listOnly: false, city: "shanghai" };
+  const ui = { search: "", district: "", status: "", listOnly: false, city: "shanghai", country: "" };
 
   // ------------------------------------------------------------------ map
   const map = L.map("map", { zoomControl: true }).setView([31.235, 121.49], 12);
@@ -739,7 +1121,7 @@
   base.addTo(map);
   L.control.scale({ metric: true, imperial: false, position: "bottomleft" }).addTo(map);
 
-  // ---- district boundaries (real polygons from districts-geo.js) ----
+  // ---- district boundaries (polygons served from the database) ----
   const ADCODE2KEY = {};
   for (const [k, d] of Object.entries(DISTRICTS)) ADCODE2KEY[d.adcode] = k;
 
@@ -755,11 +1137,14 @@
     html: `<div class="hotel-pin">${ic("bed", "lg")}</div>`,
   });
   const hotelMarkers = {};
-  function drawHotels(t) {
+  // `date` scopes the pins to the stays that touch that day; omit it to show the whole trip
+  function drawHotels(t, date) {
     hotelLayer.clearLayers();
     for (const k in hotelMarkers) delete hotelMarkers[k];
     if (!t) return;
+    const only = date ? new Set(segsForDate(t, date).map(x => x.i)) : null;
     t.segments.forEach((s, si) => {
+      if (only && !only.has(si)) return;
       const ho = s.hotel; if (!ho || typeof ho.lat !== "number") return;
       const m = L.marker([ho.lat, ho.lng], { icon: hotelIcon(), zIndexOffset: 1000 }).addTo(hotelLayer);
       hotelMarkers[si] = m;
@@ -782,9 +1167,21 @@
   }
   const zonesOn = () => document.getElementById("zonesToggle").checked;
 
+  // Rough visual centre of a polygon — good enough to hang a label on.
+  function centroidOf(f) {
+    const rings = f.geometry.type === "MultiPolygon"
+      ? f.geometry.coordinates.map(p => p[0]) : [f.geometry.coordinates[0]];
+    let best = null, bestLen = -1;
+    for (const r of rings) if (r.length > bestLen) { bestLen = r.length; best = r; }
+    let x = 0, y = 0;
+    for (const [lng, lat] of best) { x += lng; y += lat; }
+    return [x / best.length, y / best.length];
+  }
+
   SH_DISTRICTS_GEO.features.forEach(f => {
-    const key = ADCODE2KEY[f.properties.adcode];
-    if (!key) return;
+    // the server names the district explicitly; adcode is only a fallback
+    const key = f.properties.id || ADCODE2KEY[f.properties.adcode];
+    if (!key || !DISTRICTS[key]) return;
     districtGeom[key] = f;
     const layer = L.geoJSON(f, { style: styleFor(key, false) });
     layer.on("mouseover", () => { if (zonesOn() && ui.district !== key) layer.setStyle(styleFor(key, true)); });
@@ -793,7 +1190,7 @@
     districtLayers[key] = layer;
 
     const d = DISTRICTS[key];
-    const c = f.properties.centroid || f.properties.center; // [lng, lat]
+    const c = f.properties.centroid || f.properties.center || centroidOf(f); // [lng, lat]
     districtLabels[key] = L.marker([c[1], c[0]], {
       interactive: false,
       icon: L.divIcon({ className: "", html:
@@ -840,8 +1237,12 @@
   }
   function assignDistrict(p) {
     const k = districtOfPoint(p.lat, p.lng);
-    p.d = k || (DISTRICTS[p.d] ? p.d : "_other");
-    p.city = (DISTRICTS[p.d] && DISTRICTS[p.d].city) || p.city || "shanghai";
+    if (k) { p.d = k; p.city = DISTRICTS[k].city; }        // inside a mapped district: trust the polygon
+    else {                                                  // elsewhere: keep whatever area was chosen
+      if (!DISTRICTS[p.d]) p.d = "_other";
+      if (!p.city || !areaOf(p.city)) p.city = p.city || "shanghai";
+    }
+    p.country = countryOf(p.city);
     return p;
   }
 
@@ -857,13 +1258,17 @@
   const markers = {};   // id -> L.marker
   // trip map-scoping + day highlight state (set by the Trips module)
   let scopeTrip = null;        // when set, map is scoped to this trip's places
-  let scopeShowAll = false;    // toggle: also show other nearby places
+  // what the map shows while a trip is open:
+  //   day       — only the day currently focused in the plan
+  //   trip      — everything scheduled in this trip            (default)
+  //   unvisited — the trip, plus places I haven't been to yet
+  //   all       — everything
+  let scopeMode = "day";
   let dayFocusIds = new Set(); // ids highlighted for the selected day
   let dayFocusOrder = {};      // id -> order number within the day
   function tripIdSet(t) { const s = new Set(); Object.values(t.plan || {}).forEach(a => a.forEach(id => s.add(id))); return s; }
-  function allPlaces() {
-    return [...PLACES, ...store.custom];
-  }
+  const allPlaces = () => PLACES;
+  const indexPlaces = () => { const ix = {}; PLACES.forEach(p => ix[p.id] = p); return ix; };
   function catOf(p) { return CATEGORIES[p.c] || CATEGORIES.custom; }
   function placeById(id) { return allPlaces().find(p => p.id === id); }
 
@@ -891,8 +1296,7 @@
 
   // pick up to a few images (real geosearched ones if available, else representative)
   function imagesFor(p) {
-    if (typeof IMG_PLACE !== "undefined" && IMG_PLACE[p.id] && IMG_PLACE[p.id].length)
-      return IMG_PLACE[p.id].slice(0, 4);
+    if (p.images && p.images.length) return p.images.slice(0, 4);
     const C = (typeof IMG_CAT !== "undefined") ? IMG_CAT : {};
     const cc = p.sub || p.c;
     const extra = { coffee: [C.bakery, C.matcha], matcha: [C.tea, C.coffee], food: [C.shengjian, C.noodle],
@@ -904,7 +1308,7 @@
   // pick a representative image: explicit > landmark photo > keyword > category
   function imageFor(p) {
     if (p.img) return p.img;
-    if (typeof IMG_LANDMARK !== "undefined" && IMG_LANDMARK[p.id]) return IMG_LANDMARK[p.id];
+    if (p.images && p.images.length) return p.images[0];
     const C = (typeof IMG_CAT !== "undefined") ? IMG_CAT : {};
     if (p.sub && C[p.sub]) return C[p.sub];
     const n = (p.name + " " + (p.cn || "")).toLowerCase();
@@ -925,7 +1329,7 @@
     return byCat[p.c] || C.skyline || "";
   }
   const q = s => encodeURIComponent(s);
-  const cityName = p => (typeof CITIES !== "undefined" && CITIES[p.city]) ? CITIES[p.city].name : "Shanghai";
+  const cityName = p => areaName(p.city) || "Shanghai";
   function linksHtml(p) {
     const term = (p.name + " " + (p.cn || "") + " " + cityName(p)).trim();
     const parts = [];
@@ -975,7 +1379,7 @@
     return `<div class="pop">
       <div class="strip">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" alt="" onerror="this.remove()">`).join("")}</div>
       <h3>${catIc(p)}${p.name}${p.hot?' <span class="hot-badge">'+ic('flame','sm')+'Trending</span>':''}</h3>
-      <div class="pcn">${p.cn || ""} · ${cat.label}${dName?(" · "+dName):""}${p.city&&CITIES[p.city]?(" · "+CITIES[p.city].name):""}</div>
+      <div class="pcn">${p.cn || ""} · ${cat.label}${dName?(" · "+dName):""}${p.city?(" · "+esc(areaName(p.city))):""}</div>
       ${distHtml(p)}
       ${p.desc?`<p>${p.desc}</p>`:""}
       ${p.src?`<div class="srcline">found via ${p.src}</div>`:""}
@@ -1005,14 +1409,20 @@
     el.querySelectorAll(".statusbtns button").forEach(b =>
       b.onclick = () => {
         const v = b.dataset.st;
-        store.status[p.id] = (store.status[p.id] === v) ? undefined : v;
-        if (!store.status[p.id]) delete store.status[p.id];
+        const next = (store.status[p.id] === v) ? null : v;
+        if (next) store.status[p.id] = next; else delete store.status[p.id];
+        Repo.setStatus(p.id, next).catch(e => showHint("Couldn't save that mark: " + e.message));
         save(); markers[p.id].setIcon(markerIcon(p)); refresh();
       });
     const ta = el.querySelector("textarea");
-    if (ta) ta.oninput = () => { store.notes[p.id] = ta.value; save(); renderList(); };
+    if (ta) ta.oninput = () => {
+      store.notes[p.id] = ta.value;
+      clearTimeout(ta._t);
+      ta._t = setTimeout(() => Repo.setNote(p.id, ta.value).catch(() => {}), 500);
+      renderList();
+    };
     const sb = el.querySelector(".setbase");
-    if (sb) sb.onclick = () => { store.base = p.id; save(); refresh(); showHint("Base set to " + p.name); };
+    if (sb) sb.onclick = () => { store.base = p.id; savePrefs({ basePlaceId: p.id }); refresh(); showHint("Base set to " + p.name); };
     const eb = el.querySelector(".extbtn");
     if (eb) eb.onclick = () => { markers[p.id] && markers[p.id].closePopup(); selectPlace(p); };
     const wb = el.querySelector(".wishbtn");
@@ -1022,7 +1432,7 @@
       t.wishlist = t.wishlist || [];
       if (t.wishlist.includes(p.id)) { showHint("Already an alternative in " + t.name); return; }
       t.wishlist.push(p.id); save();
-      showHint("🃏 Added as alternative — see it under a " + ((CITIES[p.city] || {}).name || "city") + " day");
+      showHint("Added as an alternative — it shows under your " + (areaName(p.city) || "city") + " days");
       if (openTripId === t.id) renderTrip();
     };
     const del = el.querySelector(".del");
@@ -1034,7 +1444,8 @@
     markers[p.id] = m;
     bindPopup(p);
   }
-  allPlaces().forEach(assignDistrict);
+  // Districts arrive already assigned — the server holds the polygons and is
+  // authoritative. The client copy is only used to prefill a dropped pin.
   allPlaces().forEach(addMarker);
 
   // ------------------------------------------------------------------ filtering
@@ -1042,10 +1453,14 @@
     // when a trip is open, the map is scoped to that trip's places
     if (scopeTrip) {
       const inTrip = tripIdSet(scopeTrip).has(p.id);
-      if (!scopeShowAll) return inTrip;                 // only my trip
-      return inTrip || activeCats.has(CATEGORIES[p.c] ? p.c : "custom"); // + other areas (honor category chips)
+      if (scopeMode === "day") return dayFocusIds.size ? dayFocusIds.has(p.id) : inTrip;
+      if (scopeMode === "trip") return inTrip;
+      const catOk = activeCats.has(CATEGORIES[p.c] ? p.c : "custom");   // the wider modes honour the category chips
+      if (scopeMode === "unvisited") return inTrip || (catOk && store.status[p.id] !== "visited");
+      return inTrip || catOk;                                          // "all"
     }
     if (ui.city && (p.city || "shanghai") !== ui.city) return false;
+    if (!ui.city && ui.country && countryOf(p.city) !== ui.country) return false;
     const catKey = CATEGORIES[p.c] ? p.c : "custom";
     if (!activeCats.has(catKey)) return false;
     if (ui.district && p.d !== ui.district) return false;
@@ -1086,19 +1501,23 @@
       listEl.innerHTML = `<div class="empty">No places match.<br>Try clearing filters or the search box.</div>`;
       return;
     }
-    // group by district (custom-without-district go last under "My pins")
-    const order = [...Object.keys(DISTRICTS), "_other"];
+    // group by district; places outside the mapped districts group by their area instead
     const groups = {};
-    shown.forEach(p => { const k = DISTRICTS[p.d] ? p.d : "_other"; (groups[k] ||= []).push(p); });
+    shown.forEach(p => {
+      const k = DISTRICTS[p.d] ? p.d : ("area:" + (p.city || "other"));
+      (groups[k] ||= []).push(p);
+    });
+    const order = [...Object.keys(DISTRICTS), ...Object.keys(groups).filter(k => k.startsWith("area:")).sort()];
 
     order.forEach(k => {
       const items = groups[k]; if (!items) return;
       const d = DISTRICTS[k];
+      const a = !d ? areaOf(k.slice(5)) : null;
       const g = document.createElement("div"); g.className = "district-group";
       const head = document.createElement("div"); head.className = "district-head";
       head.innerHTML = d
         ? `<span class="swatch" style="background:${d.color}"></span><b>${d.name}</b><small>${d.cn}</small><span class="count">${items.length}</span>`
-        : `<span class="swatch" style="background:#6c757d"></span><b>My pins & other</b><span class="count">${items.length}</span>`;
+        : `<span class="swatch" style="background:#6c757d"></span><b>${a ? esc(a.name) : "My pins & other"}</b><small>${a ? esc(a.cn || countryName(a.country)) : ""}</small><span class="count">${items.length}</span>`;
       g.appendChild(head);
       if (d && d.blurb) {
         const bl = document.createElement("div"); bl.className = "district-blurb"; bl.textContent = d.blurb;
@@ -1157,21 +1576,43 @@
 
   // city tabs
   const cityTabsEl = document.getElementById("cityTabs");
-  const cityEntries = [...Object.entries(CITIES), ["", { name: "All", cn: "全部" }]];
-  for (const [key, c] of cityEntries) {
-    const b = document.createElement("button");
-    b.dataset.city = key;
-    b.innerHTML = `${c.name}<br><small>${c.cn}</small>`;
-    b.onclick = () => setCity(key);
-    cityTabsEl.appendChild(b);
+  const countrySel = document.getElementById("countrySel");
+  // country picker drives which area tabs are on offer
+  function buildCountryOptions() {
+    const cs = Object.entries(allCountries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+    countrySel.innerHTML = `<option value="">All countries</option>` +
+      cs.map(([k, c]) => `<option value="${k}" ${ui.country === k ? "selected" : ""}>${esc(c.name)}${c.cn ? " · " + esc(c.cn) : ""}</option>`).join("") +
+      `<option value="__new">＋ New country…</option>`;
   }
+  function buildCityTabs() {
+    const areas = Object.entries(allAreas())
+      .filter(([, a]) => !ui.country || (a.country || "cn") === ui.country)
+      .sort((a, b) => a[1].name.localeCompare(b[1].name));
+    cityTabsEl.innerHTML = "";
+    for (const [key, c] of [...areas, ["", { name: "All", cn: "全部" }]]) {
+      const b = document.createElement("button");
+      b.dataset.city = key;
+      b.className = ui.city === key ? "on" : "";
+      b.innerHTML = `${esc(c.name)}<br><small>${esc(c.cn || "")}</small>`;
+      b.onclick = () => setCity(key);
+      cityTabsEl.appendChild(b);
+    }
+  }
+  countrySel.onchange = async () => {
+    if (countrySel.value === "__new") { countrySel.value = ui.country; await addCountry(); return; }
+    ui.country = countrySel.value;
+    // if the current area isn't in this country any more, widen to All
+    if (ui.city && ui.country && countryOf(ui.city) !== ui.country) ui.city = "";
+    buildCityTabs(); setCity(ui.city);
+  };
   function setCity(city) {
     ui.city = city; ui.district = "";
     document.getElementById("districtFilter").value = "";
     buildDistrictOptions();
     cityTabsEl.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.city === city));
     drawZones(); renderList();
-    if (city && CITIES[city]) map.flyTo(CITIES[city].center, CITIES[city].zoom, { duration: .6 });
+    const a = areaOf(city);
+    if (a && a.center) map.flyTo(a.center, a.zoom || 11, { duration: .6 });
     else map.flyTo([30.9, 120.8], 8, { duration: .6 });
   }
 
@@ -1195,7 +1636,6 @@
 
   // ---- add a custom pin (click the "Add place" button, then click the map) ----
   let addMode = false;
-  let addSeq = (store.custom.reduce((n,p)=>Math.max(n, +(String(p.id).split("-")[1]||0)),0)) + 1;
   function setAddMode(on) {
     addMode = on;
     document.getElementById("addBtn").classList.toggle("armed", on);
@@ -1203,33 +1643,28 @@
     map.getContainer().style.cursor = on ? "crosshair" : "";
     if (on) showHint("Click anywhere on the map to drop your pin");
   }
-  document.getElementById("addBtn").onclick = () => setAddMode(!addMode);
-  async function addPinAt(latlng) {
+  document.getElementById("addBtn").onclick = () => addPlaceFlow({ city: ui.city || "shanghai" });
+  document.getElementById("addAreaBtn").onclick = () => addArea();
+  // you can still drop a pin by clicking the map — it just prefills the form
+  function addPinAt(latlng) {
     setAddMode(false);
-    const v = await showModal({ title: "Add a place", okText: "Add", fields: [
-      { key: "name", label: "Name", placeholder: "e.g. My hotel" },
-      { key: "cn", label: "Chinese name (optional)", value: "" },
-    ]});
-    if (!v || !v.name) return;
-    const p = {
-      id: "custom-" + (addSeq++), custom: true, c: "custom",
-      name: v.name, cn: v.cn || "", desc: "",
+    const guess = districtOfPoint(latlng.lat, latlng.lng);
+    addPlaceFlow({
       lat: +latlng.lat.toFixed(5), lng: +latlng.lng.toFixed(5),
-    };
-    assignDistrict(p);
-    store.custom.push(p); save();
-    addMarker(p); renderList();
-    focusPlace(p);
-    showHint("Pin added — set status & notes in its popup");
+      city: guess ? DISTRICTS[guess].city : (ui.city || "shanghai"),
+    });
   }
   map.on("click", (e) => { if (addMode) addPinAt(e.latlng); });
 
   async function deleteCustom(id) {
     if (!await confirmModal("Delete this pin?", "Delete")) return;
+    try { await Repo.deletePlace(id); }
+    catch (e) { showHint("Couldn't delete: " + e.message); return; }
     const m = markers[id]; if (m) { map.removeLayer(m); delete markers[id]; }
-    store.custom = store.custom.filter(p => p.id !== id);
+    const i = PLACES.findIndex(p => p.id === id);
+    if (i >= 0) PLACES.splice(i, 1);
     delete store.status[id]; delete store.notes[id];
-    save(); renderList();
+    renderList(); refreshMarkers();
   }
 
   // export / import / reset
@@ -1273,10 +1708,175 @@
   }
   const confirmModal = (message, okText) => showModal({ title: okText || "Confirm", message, okText: okText || "OK" });
 
+  // ================================================================
+  //  Adding things: a country, an area, a place (with web lookup)
+  // ================================================================
+  async function addCountry(prefill) {
+    const v = await showModal({ title: "New country", okText: "Add", fields: [
+      { key: "name", label: "Country", value: prefill || "", placeholder: "e.g. Japan" },
+      { key: "cn", label: "Local name (optional)", value: "" },
+    ]});
+    if (!v || !v.name) return null;
+    const id = slug(v.name) || ("c" + Date.now());
+    if (!allCountries()[id]) {
+      try { await Repo.createCountry({ id: id.slice(0, 2), name: v.name, cn: v.cn || "" }); }
+      catch (e) { showHint("Couldn't add that country: " + e.message); return null; }
+      COUNTRIES[id.slice(0, 2)] = { name: v.name, cn: v.cn || "" };
+    }
+    buildCountryOptions();
+    showHint(v.name + " added");
+    return id.slice(0, 2);
+  }
+
+  // An "area" is the middle level — a city, a province, a national park, anything.
+  async function addArea(prefillCountry) {
+    const cs = Object.entries(allCountries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+    const c = map.getCenter();
+    const v = await showModal({ title: "New area", okText: "Add", message: "A city, province or region you want to record places in.", fields: [
+      { key: "name", label: "Area name", placeholder: "e.g. Kyoto, or Hokkaido" },
+      { key: "cn", label: "Local name (optional)", value: "" },
+      { key: "country", label: "Country", type: "select", value: prefillCountry || ui.country || cs[0][0],
+        options: cs.map(([k, x]) => ({ value: k, label: x.name })).concat([{ value: "__new", label: "＋ New country…" }]) },
+      { key: "center", label: "Centre — paste a Google Maps link or “lat, lng”",
+        value: c.lat.toFixed(4) + ", " + c.lng.toFixed(4), placeholder: "35.0116, 135.7681" },
+      { key: "zoom", label: "Default zoom", value: "11" },
+    ]});
+    if (!v || !v.name) return null;
+    let country = v.country;
+    if (country === "__new") { country = await addCountry(); if (!country) return null; }
+    const ll = parseLatLng(v.center);
+    if (!ll) { showHint("Couldn't read those coordinates — paste a Google Maps link or “lat, lng”"); return null; }
+    const id = slug(v.name) || ("a" + Date.now());
+    if (allAreas()[id]) { showHint("An area called " + v.name + " already exists"); return id; }
+    try {
+      await Repo.createArea({ id, name: v.name, cn: v.cn || "", country, center: [ll.lat, ll.lng], zoom: +v.zoom || 11 });
+    } catch (e) { showHint("Couldn't add that area: " + e.message); return null; }
+    CITIES[id] = { name: v.name, cn: v.cn || "", country, center: [ll.lat, ll.lng], zoom: +v.zoom || 11, kind: "city" };
+    buildCountryOptions(); ui.country = country; countrySel.value = country;
+    buildCityTabs(); setCity(id);
+    showHint(v.name + " added — drop places into it now");
+    return id;
+  }
+
+  // Full add/edit form for a place. `pre` can prefill name/coords/area.
+  function placeForm(pre) {
+    pre = pre || {};
+    return new Promise(resolve => {
+      const cats = Object.entries(CATEGORIES).map(([k, c]) => `<option value="${k}" ${((pre.c || "sight") === k) ? "selected" : ""}>${esc(c.label)}</option>`).join("");
+      const back = document.createElement("div");
+      back.className = "modal-back";
+      back.innerHTML = `<div class="modal wide">
+        <h3>${pre.id ? "Edit place" : "Add a place"}</h3>
+        <div class="mgrid">
+          <label class="mfield full"><span>Name</span>
+            <div class="mrow"><input data-k="name" value="${esc(pre.name || "")}" placeholder="e.g. Fushimi Inari Shrine">
+            <button class="btn" data-look>${ic("search", "sm")}Look up</button></div>
+            <div class="mhelp">“Look up” searches the web in the mini browser so you can copy the address and coordinates.</div>
+          </label>
+          <label class="mfield"><span>Local name (optional)</span><input data-k="cn" value="${esc(pre.cn || "")}"></label>
+          <label class="mfield"><span>Category</span><select data-k="c">${cats}</select></label>
+          <label class="mfield"><span>Country</span><select data-k="country"></select></label>
+          <label class="mfield"><span>Area / province</span><select data-k="city"></select></label>
+          <label class="mfield full"><span>Location — paste a Google Maps link or “lat, lng”</span>
+            <input data-k="coord" value="${pre.lat != null ? pre.lat + ", " + pre.lng : ""}" placeholder="https://maps.app.goo.gl/… or 35.0116, 135.7681">
+            <div class="mhelp" data-coordhelp></div>
+          </label>
+          <label class="mfield full"><span>Link (optional)</span><input data-k="link" value="${esc(pre.link || "")}" placeholder="website, Maps or RED link"></label>
+          <label class="mfield full"><span>Notes (optional)</span><textarea data-k="desc" placeholder="Why you want to go, what to order, opening hours…">${esc(pre.desc || "")}</textarea></label>
+          <label class="mfield"><span>I've…</span><select data-k="status">
+            <option value="want">Want to go</option>
+            <option value="planned">Planned</option>
+            <option value="visited">Been there</option>
+            <option value="">Just recording it</option>
+          </select></label>
+        </div>
+        <div class="mbtns"><button class="btn" data-c>Cancel</button><button class="btn primary" data-ok>${pre.id ? "Save" : "Add place"}</button></div>
+      </div>`;
+      document.body.appendChild(back);
+      const $ = k => back.querySelector('[data-k="' + k + '"]');
+      const help = back.querySelector("[data-coordhelp]");
+
+      function fillCountries() {
+        const cs = Object.entries(allCountries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
+        const cur = pre.city ? countryOf(pre.city) : (ui.country || cs[0][0]);
+        $("country").innerHTML = cs.map(([k, c]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${esc(c.name)}</option>`).join("")
+          + `<option value="__new">＋ New country…</option>`;
+      }
+      function fillAreas() {
+        const co = $("country").value;
+        const as = Object.entries(allAreas()).filter(([, a]) => (a.country || "cn") === co)
+          .sort((a, b) => a[1].name.localeCompare(b[1].name));
+        const cur = pre.city && as.some(([k]) => k === pre.city) ? pre.city : (as[0] ? as[0][0] : "");
+        $("city").innerHTML = as.map(([k, a]) => `<option value="${k}" ${k === cur ? "selected" : ""}>${esc(a.name)}</option>`).join("")
+          + `<option value="__new">＋ New area…</option>`;
+      }
+      function checkCoord() {
+        const ll = parseLatLng($("coord").value);
+        help.className = "mhelp " + (($("coord").value.trim() && !ll) ? "bad" : ll ? "ok" : "");
+        help.textContent = ll ? ll.lat.toFixed(5) + ", " + ll.lng.toFixed(5)
+          : ($("coord").value.trim() ? "Couldn't find coordinates in that." : "Right-click a spot in Google Maps and copy the coordinates, or paste the whole URL.");
+        return ll;
+      }
+      fillCountries(); fillAreas(); checkCoord();
+      if (pre.status) $("status").value = pre.status;
+
+      $("country").onchange = async () => {
+        if ($("country").value === "__new") { const id = await addCountry(); fillCountries(); if (id) $("country").value = id; }
+        fillAreas();
+      };
+      $("city").onchange = async () => {
+        if ($("city").value === "__new") { const id = await addArea($("country").value); fillCountries(); fillAreas(); if (id) { $("country").value = countryOf(id); fillAreas(); $("city").value = id; } }
+      };
+      $("coord").oninput = checkCoord;
+      back.querySelector("[data-look]").onclick = () => {
+        const nm = ($("name").value || "").trim();
+        if (!nm) { showHint("Type a name first"); return; }
+        openWebQuery(nm + " " + (areaName($("city").value) || ""));
+      };
+      const close = v => { back.remove(); resolve(v); };
+      back.querySelector("[data-c]").onclick = () => close(null);
+      back.querySelector("[data-ok]").onclick = () => {
+        const name = ($("name").value || "").trim();
+        if (!name) { showHint("A name is required"); $("name").focus(); return; }
+        const ll = checkCoord();
+        if (!ll) { showHint("A location is required — paste a Maps link or “lat, lng”"); $("coord").focus(); return; }
+        close({ name, cn: ($("cn").value || "").trim(), c: $("c").value, city: $("city").value,
+          lat: +ll.lat.toFixed(5), lng: +ll.lng.toFixed(5), link: ($("link").value || "").trim(),
+          desc: ($("desc").value || "").trim(), status: $("status").value });
+      };
+      back.onclick = e => { if (e.target === back) close(null); };
+      back.addEventListener("keydown", e => { if (e.key === "Escape") close(null); });
+      setTimeout(() => $("name").focus(), 30);
+    });
+  }
+
+  async function addPlaceFlow(pre) {
+    const v = await placeForm(pre);
+    if (!v) return null;
+    let p;
+    try {
+      // the server owns district assignment — it holds the polygons
+      p = await Repo.createPlace({ name: v.name, cn: v.cn, c: v.c, city: v.city,
+                                   lat: v.lat, lng: v.lng, link: v.link, desc: v.desc });
+    } catch (e) { showHint("Couldn't add that place: " + e.message); return null; }
+    PLACES.push(p);
+    if (v.status) {
+      store.status[p.id] = v.status;
+      Repo.setStatus(p.id, v.status).catch(() => {});
+    }
+    addMarker(p);
+    // jump to wherever it landed so it's visible straight away
+    if (ui.city && ui.city !== p.city) { ui.country = countryOf(p.city); countrySel.value = ui.country; buildCityTabs(); setCity(p.city); }
+    renderList(); refreshMarkers();
+    focusPlace(p);
+    showHint(p.name + " added to " + areaName(p.city));
+    return p;
+  }
+
   // ==================================================================
-  //  TRIPS  — multi-city itinerary planner (stored in localStorage)
+  //  TRIPS  — multi-city itinerary planner (persisted in the database)
   // ==================================================================
-  store.trips = store.trips || [];
+
   const cityTint = { shanghai: "#e63946", suzhou: "#c1121f", hangzhou: "#2a9d8f" };
   let openTripId = null;
   let focusedDate = null;
@@ -1287,7 +1887,38 @@
 
   const isCafe = p => p.c === "coffee" || p.c === "matcha" || p.sub === "coffee" || p.sub === "matcha";
   // arrange a day's places into a rough time-of-day sequence
-  function sequenceDay(places) {
+  // What you set by hand always wins over the guess below. A place with a real
+  // clock time sorts by that time; one with only a slot sorts into that block.
+  const SLOT_RANK = { morning: 0, noon: 1, evening: 2 };
+  function sequenceDay(places, timing, date) {
+    if (timing && date) {
+      const fixed = [], loose = [];
+      places.forEach(p => {
+        const tm = timing[date + "|" + p.id];
+        (tm && (tm.slot || tm.startTime) ? fixed : loose).push(p);
+      });
+      if (fixed.length) {
+        const guessed = rawSequence(loose);
+        const rank = (p) => {
+          const tm = timing[date + "|" + p.id] || {};
+          if (tm.startTime) return Number(tm.startTime.slice(0, 2)) < 12 ? 0 : Number(tm.startTime.slice(0, 2)) < 17 ? 1 : 2;
+          return SLOT_RANK[tm.slot] ?? 1;
+        };
+        const label = (p) => {
+          const tm = timing[date + "|" + p.id] || {};
+          if (tm.startTime) return tm.startTime + (tm.endTime ? "–" + tm.endTime : "");
+          return tm.slot === "morning" ? "Morning" : tm.slot === "evening" ? "Evening" : "Midday";
+        };
+        const out = fixed.map(p => ({ slot: label(p), p, rank: rank(p), pinned: true }))
+          .concat(guessed.map(x => ({ ...x, rank: /morning|breakfast/i.test(x.slot) ? 0
+            : /evening|dinner|night/i.test(x.slot) ? 2 : 1 })));
+        return out.sort((a, b) => a.rank - b.rank ||
+          ((a.slot > b.slot) ? 1 : (a.slot < b.slot) ? -1 : 0));
+      }
+    }
+    return rawSequence(places);
+  }
+  function rawSequence(places) {
     const food = places.filter(p => p.c === "food");
     const cafe = places.filter(isCafe);
     const night = places.filter(p => p.c === "nightlife");
@@ -1326,399 +1957,880 @@
   function nav(view) {
     document.querySelectorAll("#nav button").forEach(b => b.classList.toggle("on", b.dataset.view === view));
     document.getElementById("mapPanel").hidden = view !== "map";
-    document.getElementById("tripPanel").hidden = view !== "trip";
-    setTimeout(() => map.invalidateSize(), 60);
-    if (view === "map") { clearScope(); renderList(); }
-    if (view === "trip") renderTrip();
+    document.body.dataset.view = view;
+    closeWeb();   // the mini browser belongs to whatever you were just looking at
+    if (view === "map") {
+      // Explore is map-first
+      document.body.classList.add("map-open");
+      document.getElementById("mapHide").hidden = true;
+      clearScope(); renderList();
+    } else {
+      // Trips opens on the overview, map hidden until asked for
+      document.body.classList.remove("map-open");
+      document.getElementById("mapHide").hidden = true;
+      renderTrip();
+    }
+    setTimeout(() => map.invalidateSize(), 360);
   }
   function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); showMapOverlay(false); closeAlts(); refreshMarkers(); }
 
-  // ---- v2 trip: rebuilt to match the booked hotels, then re-optimized ----
-  const mapsLink = q2 => "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(q2);
-  // last Shanghai stay, 16–21 Nov — on the Bund itself (中山东二路15号, Waitan)
-  const urcove = () => ({
-    name: "UrCove by Hyatt Shanghai on the Bund", area: "15 Zhongshan East 2nd Rd 中山东二路15号, Waitan, Huangpu · 200002",
-    link: mapsLink("UrCove by Hyatt Shanghai on the Bund 15 Zhongshan East 2nd Road"), lat: 31.2344, lng: 121.4881,
-  });
-  function makeTripV2() {
-    const L = (from, to, date, options, chosen) => ({ from, to, date, options, chosen });
-    const ITIN = {
-      // Shanghai (Amara) — famous spots, arranged day → night
-      "2026-11-08": ["Yu Garden", "Yuyuan Bazaar", "Nanxiang Steamed Buns", "Nanjing Road Pedestrian", "Rockbund", "The Bund", "Lost Heaven"],
-      "2026-11-09": ["Lujiazui", "Shanghai Tower", "Museum of Art Pudong", "North Bund", "Oriental Pearl"],
-      "2026-11-10": ["Wukang Mansion", "Anfu Road", "Wuyuan Road", "% Arabica (Wukang Road)", "Chifane", "Ren He Guan", "Beer Lady"],
-      "2026-11-11": ["Jing'an Temple", "Natural History Museum", "Zhang Garden", "The Louis", "Ibaursak", "Found 158"],
-      // travel day — Shanghai morning/afternoon (near Amara) → Fuxing after lunch → Suzhou evening
-      "2026-11-12": ["1000 Trees", "M50 Creative Park", "Shantang Street", "Tongdexing Noodle House"],
-      // Suzhou morning/afternoon → Fuxing after lunch → Hangzhou evening
-      "2026-11-13": ["Pingjiang Road", "Suzhou Museum", "Humble Administrator's Garden", "Lion Grove Garden", "Hefang Street", "Starbucks Reserve", "Nansong Shufang"],
-      // Hangzhou (Atour, Hubin/West Lake)
-      "2026-11-14": ["West Lake", "Su Causeway", "Broken Bridge", "Lingyin Temple", "Feilai Feng", "Louwailou"],
-      // Hangzhou (Club Med, Longwu tea hills)
-      "2026-11-15": ["Longjing Tea Village", "Meijiawu Tea Village", "Grandma's Home"],
-      // Hangzhou morning → Fuxing after lunch → Shanghai evening
-      "2026-11-16": ["Leifeng Pagoda", "Xintiandi", "Tianzifang", "Polux by Paul Pairet"],
-      // art day down the river — dinner on the way home at the Dapu Rd skewer joint
-      "2026-11-17": ["West Bund", "Long Museum", "Tank Shanghai", "Power Station of Art", "很久以前羊肉串 (Long Time Ago Skewers)"],
-      "2026-11-18": ["Columbia Circle", "Sinan Mansions", "TX Huaihai", "Matcha Wang", "Speak Low"],
-      "2026-11-19": ["Zhujiajiao Water Town"],
-      "2026-11-20": ["Shanghai Museum", "People's Square", "Wei Xiang Zhai", "Aujeong", "The Bund"],
-    };
-    // places we wanted but couldn't fit (mostly the 1-day Suzhou crunch) → Alternatives
-    const CANT_FIT = ["Lingering Garden", "Master of the Nets Garden", "Tiger Hill", "Hanshan Temple", "Pan Gate",
-      "Tongli Water Town", "Zhouzhuang Water Town", "Mudu Ancient Town", "Shuangta Market", "Green Dog Coffee",
-      "Xixi National Wetland Park", "Yue Fei Temple", "Three Pools Mirroring the Moon"];
-    const trip = {
-      id: "trip-shsz-2026-11", name: "Shanghai · Suzhou · Hangzhou",
-      start: "2026-11-07", end: "2026-11-21",
-      outbound: { flight: "SQ836", date: "2026-11-07", leg: "SIN 17:00 → Shanghai Pudong (PVG) 22:00" },
-      inbound:  { flight: "SQ827", date: "2026-11-21", leg: "Shanghai Pudong (PVG) 08:20 → SIN 14:10" },
-      segments: [
-        { city: "shanghai", start: "2026-11-07", end: "2026-11-12", hotel: { name: "Amara Shanghai", area: "600 Changshou Rd, Putuo", link: mapsLink("Amara Shanghai 600 Changshou Road Putuo"), lat: 31.2470, lng: 121.4385 } },
-        { city: "suzhou",   start: "2026-11-12", end: "2026-11-13", hotel: { name: "Ji Hotel Suzhou Guanqian St · Pingjiang", area: "66 Luoguqiao Xiatang, Lindun Rd, Gusu", link: mapsLink("Ji Hotel Suzhou Guanqian Street Pingjiang Lindun Road"), lat: 31.3135, lng: 120.6270 } },
-        { city: "hangzhou", start: "2026-11-13", end: "2026-11-15", hotel: { name: "Atour Hotel Hangzhou Pinghai Rd · Hubin", area: "Pinghai Rd, Hubin, by West Lake", link: mapsLink("Atour Hotel Hangzhou Pinghai Road Hubin West Lake"), lat: 30.2530, lng: 120.1640 } },
-        { city: "hangzhou", start: "2026-11-15", end: "2026-11-16", hotel: { name: "Club Med Urban Oasis Hangzhou", area: "Longwu area, Xihu (approx)", link: mapsLink("Club Med Urban Oasis Hangzhou Longwu"), lat: 30.1470, lng: 120.0900 } },
-        { city: "shanghai", start: "2026-11-16", end: "2026-11-21", hotel: urcove() },
-      ],
-      legs: [
-        L("Pudong Airport", "Shanghai (Amara)", "2026-11-07", [
-          "Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
-          "Maglev to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — bullet-speed welcome if still running",
-          "Metro Line 2 — ~70 min, ¥7 (last train ~22:00)"], 0),
-        L("Shanghai", "Suzhou", "2026-11-12", [
-          "Fuxing (复兴号) bullet, Shanghai Hongqiao → Suzhou — depart after lunch (~14:00), 25–30 min, ¥40; roomier Fuxing seats",
-          "any G-train from Shanghai Railway Stn — ~30 min, ¥26–40",
-          "Private car — ~1h20, ≈¥350"], 0),
-        L("Suzhou", "Hangzhou", "2026-11-13", [
-          "Fuxing (复兴号) bullet, Suzhou N → Hangzhou — depart mid-afternoon (~15:30) so you finish the gardens first; ~1h25, ¥120–160; extra legroom",
-          "G via Shanghai Hongqiao (1 change) — ~1h50, more departures",
-          "Private car — ~2h, ≈¥600"], 0),
-        L("Hangzhou (Hubin)", "Club Med Longwu", "2026-11-15", [
-          "Taxi / Didi across town to Longwu — ~35–45 min, ≈¥70",
-          "Metro + short taxi — ~1h"], 0),
-        L("Hangzhou", "Shanghai", "2026-11-16", [
-          "Fuxing (复兴号) bullet, Hangzhou East → Shanghai Hongqiao — depart after lunch (~14:00), ~1h, ¥73–120; roomy Fuxing seats",
-          "any G-train to Shanghai Railway Stn (central) — ~1h, ¥73",
-          "Private car — ~2h, ≈¥600"], 0),
-        L("Shanghai", "Pudong Airport", "2026-11-21", [
-          "Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
-          "Maglev from Longyang Rd (first ~06:45) + Metro — check first-train timing",
-          "Metro Line 2 (first ~05:30) — ~75 min, ¥7"], 0),
-      ],
-      plan: {}, wishlist: [],
-    };
-    for (const [date, names] of Object.entries(ITIN)) trip.plan[date] = names.map(findPlaceId).filter(Boolean);
-    trip.wishlist = CANT_FIT.map(findPlaceId).filter(Boolean);
-    return trip;
-  }
-  function ensureTripV2() {
-    if (store.tripBuilt === "v3") return;
-    store.tripBuilt = "v3";
-    store.trips = (store.trips || []).filter(t => t.id !== "trip-shsz-2026-11"); // drop the old version
-    store.trips.push(makeTripV2());
-    save();
-  }
-
-  // ---- (legacy) original seed, kept for reference; superseded by ensureTripV2 ----
-  function seedTrip() {
-    if (store.seededTrip1) return;
-    store.seededTrip1 = true;
-    const T = (from, to, date, options, chosen) => ({ from, to, date, options, chosen });
-    const trip = {
-      id: "trip-shsz-2026-11", name: "Shanghai · Suzhou · Hangzhou",
-      start: "2026-11-07", end: "2026-11-21",
-      outbound: { flight: "SQ836", date: "2026-11-07", leg: "SIN 17:00 → Shanghai Pudong (PVG) 22:00" },
-      inbound:  { flight: "SQ827", date: "2026-11-21", leg: "Shanghai Pudong (PVG) 08:20 → SIN 14:10" },
-      segments: [
-        { city: "shanghai", start: "2026-11-07", end: "2026-11-13", hotel: null },
-        { city: "suzhou",   start: "2026-11-13", end: "2026-11-16", hotel: null },
-        { city: "hangzhou", start: "2026-11-16", end: "2026-11-19", hotel: null },
-        { city: "shanghai", start: "2026-11-19", end: "2026-11-21", hotel: null },
-      ],
-      legs: [
-        T("Pudong Airport", "Shanghai city", "2026-11-07", [
-          "Taxi / Didi to hotel — ~45–60 min, ≈¥180 (best for a 22:00 arrival)",
-          "Maglev 磁悬浮 to Longyang Rd (7.5 min @430 km/h, ¥50) + Metro — a bullet-speed welcome, if trains still running",
-          "Metro Line 2 to city — ~70 min, ¥7 (last train ~22:00, tight)",
-        ], 0),
-        T("Shanghai", "Suzhou", "2026-11-13", [
-          "G high-speed 'bullet' train, Shanghai Hongqiao → Suzhou — 23–35 min, ¥40, very frequent",
-          "D/G from Shanghai Railway Stn → Suzhou — ~30 min, ¥26–40",
-          "Private car / Didi intercity — ~1h20, ≈¥350",
-        ], 0),
-        T("Suzhou", "Hangzhou", "2026-11-16", [
-          "G high-speed train direct, Suzhou N → Hangzhou — ~1h20–1h45, ¥120–160",
-          "G via Shanghai Hongqiao (1 change) — ~1h50, ¥110–150, more departures",
-          "Private car — ~2h, ≈¥600",
-        ], 0),
-        T("Hangzhou", "Shanghai", "2026-11-19", [
-          "G high-speed train, Hangzhou East → Shanghai Hongqiao — 45–65 min, ¥73–120",
-          "G → Shanghai Railway Stn (central) — ~1h, ¥73",
-          "Private car — ~2h, ≈¥600",
-        ], 0),
-        T("Shanghai city", "Pudong Airport", "2026-11-21", [
-          "Taxi / Didi to PVG — ~45–60 min, ≈¥180 (safest for the 08:20 flight)",
-          "Maglev from Longyang Rd (first ~06:45) + Metro — fun but check first-train timing",
-          "Metro Line 2 (first ~05:30) — ~75 min, ¥7, earliest but slow",
-        ], 0),
-      ],
-      plan: {}, wishlist: [],
-    };
-    const ITIN = {
-      "2026-11-08": ["The Bund", "Yu Garden", "Yuyuan Bazaar", "Nanjing Road Pedestrian", "Nanxiang Steamed Buns"],
-      "2026-11-09": ["Lujiazui", "Shanghai Tower", "Museum of Art Pudong", "Oriental Pearl Tower"],
-      "2026-11-10": ["Wukang Mansion", "Anfu Road", "% Arabica (Wukang Road)", "Tianzifang", "Metal Hands"],
-      "2026-11-11": ["Jing'an Temple", "Zhang Garden", "M50 Creative Park", "1000 Trees", "Manner Coffee"],
-      "2026-11-12": ["Shanghai Propaganda Poster Art Centre", "Columbia Circle", "West Bund Art Belt", "Shouning Road Crayfish"],
-      "2026-11-13": ["Pingjiang Road", "Suzhou Museum", "Humble Administrator's Garden"],
-      "2026-11-14": ["Lingering Garden", "Tiger Hill", "Shantang Street", "Tongdexing Noodle House"],
-      "2026-11-15": ["Tongli Water Town", "Shuangta Market"],
-      "2026-11-16": ["West Lake", "Broken Bridge", "Bai Causeway", "Louwailou"],
-      "2026-11-17": ["Su Causeway", "Leifeng Pagoda", "Lingyin Temple", "Feilai Feng"],
-      "2026-11-18": ["Longjing Tea Village", "Meijiawu Tea Village", "Xixi National Wetland Park"],
-      "2026-11-19": ["Xintiandi", "TX Huaihai"],
-      "2026-11-20": ["Power Station of Art", "Tianzifang"],
-    };
-    for (const [date, names] of Object.entries(ITIN))
-      trip.plan[date] = names.map(findPlaceId).filter(Boolean);
-    store.trips.push(trip); save();
-  }
+  // The reference trip is seeded server-side (backend/scripts/seed.js) and any
+  // trip you had in the old browser store is imported on first boot. Nothing is
+  // fabricated in the client any more.
 
   // ---- render: list of trips OR a single trip's detail ----
-  const tripContent = document.getElementById("tripContent");
-  function renderTrip() {
-    if (openTripId && store.trips.find(t => t.id === openTripId)) renderTripDetail(store.trips.find(t => t.id === openTripId));
-    else renderTripList();
-  }
-  function renderTripList() {
-    clearScope();
-    document.getElementById("tripBar").innerHTML = "";
-    let h = `<div class="trip-actions"><button class="btn primary" id="newTripBtn">${ic("plus", "sm")}New trip</button></div>`;
-    if (!store.trips.length) h += `<div class="tip-note">No trips yet. Create one, add city stays with dates, pick transport between them, add hotels, and drop places into each day. Everything saves in your browser.</div>`;
-    store.trips.forEach(t => {
-      const cities = [...new Set(t.segments.map(s => (CITIES[s.city] || {}).name || s.city))].join(" → ");
-      h += `<div class="trip-card" data-open="${t.id}">
-        <h3>${esc(t.name)}</h3>
-        <div class="sub">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${esc(cities)}</div>
-      </div>`;
+  function segForDate(t, date) { return (t.segments || []).find(s => date >= s.start && date < s.end); }
+
+  // Every stay this date touches. On a travel day that's two: the one you check out of
+  // and the one you check into. Stays are inclusive of both their start and end dates here,
+  // because the checkout morning is still a morning spent in that city.
+  function segsForDate(t, date) {
+    const out = [];
+    (t.segments || []).forEach((s, i) => {
+      if (date >= s.start && date <= s.end)
+        out.push({ s, i, arrive: date === s.start, depart: date === s.end });
     });
-    tripContent.innerHTML = h;
-    document.getElementById("newTripBtn").onclick = createTrip;
-    tripContent.querySelectorAll("[data-open]").forEach(c => c.onclick = () => { openTripId = c.dataset.open; renderTrip(); });
+    // earliest check-in first — that is the order you pass through them
+    return out.sort((a, b) => (a.s.start < b.s.start ? -1 : a.s.start > b.s.start ? 1 : a.i - b.i));
+  }
+  // the cities you're in on this date, in the order you're in them
+  function citiesForDate(t, date) {
+    // The server works this out from the stays AND the commutes' resolved
+    // areas, so it can see a day trip that never changes hotel. Fall back to
+    // the local stays only for a trip that hasn't been saved yet.
+    const fromServer = (t.areasByDay || {})[date];
+    if (fromServer && fromServer.length) return fromServer;
+    // In the order you actually move through them. Only CONSECUTIVE repeats are
+    // collapsed, so a Shanghai → Suzhou → Shanghai day keeps all three legs.
+    const seq = segsForDate(t, date)
+      .map(x => x.s.city)
+      .filter(Boolean)
+      .filter((c, i, arr) => i === 0 || arr[i - 1] !== c);
+    if (seq.length) return seq;
+    const all = t.segments || [];
+    if (!all.length) return [];
+    const before = all.filter(s => s.end <= date).pop();   // outside every stay — use the nearest one
+    return [(before || all[0]).city];
+  }
+  const cityLabel = (t, date) => citiesForDate(t, date).map(areaName).join(" → ");
+  // Leaving the area — a different city, province or country. Moving hotels
+  // within one city is not travel, which is the whole point of this check.
+  function isTravelDay(t, date, cities) {
+    const server = (t.travelDays || {})[date];
+    if (server !== undefined) return !!server;
+    return new Set(cities || citiesForDate(t, date)).size > 1;
+  }
+  // where the day ends up — the default for filtering and for "add a place here"
+  function segCity(t, date) { const c = citiesForDate(t, date); return c.length ? c[c.length - 1] : ""; }
+
+  // ---- trips live in two places: a nav rail in the sidebar, content on the stage ----
+  const stage = document.getElementById("stage");
+  let stageTab = "overview";       // "overview" | "plan"
+  let stageDate = null;            // the day currently in focus inside the plan
+  let collapsedDays = new Set();   // plan accordion — empty set means "all expanded"
+  let addOpenDate = null;          // which day card has its add row showing
+  const addCity = {};              // date -> which of the day's cities you're adding for
+
+  const openTrip = () => store.trips.find(x => x.id === openTripId) || null;
+  function renderTrip() {
+    const t = openTrip();
+    if (t) { t.wishlist = t.wishlist || []; scopeTrip = t; refreshMarkers(); drawHotels(t, focusedDate); showMapOverlay(true); }
+    else { clearScope(); }
+    renderStage(t);
+  }
+  const renderTripDetail = t => renderStage(t);
+
+  function openTripById(id, tab) {
+    openTripId = id; stageTab = tab || "overview"; stageDate = null;
+    collapsedDays = new Set(); addOpenDate = null;
+    focusedDate = null; dayFocusIds = new Set(); dayFocusOrder = {};   // no day in focus yet
+    renderTrip();
+    if (tab === "plan") stage.scrollTop = 0;
   }
 
-  function segForDate(t, date) { return t.segments.find(s => date >= s.start && date < s.end); }
+  function openDay(t, date) {
+    stageTab = "plan"; stageDate = date; collapsedDays.delete(date);
+    renderStage(t);
+    scrollToDay(date);
+    if (mapOpen()) focusDayOnMap(t, date);
+  }
+  // Move the "you are here" highlight without re-rendering the whole plan —
+  // a full re-render would yank the page out from under the tap.
+  function markCurrentDay(date) {
+    stage.querySelectorAll(".dsec.cur").forEach(el => el.classList.remove("cur"));
+    const el = document.getElementById("day-" + date);
+    if (el) el.classList.add("cur");
+  }
 
-  function renderTripDetail(t) {
-    t.wishlist = t.wishlist || [];
-    // opening a trip scopes the map to its places; keep any current day highlight
-    scopeTrip = t; refreshMarkers(); drawHotels(t);
-    showMapOverlay(true);   // "show other places nearby" floats over the map while a trip is open
-    const days = dateRange(t.start, t.end);
-    let h = `<div class="trip-actions">
-      <button class="btn sm" id="backTrips">← Trips</button>
-      <button class="btn sm" id="delTrip" style="margin-left:auto">${ic("trash", "sm")}Delete</button>
-    </div>
-    <div class="trip-head">
-      <h2>${esc(t.name)}</h2>
-      <div class="dates">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days · <button class="btn sm" id="editFlights" style="padding:2px 7px">${ic("plane", "sm")}Flights</button></div>
-      ${(t.outbound.flight || t.outbound.leg) ? `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.outbound.flight)}</span><span class="leg">${esc(t.outbound.leg)}</span></div>` : ""}
-      ${(t.inbound.flight || t.inbound.leg) ? `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.inbound.flight)}</span><span class="leg">${esc(t.inbound.leg)}</span></div>` : ""}
+  function scrollToDay(date) {
+    setTimeout(() => {
+      const el = document.getElementById("day-" + date);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
+  // ---------- stage ----------
+  function renderStage(t) {
+    if (!t) { renderStageList(); return; }
+    if (stageTab === "plan") renderStagePlan(t);
+    else renderStageOverview(t);
+  }
+
+  // the trip list itself now lives on the stage
+  function renderStageList() {
+    const n = store.trips.length;
+    let h = `<div class="stage-in">
+      <div class="st-head">
+        <div class="st-head-b">
+          <h2 class="st-title">Trips</h2>
+          <div class="st-sub">${n ? n + " trip" + (n > 1 ? "s" : "") : "Nothing planned yet"}</div>
+        </div>
+        <button class="btn primary" id="stNewTrip">${ic("plus", "sm")}New trip</button>
+      </div>
+      <div class="st-sec">`;
+    if (!n) h += `<div class="tip-note">No trips yet. Create one, add city stays with dates, pick transport between them, add hotels, and drop places into each day.</div>`;
+    store.trips.forEach(x => {
+      const segs = x.segments || [];
+      const areas = [...new Set(segs.map(s => areaName(s.city)))].join(" → ");
+      const nd = dateRange(x.start, x.end).length;
+      const nP = new Set(Object.values(x.plan || {}).flat().filter(id => placeById(id))).size;
+      const nB = segs.filter(s => s.hotel).length;
+      h += `<div class="trip-card" data-open="${x.id}">
+        <h3>${esc(x.name)}</h3>
+        <div class="sub">${fmtDay(x.start)} – ${fmtDay(x.end)} · ${nd} days${areas ? " · " + esc(areas) : ""}</div>
+        <div class="tc-meta">${nP} place${nP === 1 ? "" : "s"} planned · ${nB} of ${segs.length} stay${segs.length === 1 ? "" : "s"} booked</div>
+        <div class="tc-acts">
+          <button class="btn sm" data-openov="${x.id}">${ic("layers", "sm")}Overview</button>
+          <button class="btn sm" data-openplan="${x.id}">${ic("calendar", "sm")}Plan</button>
+        </div></div>`;
+    });
+    h += `</div></div>`;
+    stage.innerHTML = h;
+    stage.querySelectorAll("[data-open]").forEach(c => c.onclick = (e) => {
+      if (e.target.closest("button")) return;
+      openTripById(c.dataset.open, "overview");
+    });
+    stage.querySelectorAll("[data-openov]").forEach(b => b.onclick = () => openTripById(b.dataset.openov, "overview"));
+    stage.querySelectorAll("[data-openplan]").forEach(b => b.onclick = () => openTripById(b.dataset.openplan, "plan"));
+    const nb = document.getElementById("stNewTrip");
+    if (nb) nb.onclick = createTrip;
+  }
+
+  const tabsBar = () => `<div class="st-crumb">
+      <button class="btn sm" id="stAll">${ic("back", "sm")}All trips</button>
+      <div class="st-tabs">
+        <button data-tab="overview" class="${stageTab === "overview" ? "on" : ""}">Overview</button>
+        <button data-tab="plan" class="${stageTab === "plan" ? "on" : ""}">Plan</button>
+      </div>
+      <span class="spacer"></span>
+      <button class="btn sm" id="stDel" title="Delete this trip">${ic("trash", "sm")}</button>
+      <button class="btn sm" id="stMap">${ic("map", "sm")}${mapOpen() ? "Hide map" : "Show map"}</button>
     </div>`;
 
+  // The kind catalogue comes from the database (GET /api/trips/commute-kinds),
+  // so adding "sleeper train" server-side needs no change here.
+  let COMMUTE_KINDS = [];
+  const commuteKind = (id) => COMMUTE_KINDS.find(k => k.id === id)
+    || { id: id || "other", label: id || "Transport", icon: "train", spans_days: false };
+  const spanDays = (c) => dateRange(c.startDate, c.endDate || c.startDate).length;
+
+  // Per-type detail lives in `attrs`; show only what's filled in.
+  const ATTR_LABEL = {
+    vendor: "with", vehicleClass: "car", plate: "plate", transmission: "gearbox",
+    fuelPolicy: "fuel", insurance: "cover", deposit: "deposit", pickupInstructions: "pickup",
+    terminal: "terminal", gate: "gate", seat: "seat", baggage: "bags", aircraft: "aircraft",
+    cabin: "cabin", car: "carriage", platform: "platform", class: "class",
+    passType: "pass", coverage: "covers", parking: "parking",
+  };
+  const attrLine = (c) => Object.entries(c.attrs || {})
+    .filter(([, v]) => v != null && v !== "")
+    .map(([k, v]) => `<span class="attr"><i>${esc(ATTR_LABEL[k] || k)}</i> ${esc(String(v))}</span>`)
+    .join("");
+
+  // One form for every kind: the shared fields, then whatever that kind adds.
+  const KIND_FIELDS = {
+    car_rental: [["vendor", "Rental company"], ["vehicleClass", "Vehicle"], ["plate", "Plate"],
+                 ["fuelPolicy", "Fuel policy"], ["insurance", "Insurance"], ["deposit", "Deposit"]],
+    car_own:    [["plate", "Plate"], ["parking", "Parking notes"], ["tolls", "Tolls"]],
+    flight:     [["terminal", "Terminal"], ["seat", "Seat"], ["baggage", "Baggage"], ["cabin", "Cabin"]],
+    train:      [["car", "Carriage"], ["seat", "Seat"], ["platform", "Platform"], ["class", "Class"]],
+    ferry:      [["cabin", "Cabin"], ["deck", "Deck"]],
+    rail_pass:  [["passType", "Pass"], ["coverage", "Covers"]],
+  };
+
+  async function editCommute(t, idx) {
+    const cur = idx == null ? {} : (t.commutes[idx] || {});
+    const kind = cur.kind || "car_rental";
+    const k = commuteKind(kind);
+    const extra = (KIND_FIELDS[kind] || []).map(([key, label]) =>
+      ({ key: "a_" + key, label, value: (cur.attrs || {})[key] || "" }));
+    const v = await showModal({
+      title: idx == null ? "Add transport" : k.label,
+      okText: "Save",
+      message: "A hire car or a rail pass covers a range of days; a transfer is a single date.",
+      fields: [
+        { key: "kind", label: "Type", type: "select", value: kind,
+          options: COMMUTE_KINDS.map(x => ({ value: x.id, label: x.label })) },
+        { key: "label", label: "Description", value: cur.label || "", placeholder: "e.g. Hertz compact, Hongqiao pickup" },
+        { key: "start", label: "From date", type: "date", value: cur.startDate || t.start },
+        { key: "end", label: "To date (leave as-is for a single day)", type: "date", value: cur.endDate || cur.startDate || t.start },
+        { key: "from", label: "Pick up / from", value: cur.fromLabel || "" },
+        { key: "to", label: "Drop off / to", value: cur.toLabel || "" },
+        { key: "code", label: "Booking reference", value: cur.code || "" },
+        { key: "status", label: "Status", type: "select", value: cur.status || "idea",
+          options: [{ value: "idea", label: "Idea" }, { value: "planned", label: "Planned" }, { value: "booked", label: "Booked" }] },
+        ...extra,
+      ],
+    });
+    if (!v) return;
+    const attrs = {};
+    (KIND_FIELDS[v.kind] || []).forEach(([key]) => { if (v["a_" + key]) attrs[key] = v["a_" + key]; });
+    const row = {
+      kind: v.kind, label: v.label || null, startDate: v.start,
+      endDate: (v.end && v.end !== v.start) ? v.end : null,
+      fromLabel: v.from || null, toLabel: v.to || null,
+      code: v.code || null, status: v.status, attrs,
+      direction: "internal",
+    };
+    t.commutes = t.commutes || [];
+    if (idx == null) t.commutes.push(row); else t.commutes[idx] = Object.assign({}, cur, row);
+    save(); renderStage(t);
+  }
+
+  // A place is shared; what it means on one day of one trip is not. Timing, a
+  // note and where it falls in the day live on the trip item, not on the place.
+  async function editItem(t, date, placeId) {
+    const p = placeById(placeId); if (!p) return;
+    const key = date + "|" + placeId;
+    t.timing = t.timing || {};
+    const cur = t.timing[key] || {};
+    const v = await showModal({
+      title: p.name,
+      okText: "Save",
+      message: fmtDay(date) + " — most stops only need a rough slot. Set a time only where it matters.",
+      fields: [
+        { key: "slot", label: "When", type: "select", value: cur.slot || "",
+          options: [{ value: "", label: "Work it out for me" },
+                    { value: "morning", label: "Morning" },
+                    { value: "noon", label: "Midday" },
+                    { value: "evening", label: "Evening" }] },
+        { key: "start", label: "Starts at (optional)", value: cur.startTime || "", placeholder: "09:30" },
+        { key: "end", label: "Ends at (optional)", value: cur.endTime || "", placeholder: "11:00" },
+        { key: "note", label: "Note for this stop", value: cur.note || "",
+          placeholder: "booked, ref 8821 · closes early on Mondays" },
+      ],
+    });
+    if (!v) return;
+    const hhmm = (x) => {
+      const m = String(x || "").trim().match(/^(\d{1,2})[:.]?(\d{2})$/);
+      if (!m) return null;
+      const hh = Math.min(23, +m[1]), mm = Math.min(59, +m[2]);
+      return String(hh).padStart(2, "0") + ":" + String(mm).padStart(2, "0");
+    };
+    if (v.start && !hhmm(v.start)) { showHint("Couldn't read that start time — use 09:30"); return; }
+    if (v.end && !hhmm(v.end)) { showHint("Couldn't read that end time — use 11:00"); return; }
+    const next = { slot: v.slot || null, startTime: hhmm(v.start), endTime: hhmm(v.end), note: v.note || null };
+    if (!next.slot && !next.startTime && !next.endTime && !next.note) delete t.timing[key];
+    else t.timing[key] = next;
+    save(); renderStage(t);
+  }
+
+  // People are stored server-side immediately: they aren't part of the plan
+  // document, and a traveller's dates shouldn't wait on a debounce.
+  async function editPerson(t, idx) {
+    const cur = idx == null ? {} : (t.participants[idx] || {});
+    const first = (cur.dates || [])[0] || {};
+    const v = await showModal({
+      title: idx == null ? "Add someone" : esc(cur.name),
+      okText: "Save",
+      message: "Leave the dates on the full trip unless they join late or leave early.",
+      fields: [
+        { key: "name", label: "Name", value: cur.name || "" },
+        { key: "email", label: "Email (optional)", value: cur.email || "" },
+        { key: "start", label: "Joins on", type: "date", value: first.startDate || t.start },
+        { key: "end", label: "Leaves on", type: "date", value: first.endDate || t.end },
+      ],
+    });
+    if (!v || !v.name) return;
+    const whole = v.start === t.start && v.end === t.end;
+    const body = {
+      name: v.name, email: v.email || null,
+      dates: whole ? [] : [{ startDate: v.start, endDate: v.end }],
+    };
+    try {
+      t.participants = idx == null
+        ? await Repo.addParticipant(t.id, body)
+        : await Repo.updateParticipant(t.id, cur.id, body);
+    } catch (e) { showHint("Couldn't save that: " + e.message); return; }
+    renderStage(t);
+  }
+
+  const bkRow = o => `<div class="bk${o.missing ? " missing" : ""}">
+      <span class="bk-ic">${ic(o.icon, "lg")}</span>
+      <span class="bk-b">
+        <span class="bk-when">${esc(o.when)}</span>
+        <div class="bk-name">${o.name}</div>
+        ${o.meta ? `<div class="bk-meta">${o.meta}</div>` : ""}
+        ${o.acts ? `<div class="bk-acts">${o.acts}</div>` : ""}
+      </span>
+      ${o.tag ? `<span class="tag${o.missing ? " no" : ""}">${esc(o.tag)}</span>` : ""}
+    </div>`;
+
+  function renderStageOverview(t) {
+    const days = dateRange(t.start, t.end);
+    const areas = [...new Set(t.segments.map(s => s.city))];
+    const countries = [...new Set(areas.map(countryOf))];
+    const stays = t.segments.length;
+    const booked = t.segments.filter(s => s.hotel).length;
+    const plannedCount = new Set(Object.values(t.plan).flat().filter(id => placeById(id))).size;
+    const cant = (t.wishlist || []).filter(id => placeById(id));
+
+    let h = `<div class="stage-in">${tabsBar()}
+      <h2 class="st-title">${esc(t.name)}</h2>
+      <div class="st-sub">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days · ${plannedCount} places planned</div>
+      <div class="st-chips">
+        ${countries.map(c => `<span class="geo-chip country">${esc(countryName(c))}</span>`).join("")}
+        ${areas.map(a => `<span class="geo-chip">${esc(areaName(a))}</span>`).join("")}
+      </div>`;
+
     if (!t.segments.length) {
-      h += `<div class="tip-note">This trip has no city stays yet. Add one to build a day-by-day plan.</div>
-        <div class="trip-actions"><button class="btn primary" id="addStay">${ic("plus", "sm")}Add first city stay</button></div>`;
-      tripContent.innerHTML = h; wireTripDetail(t); return;
+      h += `<div class="st-sec"><div class="tip-note">This trip has no city stays yet. Add one to build a day-by-day plan.</div>
+        <button class="btn primary" id="stStay2">${ic("plus", "sm")}Add first city stay</button></div></div>`;
+      stage.innerHTML = h; wireStage(t); return;
     }
 
-    h += `<div class="tip-note">Tap a <b>day header</b> to focus that day on the map. The ${ic("layers", "sm")} button beside it opens that day's <b>alternatives</b> in the side panel, and tapping a place searches it live in the mini browser on the right.</div>`;
-    // overview: what's planned + what couldn't fit
-    const plannedCount = new Set(Object.values(t.plan).flat()).size;
-    const cant = t.wishlist.filter(id => placeById(id));
-    h += `<div class="overview"><div class="ov-sum"><b>${plannedCount}</b> places planned · <b>${cant.length}</b> couldn't fit / not scheduled</div>
-      ${cant.length ? `<button class="ov-toggle" id="ovToggle">${overviewOpen ? ic("up", "sm") + "hide" : ic("down", "sm") + "show"} the couldn't-fit list</button>` : ""}</div>`;
-    if (overviewOpen && cant.length) {
-      h += `<div class="ov-list">`;
-      cant.forEach(id => { const p = placeById(id);
-        h += `<div class="ov-item"><span class="wname" data-fly="${p.id}">${catIc(p, "sm")} ${esc(p.name)} <span class="pcn2">${esc((CITIES[p.city] || {}).name || "")}</span></span>
-          <button class="rm" data-wrm="${p.id}" title="remove">×</button></div>`; });
+    // ---- getting around: flights, and anything else you're holding ----
+    h += `<div class="st-sec"><h3>${ic("plane", "sm")}Getting there
+      <button class="h3btn" id="stCommute">${ic("plus", "sm")}Add transport</button></h3>`;
+    [["Out", t.outbound], ["Back", t.inbound]].forEach(([lbl, f]) => {
+      const has = f && (f.flight || f.leg);
+      h += bkRow({
+        icon: "plane", when: lbl + " · " + (f && f.date ? fmtDay(f.date) : "no date"),
+        name: has ? esc(f.flight || "Flight") : "Not booked",
+        meta: has ? esc(f.leg || "") : "Add the flight number and times.",
+        acts: `<button data-flights>${ic("pencil", "sm")}${has ? "Edit" : "Add"}</button>`,
+        tag: has ? "booked" : "to book", missing: !has,
+      });
+    });
+    // hire cars, rail passes, transfers — the ones that can run across days
+    (t.commutes || []).forEach((c, ci) => {
+      const k = commuteKind(c.kind);
+      const span = c.endDate && c.endDate !== c.startDate;
+      h += bkRow({
+        icon: k.icon, when: k.label + " · " + (span
+          ? fmtDay(c.startDate) + " → " + fmtDay(c.endDate) + " · " + spanDays(c) + " days"
+          : fmtDay(c.startDate)),
+        name: esc(c.label || c.operator || k.label),
+        meta: [
+          [c.fromLabel, c.toLabel].filter(Boolean).join(" → "),
+          c.code ? "ref " + esc(c.code) : "",
+          attrLine(c),
+        ].filter(Boolean).join("<br>"),
+        acts: `<button data-editcommute="${ci}">${ic("pencil", "sm")}Edit</button>
+               <button data-rmcommute="${ci}">Remove</button>`,
+        tag: c.status === "booked" ? "booked" : c.status === "planned" ? "planned" : "to book",
+        missing: c.status !== "booked",
+      });
+    });
+    h += `</div>`;
+
+    // ---- who's coming, and for how long ----
+    h += `<div class="st-sec"><h3>${ic("users", "sm")}Who's coming<span class="cnt">${(t.participants || []).length || "just you"}</span>
+      <button class="h3btn" id="stPerson">${ic("plus", "sm")}Add someone</button></h3>`;
+    if (!(t.participants || []).length) {
+      h += `<div class="tip-note">Nobody listed yet. Add the people travelling with you — each can have their own dates, because people don't always come for the whole trip.</div>`;
+    } else {
+      t.participants.forEach((p, pi) => {
+        const when = p.wholeTrip
+          ? "whole trip"
+          : p.dates.map(d => fmtDay(d.startDate) + " → " + fmtDay(d.endDate)).join(", ");
+        const nights = p.wholeTrip ? days.length : p.dates.reduce((n, d) => n + dateRange(d.startDate, d.endDate).length, 0);
+        h += `<div class="person" data-person="${pi}">
+          <span class="pav" style="${p.colour ? `background:${esc(p.colour)}` : ""}">${esc((p.name || "?").trim()[0] || "?")}</span>
+          <span class="pb"><span class="pn">${esc(p.name)}${p.isOrganiser ? `<span class="ptag">organiser</span>` : ""}</span>
+            <span class="pw">${esc(when)} · ${nights} day${nights === 1 ? "" : "s"}</span></span>
+          <span class="pacts"><button data-editperson="${pi}">${ic("pencil", "sm")}</button>
+            <button data-rmperson="${pi}">${ic("trash", "sm")}</button></span></div>`;
+      });
+    }
+    h += `</div>`;
+
+    // ---- stays ----
+    h += `<div class="st-sec"><h3>${ic("bed", "sm")}Stays<span class="cnt">${booked} of ${stays} booked</span>
+      <button class="h3btn" id="stStay">${ic("plus", "sm")}Add stay</button></h3>`;
+    t.segments.forEach((seg, si) => {
+      const ho = seg.hotel;
+      h += bkRow({
+        icon: "bed",
+        when: areaName(seg.city) + " · " + countryName(countryOf(seg.city)),
+        name: ho ? esc(ho.name) : "No hotel booked",
+        meta: `${fmtDay(seg.start)} → ${fmtDay(seg.end)} · ${nights(seg)} night${nights(seg) > 1 ? "s" : ""}`
+          + `${seg.checkInTime || seg.checkOutTime ? ` · in ${esc(seg.checkInTime || "—")}, out ${esc(seg.checkOutTime || "—")}` : ""}`
+          + `${ho && ho.area ? "<br>" + esc(ho.area) : ""}`,
+        acts: ho
+          ? `${typeof ho.lat === "number" ? `<button data-hotelmap="${si}">${ic("pin", "sm")}On map</button>` : ""}
+             ${ho.link ? `<a href="${esc(ho.link)}" target="_blank" rel="noopener">${ic("map", "sm")}Maps</a>` : ""}
+             <button data-edithotel="${si}">${ic("pencil", "sm")}Edit</button>
+             <button data-rmhotel="${si}">Remove</button>`
+          : `<button data-addhotel="${si}">${ic("plus", "sm")}Add hotel</button>
+             <button data-hotelweb="${si}">${ic("search", "sm")}Find one</button>`,
+        tag: ho ? "booked" : "to book", missing: !ho,
+      });
+    });
+    h += `</div>`;
+
+    // ---- transport between areas ----
+    if (t.legs.length) {
+      h += `<div class="st-sec"><h3>${ic("train", "sm")}Between cities</h3>`;
+      t.legs.forEach((l, li) => {
+        const chosen = l.options[l.chosen];
+        h += bkRow({
+          icon: commuteKind((l.kinds || [])[l.chosen]).icon, when: fmtDay(l.date),
+          name: esc(l.from) + " → " + esc(l.to),
+          meta: chosen ? esc(chosen) : "No option chosen yet.",
+          acts: `<button data-legday="${l.date}">${ic("layers", "sm")}Open that day</button>`,
+          tag: chosen ? "chosen" : "to pick", missing: !chosen,
+        });
+      });
       h += `</div>`;
     }
 
+    // ---- days ----
+    h += `<div class="st-sec"><h3>${ic("calendar", "sm")}Days<span class="cnt">tap to open in the plan</span></h3>`;
     days.forEach((date, i) => {
-      const seg = segForDate(t, date);
-      const city = seg ? seg.city : t.segments[t.segments.length - 1].city;
-      const cname = (CITIES[city] || {}).name || city;
-      const tint = cityTint[city] || "#6c757d";
-      const focused = focusedDate === date;
-      const nAlts = t.inbound.date === date ? 0
-        : t.wishlist.map(placeById).filter(p => p && (altAllCities || (p.city || "shanghai") === city)).length;
-      h += `<div class="day${focused ? " focused" : ""}">
-        <div class="day-head" data-focus="${date}"><span class="dnum">D${i + 1}</span><span class="ddate">${fmtDay(date)}</span>
-          <span class="dcity" style="background:${tint}">${esc(cname)}</span><span class="focusbtn">${ic("target", "sm")}${focused ? "on map" : "focus"}</span>
-          ${t.inbound.date === date ? "" : `<button class="altsbtn${altOpenDate === date ? " on" : ""}" data-alts="${date}" title="Show this day's alternatives in the side panel">${ic("layers", "sm")}${nAlts}</button>`}</div>
-        <div class="day-body">`;
-      // arrival flight
-      if (t.outbound.date === date && (t.outbound.flight || t.outbound.leg))
-        h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.outbound.flight)}</span><span class="leg">arrive ${esc(t.outbound.leg.split("→").pop().trim())}</span></div>`;
-      // transport leg
-      const li = t.legs.findIndex(l => l.date === date);
-      if (li >= 0) {
-        const l = t.legs[li];
-        h += `<div class="transport"><div class="tt-title">${ic("train", "sm")}${esc(l.from)} → ${esc(l.to)}</div>`;
-        l.options.forEach((o, oi) => {
-          h += `<div class="opt ${l.chosen === oi ? "chosen" : ""}" data-leg="${li}" data-opt="${oi}"><span class="radio"></span><span>${esc(o)}</span></div>`;
-        });
-        h += `<button class="opt-add" data-addopt="${li}">${ic("plus", "sm")}add option</button></div>`;
-      }
-      // hotel (first night of a segment)
-      if (seg && seg.start === date) {
-        const si = t.segments.indexOf(seg);
-        const ho = seg.hotel;
-        if (ho)
-          h += `<div class="hotelcard">
-            <div class="hc-ic">${ic("bed", "lg")}</div>
-            <div class="hc-body">
-              <div class="hc-name">${esc(ho.name)}</div>
-              <div class="hc-area">${esc(ho.area || "")}</div>
-              <div class="hc-dates">${ic("calendar", "sm")}${fmtDay(seg.start)} → ${fmtDay(seg.end)} · ${nights(seg)} night${nights(seg) > 1 ? "s" : ""}</div>
-              <div class="hc-links">
-                ${typeof ho.lat === "number" ? `<button data-hotelmap="${si}">${ic("pin", "sm")}Show on map</button>` : ""}
-                ${ho.link ? `<a href="${esc(ho.link)}" target="_blank" rel="noopener">${ic("map", "sm")}Maps</a>` : ""}
-                <button data-edithotel="${si}">${ic("pencil", "sm")}Edit</button><button data-rmhotel="${si}">Remove</button>
-              </div>
-            </div></div>`;
-        else
-          h += `<div class="hotelcard need"><div class="hc-ic">${ic("bed", "lg")}</div><div class="hc-body">
-            <div class="hc-name">No hotel booked for ${esc(cname)} (${fmtDay(seg.start)} → ${fmtDay(seg.end)})</div>
-            <div class="hc-links"><button class="btn sm" data-addhotel="${si}">${ic("plus", "sm")}Add hotel</button></div></div></div>`;
-      }
-      // planned places — grouped by type, or sequenced by time
-      const ids = t.plan[date] || [];
-      const dayPlaces = ids.map(placeById).filter(Boolean);
-      const prow = (p) => `<div class="dplace" data-fly="${p.id}"><span class="pemoji">${catIc(p, "sm")}</span>
-        <span>${esc(p.name)} <span class="pcn2">${esc(p.cn || "")}</span></span>
-        <button class="rm" data-rm="${p.id}" data-date="${date}" title="remove">×</button></div>`;
-      sequenceDay(dayPlaces).forEach(({ slot, p }) => {
-        h += `<div class="slot"><div class="slot-tag">${slot}</div><div class="slot-p">${prow(p)}</div></div>`;
-      });
-      // departure flight
-      if (t.inbound.date === date && (t.inbound.flight || t.inbound.leg))
-        h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.inbound.flight)}</span><span class="leg">depart ${esc(t.inbound.leg)}</span></div>`;
-      // add-place dropdown
-      if (t.inbound.date !== date) {
-        if (!ids.length && t.outbound.date !== date && li < 0)
-          h += `<div class="day-empty">Free day — nothing planned yet.</div>`;
-        const opts = allPlaces().filter(p => (p.city || "shanghai") === city && !ids.includes(p.id))
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
-        h += `<select class="add-place-sel" data-adddate="${date}"><option value="">Add a ${esc(cname)} place to this day…</option>${opts}</select>`;
-      }
+      const nP = (t.plan[date] || []).filter(id => placeById(id)).length;
+      const flags = [];
+      if (t.outbound.date === date) flags.push("arrive");
+      if (t.inbound.date === date) flags.push("depart");
+      if (isTravelDay(t, date)) flags.push("travel");
+      h += `<div class="dayrow" data-day="${date}">
+        <span class="dnum">D${i + 1}</span>
+        <span class="dr-date">${fmtDay(date)}</span>
+        <span class="dr-city">${esc(cityLabel(t, date))}${flags.length ? ` · <span class="dr-flag">${flags.join(" · ")}</span>` : ""}</span>
+        <span class="dr-n">${nP ? nP + " place" + (nP > 1 ? "s" : "") : "free"}</span>
+        <span class="dr-go">${ic("back", "sm")}</span></div>`;
+    });
+    h += `</div>`;
+
+    // ---- couldn't fit ----
+    if (cant.length) {
+      h += `<div class="st-sec"><h3>${ic("layers", "sm")}Not scheduled<span class="cnt">${cant.length}</span></h3><div class="ov-list">`;
+      cant.forEach(id => { const p = placeById(id); h += wishRow(p); });
       h += `</div></div>`;
+    }
+    h += `</div>`;
+    stage.innerHTML = h;
+    wireStage(t);
+  }
+
+  // ---------- plan: every day as an expand/collapse section, all open by default ----------
+  function renderStagePlan(t) {
+    const days = dateRange(t.start, t.end);
+    let h = `<div class="stage-in">${tabsBar()}
+      <h2 class="st-title">Plan</h2>
+      <div class="st-sub">${esc(t.name)} · ${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days</div>
+      <div class="st-crumb2">
+        <button class="btn sm" id="stExpand">Expand all</button>
+        <button class="btn sm" id="stCollapse">Collapse all</button>
+      </div>`;
+    if (!t.segments.length)
+      h += `<div class="tip-note">No city stays yet — add one on the overview so these days know where you are.</div>`;
+    days.forEach((date, i) => {
+      const cities = citiesForDate(t, date);
+      const nP = (t.plan[date] || []).filter(id => placeById(id)).length;
+      const open = !collapsedDays.has(date);
+      const flags = [];
+      if (t.outbound.date === date) flags.push("arrive");
+      if (t.inbound.date === date) flags.push("depart");
+      // only when you actually leave the area — a hotel change across town isn't travel
+      if (isTravelDay(t, date, cities)) flags.push("travel");
+      const cityBits = cities.map((c, n) =>
+        `<span class="dcity">${n ? `<span class="darrow">→</span>` : ""}${esc(areaName(c))}</span>`).join("");
+      h += `<section class="dsec${open ? " open" : ""}${stageDate === date ? " cur" : ""}${cities.length > 1 ? " twocity" : ""}" id="day-${date}">
+        <header class="dsec-h" data-toggle="${date}">
+          <span class="dsec-cv">${ic("down", "sm")}</span>
+          <span class="dnum">D${i + 1}</span>
+          <span class="dsec-date">${fmtDay(date)}</span>
+          <span class="dsec-city">${cityBits}${flags.length ? ` <span class="dr-flag">${flags.join(" · ")}</span>` : ""}</span>
+          <span class="dsec-n">${nP ? nP + " place" + (nP > 1 ? "s" : "") : "free"}</span>
+          <span class="dsec-acts">
+            <button data-dfocus="${date}" title="Focus this day on the map">${ic("target", "sm")}</button>
+            <button data-dalts="${date}" title="Alternatives for this day">${ic("layers", "sm")}</button>
+            <button data-dadd="${date}" class="${addOpenDate === date ? "on" : ""}" title="Add a place to this day">${ic("plus", "sm")}</button>
+          </span>
+        </header>
+        <div class="dsec-b">${open ? dayBody(t, date) : ""}</div>
+      </section>`;
+    });
+    h += `</div>`;
+    stage.innerHTML = h;
+    wireStage(t);
+  }
+
+  // one day's contents — the add row, flights, transport, beds, the time-ordered places
+  function dayBody(t, date) {
+    const cities = citiesForDate(t, date);
+    const city = segCity(t, date);
+    const ids = (t.plan[date] || []);
+    const dayPlaces = ids.map(placeById).filter(Boolean);
+    let h = "";
+
+    // "＋" in the header opens this: pick the city first when the day spans two
+    if (addOpenDate === date) {
+      const pick = (cities.includes(addCity[date]) ? addCity[date] : city) || "";
+      h += `<div class="addrow">`;
+      if (cities.length > 1)
+        h += `<div class="seg sm">${cities.map(c =>
+          `<button data-addcity="${c}" data-addd="${date}" class="${c === pick ? "on" : ""}">${esc(areaName(c))}</button>`).join("")}</div>`;
+      const opts = allPlaces().filter(p => (!pick || p.city === pick) && !ids.includes(p.id))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
+      h += `<select class="add-place-sel" data-adddate="${date}"><option value="">Add a ${esc(areaName(pick) || "")} place…</option>${opts}</select>
+        <button class="addrow-new" data-newplace="${pick}" data-newdate="${date}">${ic("plus", "sm")}Add a place that isn't listed</button>
+      </div>`;
+    }
+
+    if (t.outbound.date === date && (t.outbound.flight || t.outbound.leg))
+      h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.outbound.flight)}</span><span class="leg">arrive ${esc(String(t.outbound.leg).split("→").pop().trim())}</span></div>`;
+
+    const li = t.legs.findIndex(l => l.date === date);
+    if (li >= 0) {
+      const l = t.legs[li];
+      h += `<div class="transport"><div class="tt-title">${ic("train", "sm")}${esc(l.from)} → ${esc(l.to)}</div>`;
+      l.options.forEach((o, oi) => {
+        h += `<div class="opt ${l.chosen === oi ? "chosen" : ""}" data-leg="${li}" data-opt="${oi}"><span class="radio"></span><span>${esc(o)}</span></div>`;
+      });
+      h += `<button class="opt-add" data-addopt="${li}">${ic("plus", "sm")}add option</button></div>`;
+    }
+
+    // One line per bed. The plan is a guide you read at a glance, so the detail
+    // (address, links, the full stay range) stays on the overview.
+    segsForDate(t, date).forEach(({ s: seg, i: si, arrive, depart }) => {
+      const ho = seg.hotel;
+      const nAll = nights(seg);
+      const nSoFar = dateRange(seg.start, date).length - 1;
+      const where = areaName(seg.city);
+      // what matters today: arriving, leaving, or just which night this is
+      let when;
+      if (arrive && depart) when = `check in ${seg.checkInTime || "—"} · 1 night`;
+      else if (arrive)      when = `check in ${seg.checkInTime || "—"} · ${nAll} night${nAll > 1 ? "s" : ""}`;
+      else if (depart)      when = `check out ${seg.checkOutTime || "—"}`;
+      else                  when = `night ${nSoFar} of ${nAll}`;
+      if (ho)
+        h += `<div class="hrow${depart && !arrive ? " leaving" : ""}">
+            <span class="hr-ic">${ic("bed", "sm")}</span>
+            <span class="hr-name" title="${esc(ho.area || where)}">${esc(ho.name)}</span>
+            <span class="hr-when">${esc(when)}</span>
+            <span class="hr-acts">
+              ${typeof ho.lat === "number" ? `<button data-hotelmap="${si}" title="Show on map">${ic("pin", "sm")}</button>` : ""}
+              <button data-edithotel="${si}" title="Edit this stay">${ic("pencil", "sm")}</button>
+            </span></div>`;
+      else
+        h += `<div class="hrow need">
+            <span class="hr-ic">${ic("bed", "sm")}</span>
+            <span class="hr-name">No hotel in ${esc(where)}</span>
+            <span class="hr-when">${esc(fmtDay(seg.start))} → ${esc(fmtDay(seg.end))}</span>
+            <span class="hr-acts"><button data-addhotel="${si}" title="Add a hotel">${ic("plus", "sm")}</button></span>
+          </div>`;
     });
 
-    h += `<div class="trip-actions"><button class="btn sm" id="addStay">${ic("plus", "sm")}Add another city stay</button></div>`;
-    tripContent.innerHTML = h;
-    wireTripDetail(t);
-    if (altOpenDate) renderAlts();   // keep the extended sidebar in sync with the plan
+    sequenceDay(dayPlaces, t.timing, date).forEach(({ slot, p }) => {
+      h += `<div class="slot"><div class="slot-tag">${slot}</div><div class="slot-p">${dayPlaceRow(p, date, t)}</div></div>`;
+    });
+
+    if (t.inbound.date === date && (t.inbound.flight || t.inbound.leg))
+      h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.inbound.flight)}</span><span class="leg">depart ${esc(t.inbound.leg)}</span></div>`;
+
+    if (!dayPlaces.length && t.outbound.date !== date && t.inbound.date !== date && li < 0)
+      h += `<div class="day-empty">Free day — nothing planned yet.</div>`;
+    return h;
+  }
+
+  // ---------- rows you can remove — two steps, never one stray tap ----------
+  const swipeRow = (cls, attrs, inner, delAttrs, extraActs) => `<div class="swipe">
+      <div class="sw-back"><button class="sw-del" ${delAttrs}>${ic("trash", "sm")}Remove</button></div>
+      <div class="sw-front ${cls}" ${attrs}>${inner}
+        ${extraActs || ""}
+        <span class="sw-hint" data-swipeopen title="Swipe left — or tap — to remove">${ic("back", "sm")}</span>
+      </div>
+    </div>`;
+
+  const dayPlaceRow = (p, date, t) => {
+    const tm = ((t && t.timing) || {})[date + "|" + p.id] || {};
+    const when = tm.startTime ? tm.startTime + (tm.endTime ? "–" + tm.endTime : "") : "";
+    return swipeRow("dplace", `data-fly="${p.id}" data-day-of="${date}"`,
+      `<span class="pemoji">${catIc(p, "sm")}</span>
+       <span class="pname">${esc(p.name)} <span class="pcn2">${esc(p.cn || "")}</span></span>
+       ${when ? `<span class="ptime">${esc(when)}</span>` : ""}
+       ${tm.note ? `<span class="pnote" title="${esc(tm.note)}">${ic("note", "sm")}</span>` : ""}
+       <span class="pcity">${esc(areaName(p.city))}</span>`,
+      `data-rm="${p.id}" data-date="${date}"`,
+      // edit sits before the swipe grip: the common action is nearer the text,
+      // the destructive one stays behind a deliberate gesture
+      `<button class="sw-edit" data-edititem="${p.id}" data-itemdate="${date}"
+               title="Timing and notes for this stop">${ic("pencil", "sm")}</button>`);
+  };
+
+  const wishRow = p => swipeRow("ov-item", `data-fly="${p.id}"`,
+    `<span class="wname">${catIc(p, "sm")} ${esc(p.name)} <span class="pcn2">${esc(areaName(p.city))}</span></span>`,
+    `data-wrm="${p.id}"`);
+
+  // drag the row left (or tap the grip) to reveal Remove; tapping Remove is the second step
+  function wireSwipes(root) {
+    root.querySelectorAll(".swipe").forEach(row => {
+      const front = row.querySelector(".sw-front");
+      if (!front) return;
+      const W = 96;
+      let x0 = null, y0 = 0, base = 0, dx = 0, dragging = false;
+      const shut = () => { row.classList.remove("open"); front.style.transform = ""; };
+      const show = () => { row.classList.add("open"); front.style.transform = "translateX(-" + W + "px)"; };
+      front.addEventListener("pointerdown", (e) => {
+        if (e.target.closest("[data-swipeopen]") || e.target.closest(".sw-del")
+            || e.target.closest(".sw-edit")) return;
+        x0 = e.clientX; y0 = e.clientY;
+        base = row.classList.contains("open") ? -W : 0;
+        dx = base; dragging = false;
+      });
+      front.addEventListener("pointermove", (e) => {
+        if (x0 === null) return;
+        const mx = e.clientX - x0, my = e.clientY - y0;
+        if (!dragging) {
+          // don't hijack the pointer until it's clearly a sideways drag — a tap must stay a tap
+          if (Math.abs(mx) < 8 || Math.abs(mx) < Math.abs(my)) return;
+          dragging = true;
+          front.style.transition = "none";
+          try { front.setPointerCapture(e.pointerId); } catch (err) {}
+        }
+        dx = Math.min(0, Math.max(-W, base + mx));
+        front.style.transform = "translateX(" + dx + "px)";
+      });
+      const finish = () => {
+        if (x0 === null) return;
+        x0 = null;
+        if (!dragging) return;                 // plain tap — leave the click alone
+        dragging = false; front.style.transition = "";
+        if (dx < -W / 2) show(); else shut();
+        front.dataset.drag = "1";
+        setTimeout(() => { front.dataset.drag = ""; }, 0);
+      };
+      front.addEventListener("pointerup", finish);
+      front.addEventListener("pointercancel", finish);
+      const grip = front.querySelector("[data-swipeopen]");
+      if (grip) grip.onclick = (e) => { e.stopPropagation(); row.classList.contains("open") ? shut() : show(); };
+    });
+  }
+  function shutSwipes(except) {
+    document.querySelectorAll(".swipe.open").forEach(r => {
+      if (except && r === except) return;
+      r.classList.remove("open");
+      const f = r.querySelector(".sw-front"); if (f) f.style.transform = "";
+    });
+  }
+
+  // ---------- one wiring pass for whatever the stage is showing ----------
+  function wireStage(t) {
+    const byId = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    byId("stMap", () => { setMapOpen(!mapOpen()); renderStage(t); });
+    byId("stAll", () => { openTripId = null; stageTab = "overview"; stageDate = null; renderTrip(); });
+    byId("stDel", async () => {
+      if (!await confirmModal("Delete “" + t.name + "”? This can't be undone.", "Delete")) return;
+      try { await Repo.deleteTrip(t.id); }
+      catch (e) { showHint("Couldn't delete that trip: " + e.message); return; }
+      store.trips = store.trips.filter(x => x.id !== t.id);
+      delete lastPushed[t.id];
+      openTripId = null; stageTab = "overview"; renderTrip();
+    });
+    byId("stStay", () => addCityStay(t));
+    byId("stCommute", () => editCommute(t, null));
+    byId("stPerson", () => editPerson(t, null));
+    stage.querySelectorAll("[data-editcommute]").forEach(b => b.onclick = () => editCommute(t, +b.dataset.editcommute));
+    stage.querySelectorAll("[data-rmcommute]").forEach(b => b.onclick = async () => {
+      if (!await confirmModal("Remove this transport?", "Remove")) return;
+      t.commutes.splice(+b.dataset.rmcommute, 1); save(); renderStage(t);
+    });
+    stage.querySelectorAll("[data-edititem]").forEach(b => b.onclick = (e) => {
+      e.stopPropagation();
+      editItem(t, b.dataset.itemdate, b.dataset.edititem);
+    });
+    stage.querySelectorAll("[data-editperson]").forEach(b => b.onclick = () => editPerson(t, +b.dataset.editperson));
+    stage.querySelectorAll("[data-rmperson]").forEach(b => b.onclick = async () => {
+      const p = t.participants[+b.dataset.rmperson];
+      if (!await confirmModal("Remove " + p.name + " from this trip?", "Remove")) return;
+      try { await Repo.removeParticipant(t.id, p.id); t.participants.splice(+b.dataset.rmperson, 1); }
+      catch (e) { showHint("Couldn't remove: " + e.message); return; }
+      renderStage(t);
+    });
+    byId("stStay2", () => addCityStay(t));
+    byId("stExpand", () => { collapsedDays = new Set(); renderStage(t); });
+    byId("stCollapse", () => { collapsedDays = new Set(dateRange(t.start, t.end)); renderStage(t); });
+    stage.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
+      stageTab = b.dataset.tab; stageDate = null;
+      focusedDate = null; dayFocusIds = new Set(); dayFocusOrder = {};
+      refreshMarkers(); drawHotels(t);
+      renderStage(t); stage.scrollTop = 0;
+    });
+
+    stage.querySelectorAll("[data-toggle]").forEach(hd => hd.onclick = (e) => {
+      if (e.target.closest("button")) return;
+      const date = hd.dataset.toggle;
+      if (collapsedDays.has(date)) collapsedDays.delete(date); else collapsedDays.add(date);
+      stageDate = date; renderStage(t);
+    });
+    stage.querySelectorAll("[data-dadd]").forEach(b => b.onclick = (e) => {
+      e.stopPropagation();
+      const date = b.dataset.dadd;
+      addOpenDate = addOpenDate === date ? null : date;
+      if (addOpenDate) collapsedDays.delete(date);
+      renderStage(t);
+    });
+    stage.querySelectorAll("[data-addcity]").forEach(b => b.onclick = () => {
+      addCity[b.dataset.addd] = b.dataset.addcity; renderStage(t);
+    });
+    stage.querySelectorAll("[data-newplace]").forEach(b => b.onclick = async () => {
+      const date = b.dataset.newdate;
+      const p = await addPlaceFlow({ city: b.dataset.newplace || undefined });
+      if (!p) return;
+      (t.plan[date] = t.plan[date] || []).push(p.id); save();
+      nav("trip"); renderTrip();
+    });
+    stage.querySelectorAll("[data-dfocus]").forEach(b => b.onclick = (e) => {
+      e.stopPropagation(); stageDate = b.dataset.dfocus; renderStage(t); focusDayOnMap(t, b.dataset.dfocus);
+    });
+    stage.querySelectorAll("[data-dalts]").forEach(b => b.onclick = (e) => {
+      e.stopPropagation();
+      const date = b.dataset.dalts;
+      if (altOpenDate === date) closeAlts(); else openAlts(date);
+    });
+
+    stage.querySelectorAll("[data-day]").forEach(el => el.onclick = () => openDay(t, el.dataset.day));
+    stage.querySelectorAll("[data-legday]").forEach(el => el.onclick = () => openDay(t, el.dataset.legday));
+    stage.querySelectorAll("[data-flights]").forEach(el => el.onclick = () => editFlights(t));
+    stage.querySelectorAll(".opt").forEach(o => o.onclick = () => { t.legs[+o.dataset.leg].chosen = +o.dataset.opt; save(); renderStage(t); });
+    stage.querySelectorAll("[data-addopt]").forEach(b => b.onclick = async () => {
+      const v = await showModal({ title: "Add transport option", okText: "Add", fields: [
+        { key: "s", label: "Describe the option", placeholder: "G-train ~30 min ¥40" }]});
+      if (!v || !v.s) return;
+      t.legs[+b.dataset.addopt].options.push(v.s); save(); renderStage(t);
+    });
+    stage.querySelectorAll("[data-fly]").forEach(d => d.onclick = (e) => {
+      if (e.target.closest("[data-swipeopen]") || e.target.closest("[data-edititem]")) return;
+      const front = d.closest(".sw-front");
+      if (front && front.dataset.drag === "1") return;          // that was a drag, not a tap
+      if (d.closest(".swipe.open")) { shutSwipes(); return; }   // first tap just puts the row back
+      const p = placeById(d.dataset.fly); if (!p) return;
+      const wasOpen = mapOpen();
+      const date = d.dataset.dayOf;
+      if (date) {
+        stageDate = date;
+        setDayFocus(t, date);                     // light up the whole day's route around it
+        markCurrentDay(date);                     // and move the highlight to that card
+      }
+      setMapOpen(true);
+      // if the map is only just sliding in, let it finish sizing before flying
+      selectPlace(p, wasOpen ? 0 : 400);
+    });
+    stage.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
+      const date = b.dataset.date;
+      t.plan[date] = (t.plan[date] || []).filter(x => x !== b.dataset.rm); save(); renderTrip();
+    });
+    stage.querySelectorAll("[data-adddate]").forEach(sel => sel.onchange = () => {
+      if (!sel.value) return;
+      const date = sel.dataset.adddate;
+      (t.plan[date] = t.plan[date] || []).push(sel.value); save();
+      if (focusedDate === date) setDayFocus(t, date);   // keep the map in step
+      renderTrip();
+    });
+    stage.querySelectorAll("[data-addhotel]").forEach(b => b.onclick = () => editHotel(t, +b.dataset.addhotel));
+    stage.querySelectorAll("[data-edithotel]").forEach(b => b.onclick = () => editHotel(t, +b.dataset.edithotel));
+    stage.querySelectorAll("[data-rmhotel]").forEach(b => b.onclick = () => {
+      const seg = t.segments[+b.dataset.rmhotel];
+      seg.hotel = null; seg.placeId = null;      // the hotel place itself stays in the catalogue
+      save(); drawHotels(t, focusedDate); renderStage(t);
+    });
+    stage.querySelectorAll("[data-hotelweb]").forEach(b => b.onclick = () => {
+      const seg = t.segments[+b.dataset.hotelweb];
+      openWebQuery("hotels in " + areaName(seg.city) + " " + fmtDay(seg.start) + " to " + fmtDay(seg.end));
+    });
+    stage.querySelectorAll("[data-hotelmap]").forEach(b => b.onclick = () => {
+      const si = +b.dataset.hotelmap, ho = t.segments[si].hotel; if (!ho || typeof ho.lat !== "number") return;
+      setMapOpen(true);
+      setTimeout(() => {
+        map.flyTo([ho.lat, ho.lng], 15, { duration: .6 });
+        const m = hotelMarkers[si]; if (m) setTimeout(() => m.openPopup(), 500);
+      }, 340);
+    });
+    stage.querySelectorAll("[data-wrm]").forEach(b => b.onclick = () => {
+      t.wishlist = t.wishlist.filter(x => x !== b.dataset.wrm); save(); renderStage(t);
+    });
+    wireSwipes(stage);
+    if (altOpenDate) renderAlts();
   }
 
   async function editFlights(t) {
     const v = await showModal({ title: "Flights", okText: "Save", fields: [
       { key: "of", label: "Outbound flight no.", value: t.outbound.flight || "" },
+      { key: "od", label: "Outbound date", type: "date", value: t.outbound.date || t.start },
       { key: "ol", label: "Outbound details", value: t.outbound.leg || "", placeholder: "SIN 17:00 → PVG 22:00" },
       { key: "if", label: "Return flight no.", value: t.inbound.flight || "" },
+      { key: "id", label: "Return date", type: "date", value: t.inbound.date || t.end },
       { key: "il", label: "Return details", value: t.inbound.leg || "", placeholder: "PVG 08:20 → SIN 14:10" },
     ]});
     if (!v) return;
-    t.outbound.flight = v.of; t.outbound.leg = v.ol; t.inbound.flight = v.if; t.inbound.leg = v.il;
-    save(); renderTripDetail(t);
+    t.outbound.flight = v.of; t.outbound.leg = v.ol; if (v.od) t.outbound.date = v.od;
+    t.inbound.flight = v.if; t.inbound.leg = v.il; if (v.id) t.inbound.date = v.id;
+    save(); renderTrip();
   }
 
-  function wireTripDetail(t) {
-    document.getElementById("backTrips").onclick = () => { openTripId = null; renderTrip(); };
-    const ef = document.getElementById("editFlights"); if (ef) ef.onclick = () => editFlights(t);
-    document.getElementById("delTrip").onclick = async () => {
-      if (!await confirmModal("Delete “" + t.name + "”? This can't be undone.", "Delete")) return;
-      store.trips = store.trips.filter(x => x.id !== t.id); save(); openTripId = null; renderTrip();
-    };
-    tripContent.querySelectorAll(".opt").forEach(o => o.onclick = () => {
-      t.legs[+o.dataset.leg].chosen = +o.dataset.opt; save(); renderTripDetail(t);
-    });
-    tripContent.querySelectorAll("[data-addopt]").forEach(b => b.onclick = async () => {
-      const v = await showModal({ title: "Add transport option", okText: "Add", fields: [
-        { key: "s", label: "Describe the option", placeholder: "G-train ~30 min ¥40" }]});
-      if (!v || !v.s) return;
-      t.legs[+b.dataset.addopt].options.push(v.s); save(); renderTripDetail(t);
-    });
-    tripContent.querySelectorAll("[data-fly]").forEach(d => d.onclick = (e) => {
-      if (e.target.classList.contains("rm")) return;
-      const p = placeById(d.dataset.fly); if (p) tripSelect(p);   // map fly, or Trip-view detail
-    });
-    tripContent.querySelectorAll("[data-focus]").forEach(el => el.onclick = () => focusDay(t, el.dataset.focus));
-    const ovT = document.getElementById("ovToggle");
-    if (ovT) ovT.onclick = () => { overviewOpen = !overviewOpen; renderTripDetail(t); };
-    tripContent.querySelectorAll("[data-rm]").forEach(b => b.onclick = () => {
-      const date = b.dataset.date; t.plan[date] = (t.plan[date] || []).filter(x => x !== b.dataset.rm); save(); renderTripDetail(t);
-    });
-    tripContent.querySelectorAll("[data-adddate]").forEach(sel => sel.onchange = () => {
-      const date = sel.dataset.adddate; if (!sel.value) return;
-      (t.plan[date] = t.plan[date] || []).push(sel.value); save(); renderTripDetail(t);
-    });
-    tripContent.querySelectorAll("[data-addhotel]").forEach(b => b.onclick = () => editHotel(t, +b.dataset.addhotel));
-    tripContent.querySelectorAll("[data-edithotel]").forEach(b => b.onclick = () => editHotel(t, +b.dataset.edithotel));
-    tripContent.querySelectorAll("[data-rmhotel]").forEach(b => b.onclick = () => { t.segments[+b.dataset.rmhotel].hotel = null; save(); renderTripDetail(t); });
-    tripContent.querySelectorAll("[data-hotelmap]").forEach(b => b.onclick = () => {
-      const si = +b.dataset.hotelmap, ho = t.segments[si].hotel; if (!ho) return;
-      map.flyTo([ho.lat, ho.lng], 15, { duration: .6 });
-      const m = hotelMarkers[si]; if (m) setTimeout(() => m.openPopup(), 400);
-    });
-    const addStay = document.getElementById("addStay");
-    if (addStay) addStay.onclick = () => addCityStay(t);
-    // 🃏 on a day header → that day's alternatives in the extended sidebar
-    tripContent.querySelectorAll("[data-alts]").forEach(b => b.onclick = (e) => {
-      e.stopPropagation();                       // don't also toggle the day's map focus
-      const date = b.dataset.alts;
-      if (altOpenDate === date) closeAlts(); else openAlts(date);
-      renderTripDetail(t);
-    });
-    // the couldn't-fit overview list can drop an alternative outright
-    tripContent.querySelectorAll("[data-wrm]").forEach(b => b.onclick = () => {
-      t.wishlist = t.wishlist.filter(x => x !== b.dataset.wrm); save(); renderTripDetail(t);
-    });
+  // ---------- the map drawer ----------
+  const mapOpen = () => document.body.classList.contains("map-open");
+  function setMapOpen(on) {
+    document.body.classList.toggle("map-open", !!on);
+    const inTrip = document.body.dataset.view === "trip";
+    const x = document.getElementById("mapHide");
+    if (x) x.hidden = !(on && inTrip);
+    const rz = document.getElementById("stageResizer");
+    if (rz) rz.hidden = !(on && inTrip);
+    setTimeout(() => map.invalidateSize(), 360);
+  }
+  // marker state only — highlight a day's route without moving the camera
+  function setDayFocus(t, date) {
+    focusedDate = date;
+    const ordered = sequenceDay((t.plan[date] || []).map(placeById).filter(Boolean), t.timing, date).map(x => x.p.id);
+    dayFocusIds = new Set(ordered);
+    dayFocusOrder = {}; ordered.forEach((id, n) => dayFocusOrder[id] = n + 1);
+    refreshMarkers();
+    drawHotels(t, date);          // only the beds that matter on this day
+    return ordered;
+  }
+  function focusDayOnMap(t, date) {
+    if (!date) return;
+    const ordered = setDayFocus(t, date);
+    setMapOpen(true);
+    setTimeout(() => {
+      const pts = ordered.map(id => { const p = placeById(id); return [p.lat, p.lng]; });
+      if (pts.length > 1) map.fitBounds(pts, { padding: [60, 60], maxZoom: 15 });
+      else if (pts.length === 1) map.flyTo(pts[0], 15, { duration: .6 });
+      else {
+        const a = areaOf(segCity(t, date));
+        if (a && a.center) map.flyTo(a.center, a.zoom || 11, { duration: .6 });
+      }
+      showHint(pts.length ? pts.length + " spots highlighted for this day" : "Nothing planned for this day yet");
+    }, 360);
   }
 
-  function focusDay(t, date) {
-    focusedDate = (focusedDate === date) ? null : date;   // tap again to unfocus
-    const ordered = sequenceDay((t.plan[date] || []).map(placeById).filter(Boolean)).map(s => s.p.id);
-    const ids = focusedDate ? ordered.filter(id => placeById(id)) : [];
-    dayFocusIds = new Set(ids);
-    dayFocusOrder = {}; ids.forEach((id, i) => dayFocusOrder[id] = i + 1);
-    renderTripDetail(t);   // marks the focused day + refreshMarkers() re-icons highlights
-    if (!focusedDate) return;
-    const pts = ids.map(id => { const p = placeById(id); return [p.lat, p.lng]; });
-    if (pts.length > 1) map.fitBounds(pts, { padding: [70, 70], maxZoom: 15 });
-    else if (pts.length === 1) map.flyTo(pts[0], 15, { duration: .6 });
-    else { const seg = segForDate(t, date); const c = seg ? seg.city : t.segments[t.segments.length - 1].city;
-      if (CITIES[c]) map.flyTo(CITIES[c].center, CITIES[c].zoom, { duration: .6 }); }
-    setTimeout(() => map.invalidateSize(), 60);
-    showHint(pts.length ? (pts.length + " spots highlighted for this day") : "No places planned for this day yet");
-  }
-
-  // the floating "show other places nearby" control over the map
   function showMapOverlay(on) {
     const el = document.getElementById("mapOverlay");
     if (!el) return;
     el.hidden = !on;
-    const cb = document.getElementById("scopeAll");
-    if (cb) cb.checked = scopeShowAll;
+    const sel = document.getElementById("scopeSel");
+    if (sel) sel.value = scopeMode;
   }
   // selecting a place anywhere → highlight it, and search it in the mini browser
-  function selectPlace(p) {
+  function selectPlace(p, delay) {
     if (!p) return;
     selectedPlaceId = p.id;
-    map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 15), { duration: .5 });
+    const fly = () => map.flyTo([p.lat, p.lng], Math.max(map.getZoom(), 15), { duration: .5 });
+    if (delay) setTimeout(fly, delay); else fly();
     openWeb(p);
     if (altOpenDate) renderAlts();
   }
@@ -1745,15 +2857,14 @@
     if (!t || !date) { closeAlts(); return; }
     t.wishlist = t.wishlist || [];
     const body = document.getElementById("alt-body"), foot = document.getElementById("alt-foot");
-    const seg = segForDate(t, date);
-    const city = seg ? seg.city : t.segments[t.segments.length - 1].city;
-    const cname = (CITIES[city] || {}).name || city;
+    const city = segCity(t, date);
+    const cname = areaName(city) || "this trip";
     const di = dateRange(t.start, t.end).indexOf(date);
     document.getElementById("alt-sub").textContent =
       (di >= 0 ? "D" + (di + 1) + " · " : "") + fmtDay(date) + " · " + cname;
 
     const planned = t.plan[date] || [];
-    const alts = t.wishlist.map(placeById).filter(p => p && (altAllCities || (p.city || "shanghai") === city));
+    const alts = t.wishlist.map(placeById).filter(p => p && (altAllCities || !city || p.city === city));
     if (!alts.length) {
       body.innerHTML = `<div class="day-empty">No alternatives ${altAllCities ? "parked yet" : "for " + esc(cname)}. Park one below, or open a place on the map and choose “Add as an alternative”.</div>`;
     } else {
@@ -1763,7 +2874,7 @@
           <img src="${imageFor(p)}" loading="lazy" onerror="this.style.visibility='hidden'">
           <div class="ac-body">
             <div class="ac-name">${catIc(p, "sm")} ${esc(p.name)}</div>
-            <div class="ac-cn">${esc(p.cn || catOf(p).label)}${d ? " · " + kmText(d.km) : ""}${altAllCities ? " · " + esc((CITIES[p.city] || {}).name || "") : ""}</div>
+            <div class="ac-cn">${esc(p.cn || catOf(p).label)}${d ? " · " + kmText(d.km) : ""}${altAllCities ? " · " + esc(areaName(p.city)) : ""}</div>
             <div class="ac-actions">
               ${inDay ? `<span class="in-day">${ic("check", "sm")}in this day</span>` : `<button class="btn sm" data-aadd="${p.id}">${ic("plus", "sm")}Add to day</button>`}
               <button class="btn sm" data-arm="${p.id}" title="Remove from alternatives">${ic("x", "sm")}</button>
@@ -1773,7 +2884,7 @@
     }
     // footer: park another place here
     const pool = allPlaces()
-      .filter(p => (altAllCities || (p.city || "shanghai") === city) && !t.wishlist.includes(p.id) && !planned.includes(p.id))
+      .filter(p => (altAllCities || !city || p.city === city) && !t.wishlist.includes(p.id) && !planned.includes(p.id))
       .sort((a, b) => a.name.localeCompare(b.name));
     foot.innerHTML = `<select id="altAdd"><option value="">Park a place here as an alternative…</option>${
       pool.map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("")}</select>`;
@@ -1809,10 +2920,32 @@
     const wv = document.getElementById("miniweb");
     if (wv) { try { wv.src = webUrl(p, webMode); } catch (e) {} }
   }
+  // free-text mode: search anything, then add it as a place
+  let webQuery = null;
+  function queryUrl(term, mode) {
+    if (mode === "images") return "https://www.google.com/search?tbm=isch&q=" + q(term);
+    if (mode === "maps") return "https://www.google.com/maps/search/" + q(term);
+    if (mode === "red") return "https://www.xiaohongshu.com/search_result?keyword=" + q(term);
+    return "https://www.google.com/search?q=" + q(term);
+  }
+  function openWebQuery(term) {
+    term = String(term || "").trim();
+    if (!term) return;
+    webQuery = term; selectedPlaceId = null; webDismissed = false;
+    document.getElementById("webpanel").hidden = false;
+    document.getElementById("webresizer").hidden = false;
+    document.getElementById("web-detail").hidden = true;
+    document.getElementById("web-title").innerHTML = `<div>${esc(term)}<small id="web-sub">web search</small></div>`;
+    document.getElementById("web-q").value = term;
+    const wv = document.getElementById("miniweb");
+    if (wv) { try { wv.src = queryUrl(term, webMode); } catch (e) {} }
+    syncWebToggle();
+    setTimeout(() => map.invalidateSize(), 60);
+  }
   function renderWeb(p) {
     const cat = catOf(p), d = distInfo(p);
     const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : "";
-    const cityNm = (CITIES[p.city] || {}).name || "";
+    const cityNm = areaName(p.city) || "";
     document.getElementById("web-title").innerHTML =
       `${catIc(p)}<div>${esc(p.name)}<small id="web-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${esc(cat.label)}${cityNm ? " · " + esc(cityNm) : ""}</small></div>`;
     const det = document.getElementById("web-detail");
@@ -1828,7 +2961,7 @@
         ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener">${ic("globe", "sm")}Website</a>` : ""}
       </div>`;
     det.querySelector("[data-ext-alt]").onclick = () => addAlternative(p.id);
-    det.querySelector("[data-ext-base]").onclick = () => { store.base = p.id; save(); showHint("Base set to " + p.name); refreshMarkers(); renderWeb(p); if (openTripId) renderTrip(); };
+    det.querySelector("[data-ext-base]").onclick = () => { store.base = p.id; savePrefs({ basePlaceId: p.id }); showHint("Base set to " + p.name); refreshMarkers(); renderWeb(p); if (openTripId) renderTrip(); };
     setWeb(p);
   }
   function openWeb(p, opts) {
@@ -1838,7 +2971,11 @@
     webDismissed = false;
     document.getElementById("webpanel").hidden = false;
     document.getElementById("webresizer").hidden = false;
+    webQuery = null;
+    document.getElementById("web-detail").hidden = false;
+    document.getElementById("web-q").value = p.name;
     renderWeb(p);
+    syncWebToggle();
     setTimeout(() => map.invalidateSize(), 60);
   }
   function closeWeb() {
@@ -1846,33 +2983,91 @@
     document.getElementById("webpanel").hidden = true;
     document.getElementById("webresizer").hidden = true;
     const wv = document.getElementById("miniweb");
-    if (wv) { try { wv.src = "about:blank"; } catch (e) {} }   // stop background loading
+    // stop background loading — but don't re-load about:blank over about:blank, that aborts noisily
+    if (wv && wv.src && wv.src !== "about:blank") { try { wv.src = "about:blank"; } catch (e) {} }
+    syncWebToggle();
     setTimeout(() => map.invalidateSize(), 60);
   }
+  // ---- top-bar toggle: bring the mini browser back to whatever it last had ----
+  const webIsOpen = () => !document.getElementById("webpanel").hidden;
+  function syncWebToggle() {
+    const b = document.getElementById("webToggle");
+    if (b) b.classList.toggle("on", webIsOpen());
+  }
+  function openWebBlank() {
+    webDismissed = false;
+    document.getElementById("webpanel").hidden = false;
+    document.getElementById("webresizer").hidden = false;
+    document.getElementById("web-detail").hidden = true;
+    document.getElementById("web-title").innerHTML = `<div>Mini browser<small id="web-sub">search for anything</small></div>`;
+    syncWebToggle();
+    setTimeout(() => { map.invalidateSize(); const i = document.getElementById("web-q"); if (i) i.focus(); }, 80);
+  }
+  function toggleWeb() {
+    if (webIsOpen()) { closeWeb(); return; }
+    const p = placeById(selectedPlaceId);
+    if (p) openWeb(p);
+    else if (webQuery) openWebQuery(webQuery);
+    else openWebBlank();
+  }
+  // A hotel is a place (kind='lodging'), so it gets real geography, a district
+  // and a map pin of its own — and it survives being detached from this trip.
   async function editHotel(t, si) {
     const seg = t.segments[si]; const cur = seg.hotel || {};
     const v = await showModal({ title: "Hotel", okText: "Save", fields: [
       { key: "name", label: "Hotel name (leave blank to remove)", value: cur.name || "" },
       { key: "area", label: "Area / address (optional)", value: cur.area || "" },
       { key: "link", label: "Booking / map link (optional)", value: cur.link || "" },
+      { key: "coords", label: "Location — paste a Google Maps link or “lat, lng”",
+        value: (typeof cur.lat === "number") ? cur.lat + ", " + cur.lng : "" },
+      { key: "ci", label: "Check-in time", value: seg.ownCheckInTime || seg.checkInTime || "", placeholder: "15:00" },
+      { key: "co", label: "Check-out time", value: seg.ownCheckOutTime || seg.checkOutTime || "", placeholder: "11:00" },
     ]});
     if (v == null) return;
-    // keep the map pin when only the text fields are edited
-    seg.hotel = v.name ? { name: v.name, area: v.area, link: v.link, lat: cur.lat, lng: cur.lng } : null;
-    save(); renderTripDetail(t); drawHotels(t);
+    const hhmm = (x) => {
+      const m = String(x || "").trim().match(/^(\d{1,2})[:.]?(\d{2})$/);
+      if (!m) return null;
+      return String(Math.min(23, +m[1])).padStart(2, "0") + ":" + String(Math.min(59, +m[2])).padStart(2, "0");
+    };
+    // the times belong to the stay, not the hotel — an early check-in is yours alone
+    seg.ownCheckInTime = hhmm(v.ci); seg.ownCheckOutTime = hhmm(v.co);
+    seg.checkInTime = seg.ownCheckInTime || seg.checkInTime;
+    seg.checkOutTime = seg.ownCheckOutTime || seg.checkOutTime;
+    if (!v.name) { seg.hotel = null; seg.placeId = null; save(); renderTripDetail(t); drawHotels(t, focusedDate); return; }
+
+    const ll = v.coords ? parseLatLng(v.coords) : null;
+    const lat = ll ? ll.lat : cur.lat, lng = ll ? ll.lng : cur.lng;
+    try {
+      const place = await Repo.upsertHotel({
+        id: seg.placeId || null, name: v.name, area: v.area, link: v.link,
+        lat, lng, city: seg.city || null,
+      });
+      // keep the local catalogue in step so the pin and popup resolve
+      const at = PLACES.findIndex(p => p.id === place.id);
+      if (at >= 0) PLACES[at] = place; else PLACES.push(place);
+      seg.placeId = place.id;
+      seg.hotel = { name: place.name, area: place.address || "", link: place.link || "", lat: place.lat, lng: place.lng };
+    } catch (e) { showHint("Couldn't save that hotel: " + e.message); return; }
+    save(); renderTripDetail(t); drawHotels(t, focusedDate);
   }
 
   async function addCityStay(t) {
     const last = t.segments[t.segments.length - 1];
     const defStart = last ? last.end : t.start;
-    const v = await showModal({ title: "Add a city stay", okText: "Add", fields: [
-      { key: "city", label: "City", type: "select", value: "shanghai", options: Object.entries(CITIES).map(([k, c]) => ({ value: k, label: c.name + " · " + c.cn })) },
+    const areaOpts = Object.entries(allAreas())
+      .sort((a, b) => (countryName(a[1].country) + a[1].name).localeCompare(countryName(b[1].country) + b[1].name))
+      .map(([k, a]) => ({ value: k, label: countryName(a.country) + " · " + a.name + (a.cn ? " · " + a.cn : "") }));
+    const v = await showModal({ title: "Add a stay", okText: "Add", fields: [
+      { key: "city", label: "Area", type: "select", value: last ? last.city : "shanghai",
+        options: areaOpts.concat([{ value: "__new", label: "＋ New area…" }]) },
       { key: "start", label: "Check-in date", type: "date", value: defStart },
       { key: "end", label: "Check-out date", type: "date", value: addDays(defStart, 2) },
     ]});
-    if (!v || !CITIES[v.city] || !v.start || !v.end) return;
+    if (!v || !v.start || !v.end) return;
+    if (v.city === "__new") { const id = await addArea(); if (!id) return; v.city = id; }
+    if (!areaOf(v.city)) return;
     t.segments.push({ city: v.city, start: v.start, end: v.end, hotel: null });
-    if (last) t.legs.push({ from: (CITIES[last.city] || {}).name || last.city, to: (CITIES[v.city] || {}).name || v.city, date: v.start,
+    if (last) t.legs.push({ from: areaName(last.city), to: areaName(v.city), date: v.start,
       options: ["High-speed train (add time & price)", "Private car"], chosen: 0 });
     if (v.end > t.end) t.end = v.end;
     if (v.start < t.start) t.start = v.start;
@@ -1886,17 +3081,26 @@
       { key: "end", label: "End date", type: "date", value: "2026-11-14" },
     ]});
     if (!v || !v.name || !v.start || !v.end) return;
-    const trip = { id: "trip-" + v.start + "-" + v.name.toLowerCase().replace(/[^\w]+/g, "-").slice(0, 12),
-      name: v.name, start: v.start, end: v.end,
-      outbound: { flight: "", date: v.start, leg: "" }, inbound: { flight: "", date: v.end, leg: "" },
-      segments: [], legs: [], plan: {}, wishlist: [] };
-    store.trips.push(trip); save(); openTripId = trip.id; renderTrip();
+    let doc;
+    try { doc = await Repo.createTrip({ name: v.name, start: v.start, end: v.end }); }
+    catch (e) { showHint("Couldn't create that trip: " + e.message); return; }
+    const trip = PlannerAPI.toTrip(doc, indexPlaces());
+    store.trips.push(trip);
+    openTripById(trip.id, "overview");
   }
 
   document.querySelectorAll("#nav button").forEach(b => b.onclick = () => nav(b.dataset.view));
+  document.getElementById("webToggle").onclick = toggleWeb;
+  // an open swipe row closes as soon as you touch anything else
+  document.addEventListener("pointerdown", (e) => {
+    const row = e.target.closest(".swipe");
+    if (!row || !row.classList.contains("open")) shutSwipes(row);
+  }, true);
 
-  // "show other places nearby" — floats over the map, top centre
-  document.getElementById("scopeAll").onchange = (e) => { scopeShowAll = e.target.checked; refreshMarkers(); };
+  document.getElementById("mapHide").onclick = () => { setMapOpen(false); const t = openTrip(); if (t) renderStage(t); };
+
+  // what the map shows — floats over the map, top centre
+  document.getElementById("scopeSel").onchange = (e) => { scopeMode = e.target.value; refreshMarkers(); };
 
   // extended sidebar (alternatives) controls
   document.getElementById("alt-close").onclick = () => { closeAlts(); if (openTripId) renderTrip(); };
@@ -1910,9 +3114,26 @@
   document.querySelectorAll(".web-tabs [data-web]").forEach(b => b.onclick = () => {
     webMode = b.dataset.web;
     document.querySelectorAll(".web-tabs [data-web]").forEach(x => x.classList.toggle("on", x === b));
-    const p = placeById(selectedPlaceId); if (p) setWeb(p);
+    const p = placeById(selectedPlaceId);
+    if (p) setWeb(p); else if (webQuery) openWebQuery(webQuery);
   });
-  document.getElementById("web-open").onclick = () => { const p = placeById(selectedPlaceId); if (p) window.open(webUrl(p, webMode), "_blank"); };
+  document.getElementById("web-open").onclick = () => {
+    const p = placeById(selectedPlaceId);
+    const u = p ? webUrl(p, webMode) : (webQuery ? queryUrl(webQuery, webMode) : null);
+    if (u) window.open(u, "_blank");
+  };
+  const webQ = document.getElementById("web-q");
+  webQ.addEventListener("keydown", e => { if (e.key === "Enter") openWebQuery(webQ.value); });
+  // "＋" in the mini browser: record what you just found
+  document.getElementById("web-add").onclick = () => {
+    const p = placeById(selectedPlaceId);
+    addPlaceFlow(p ? { name: p.name, cn: p.cn, city: p.city, c: p.c } : { name: webQ.value.trim(), city: ui.city || "shanghai" });
+  };
+  // "search the web" beside the Explore search box
+  document.getElementById("webSearchBtn").onclick = () => {
+    const term = (document.getElementById("search").value || "").trim();
+    openWebQuery(term ? term + (ui.city ? " " + areaName(ui.city) : "") : (ui.city ? areaName(ui.city) + " things to do" : "places to visit"));
+  };
   const miniweb = document.getElementById("miniweb");
   document.getElementById("web-back").onclick = () => { try { if (miniweb.canGoBack()) miniweb.goBack(); } catch (e) {} };
   document.getElementById("web-reload").onclick = () => { try { miniweb.reload(); } catch (e) {} };
@@ -1971,7 +3192,7 @@
   ];
   const theme = { mode: "light", accent: "purple", tone: { light: "mist", dark: "graphite" } };
   try {
-    const s = JSON.parse(localStorage.getItem("planner-theme") || "{}");
+    const s = Object.assign({}, JSON.parse(localStorage.getItem("planner-theme") || "{}"), store.prefs.theme || {});
     if (s.mode === "light" || s.mode === "dark") theme.mode = s.mode;
     if (ACCENTS.some(a => a.id === s.accent)) theme.accent = s.accent;
     if (s.tone) { if (s.tone.light) theme.tone.light = s.tone.light; if (s.tone.dark) theme.tone.dark = s.tone.dark; }
@@ -1983,7 +3204,8 @@
     r.dataset.mode = theme.mode;
     r.dataset.tone = theme.tone[theme.mode];
     r.dataset.accent = theme.accent;
-    localStorage.setItem("planner-theme", JSON.stringify(theme));
+    localStorage.setItem("planner-theme", JSON.stringify(theme));   // first-paint cache only
+    savePrefs({ theme });                                            // the real home
     renderSettings();
   }
   function renderSettings() {
@@ -2001,16 +3223,27 @@
   }
   document.querySelectorAll("#modeSeg [data-tmode]").forEach(b => b.onclick = () => { theme.mode = b.dataset.tmode; applyTheme(); });
 
-  // ---- the menu itself: hover to peek, click to pin ----
-  const sidebarEl = document.getElementById("sidebar");
+  // ---- the settings drawer ----
   const menuBtn = document.getElementById("menuBtn");
-  let menuPinned = false;
-  function openMenu()  { sidebarEl.classList.add("settings-open"); menuBtn.classList.add("on"); }
-  function closeMenu() { sidebarEl.classList.remove("settings-open"); menuBtn.classList.remove("on"); menuPinned = false; }
-  menuBtn.addEventListener("mouseenter", openMenu);
-  menuBtn.addEventListener("click", () => { menuPinned = !menuPinned; menuPinned ? openMenu() : closeMenu(); });
-  sidebarEl.addEventListener("mouseleave", () => { if (!menuPinned) closeMenu(); });
+  const scrim = document.getElementById("scrim");
+  let menuOpen = false;
+  function openMenu() {
+    menuOpen = true;
+    scrim.hidden = false;
+    // let the element exist for a frame so the fade actually animates
+    requestAnimationFrame(() => document.body.classList.add("settings-open"));
+    menuBtn.classList.add("on");
+  }
+  function closeMenu() {
+    menuOpen = false;
+    document.body.classList.remove("settings-open");
+    menuBtn.classList.remove("on");
+    setTimeout(() => { if (!menuOpen) scrim.hidden = true; }, 300);
+  }
+  menuBtn.addEventListener("click", () => (menuOpen ? closeMenu() : openMenu()));
   document.getElementById("set-close").onclick = closeMenu;
+  scrim.addEventListener("click", closeMenu);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape" && menuOpen) closeMenu(); });
 
   // ---- adjustable sidebar (drag the divider; width remembered) ----
   const sidebar = document.getElementById("sidebar");
@@ -2040,6 +3273,33 @@
     sidebar.style.width = "440px"; localStorage.setItem("planner-sbw", "440"); map.invalidateSize();
   });
 
+  // ---- the plan panel is drag-resizable against the map (Trips view) ----
+  const stageResizer = document.getElementById("stageResizer");
+  const ST_MIN = 340, ST_MAX = 900;
+  const savedStW = parseInt(localStorage.getItem("planner-stagew") || "", 10);
+  if (savedStW) document.documentElement.style.setProperty("--stagew", Math.min(ST_MAX, Math.max(ST_MIN, savedStW)) + "px");
+  let stDrag = false;
+  stageResizer.addEventListener("mousedown", (e) => {
+    stDrag = true; stageResizer.classList.add("drag"); document.body.classList.add("resizing"); e.preventDefault();
+  });
+  window.addEventListener("mousemove", (e) => {
+    if (!stDrag) return;
+    const left = stage.getBoundingClientRect().left;
+    const w = Math.min(ST_MAX, Math.max(ST_MIN, e.clientX - left));
+    document.documentElement.style.setProperty("--stagew", w + "px");
+    map.invalidateSize();
+  });
+  window.addEventListener("mouseup", () => {
+    if (!stDrag) return;
+    stDrag = false; stageResizer.classList.remove("drag"); document.body.classList.remove("resizing");
+    localStorage.setItem("planner-stagew", parseInt(getComputedStyle(document.documentElement).getPropertyValue("--stagew"), 10) || 460);
+    map.invalidateSize();
+  });
+  stageResizer.addEventListener("dblclick", () => {
+    document.documentElement.style.removeProperty("--stagew");
+    localStorage.removeItem("planner-stagew"); map.invalidateSize();
+  });
+
   // ---- extension hook (future: agent / external search injects places at runtime) ----
   // Usage from anywhere: window.addPlaces([{ name, cn?, lat, lng, c?, desc?, link?, src? }, ...])
   let extSeq = 1;
@@ -2057,65 +3317,31 @@
     return n;
   };
 
-  // one-time patch: add the user's own place list into the seeded trip's days
-  // (runs once; leaves any of your other edits/hotels intact)
-  function patchUserList() {
-    if (store.patchUserList1) return;
-    store.patchUserList1 = true;
-    const t = (store.trips || []).find(x => x.id === "trip-shsz-2026-11");
-    if (!t) return;
-    const add = (date, ids) => { t.plan[date] = t.plan[date] || []; ids.forEach(id => { if (!t.plan[date].includes(id)) t.plan[date].push(id); }); };
-    add("2026-11-08", ["zhongyaotang-gelato"]);                          // Bund / Old City
-    add("2026-11-10", ["the-merchants", "fpa-store", "randomevent"]);    // French Concession / Xuhui
-    add("2026-11-11", ["the-louis-lv", "lamb-skewers-hjyq", "feng-bar-noodle"]); // Jing'an
-    add("2026-11-19", ["polux-pairet", "wei-xiang-zhai", "matcha-wang"]); // back in Shanghai / Xintiandi
-    add("2026-11-20", ["aujeong-chicken"]);                             // last day
-    save();
-  }
-  // one-time patch for the trip already saved in localStorage:
-  //   · the Dapu Rd skewer joint as dinner on the art day
-  //   · UrCove by Hyatt on the Bund for the last Shanghai stay (16–21 Nov)
-  function patchNov2026b() {
-    if (store.patchNov2026c) return;
-    store.patchNov2026c = true;
-    const t = (store.trips || []).find(x => x.id === "trip-shsz-2026-11");
-    if (!t) return;
-    if (!Object.values(t.plan || {}).some(ids => ids.includes("lamb-skewers-hjyq"))) {
-      t.plan["2026-11-17"] = t.plan["2026-11-17"] || [];
-      t.plan["2026-11-17"].push("lamb-skewers-hjyq");
-    }
-    // replace the earlier (wrong) UrCove Jing'an pin, but never clobber a hotel you set yourself
-    const seg = (t.segments || []).find(s => s.city === "shanghai" && s.start === "2026-11-16");
-    if (seg && (!seg.hotel || /^UrCove/i.test(seg.hotel.name || ""))) seg.hotel = urcove();
-    save();
-  }
-  // one-time cleanup: transport options were seeded with pictographs; the UI is icon-only now
-  function plainLegs() {
-    if (store.plainLegs1) return;
-    store.plainLegs1 = true;
-    const strip = o => String(o).replace(/^[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}\u{FE0F}]+\s*/u, "");
-    (store.trips || []).forEach(t => (t.legs || []).forEach(l => { l.options = (l.options || []).map(strip); }));
-    save();
-  }
-  // one-time cleanup: drop Huangyan Quarry from any saved trip
-  function cleanupHuangyan() {
-    if (store.rmHuangyan1) return;
-    store.rmHuangyan1 = true;
-    (store.trips || []).forEach(t => {
-      Object.keys(t.plan || {}).forEach(d => { t.plan[d] = t.plan[d].filter(id => id !== "huangyan-quarry"); });
-      if (t.wishlist) t.wishlist = t.wishlist.filter(id => id !== "huangyan-quarry");
-    });
-    save();
-  }
+  // The one-time localStorage patch functions that used to live here are gone.
+  // Their job — seeding the reference trip and correcting it in place — now
+  // belongs to backend/scripts/seed.js and the legacy import.
 
   // ------------------------------------------------------------------ go
+  try { COMMUTE_KINDS = await Repo.commuteKinds(); }
+  catch (e) { console.warn("[boot] commute kinds unavailable:", e.message); }
   buildDistrictOptions();
-  setCity("shanghai");
+  buildCountryOptions();
+  buildCityTabs();
+  setCity(Object.keys(CITIES)[0] || "shanghai");
   applyTheme();
-  ensureTripV2();
-  patchNov2026b();
-  plainLegs();
-  showHint("Trip ready — UrCove on the Bund (16–21 Nov) and the Dapu Rd skewers on 17 Nov are in.");
+  nav("map");
+  // Every trip's server state is the baseline, so an untouched trip is never re-pushed.
+  store.trips.forEach(t => {
+    lastPushed[t.id] = JSON.stringify(PlannerAPI.toPlanDoc(t)) + "|" + t.name + t.start + t.end;
+  });
+  if (BOOT.imported) {
+    const i = BOOT.imported;
+    showHint(`Moved your saved data into the database — ${i.trips} trip, ${i.items} places, ${i.hotels} hotels, ${i.marks} marks`);
+  } else {
+    const n = store.trips.length;
+    showHint(n ? `${n} trip${n > 1 ? "s" : ""} loaded from the database` : "No trips yet — create one to start");
+  }
+  })();
   </script>
 </body>
 </html>

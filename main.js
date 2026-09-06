@@ -22,6 +22,16 @@ function createWindow() {
 
   win.loadFile(path.join(__dirname, "frontend", "index.html"));
 
+  // surface renderer errors on the terminal — silent failures in the UI are
+  // otherwise invisible when running from the CLI
+  win.webContents.on("console-message", (e) => {
+    const level = e && e.level, message = (e && e.message) || "";
+    if (level !== "error" && level !== "warning") return;
+    if (/Electron Security Warning/.test(message)) return;
+    const src = String((e && e.sourceId) || "").split("/").pop();
+    console.error(`[renderer] ${message}${src ? ` (${src}:${e.lineNumber})` : ""}`);
+  });
+
   // open external links (booking sites, RED, maps) in the real browser, not in-app
   win.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:/.test(url)) { shell.openExternal(url); return { action: "deny" }; }

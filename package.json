@@ -2,10 +2,14 @@
   "name": "trip-planner",
   "productName": "Trip Planner",
   "version": "0.1.0",
-  "description": "Shanghai / Suzhou / Hangzhou trip planner — map of places + multi-city itinerary planning.",
+  "description": "Shanghai / Suzhou / Hangzhou trip planner \u2014 map of places + multi-city itinerary planning.",
   "main": "main.js",
   "scripts": {
-    "start": "electron .",
+    "start": "node tools/dev.js",
+    "dev": "node tools/dev.js",
+    "app": "electron .",
+    "backend": "npm --prefix backend start",
+    "db:reset": "npm --prefix backend run reset",
     "dist:mac": "electron-builder --mac",
     "dist:win": "electron-builder --win"
   },
@@ -18,8 +22,16 @@
   "build": {
     "appId": "com.gerry.tripplanner",
     "productName": "Trip Planner",
-    "files": ["main.js", "frontend/**/*"],
-    "mac": { "category": "public.app-category.travel", "target": "dmg" },
-    "win": { "target": "nsis" }
+    "files": [
+      "main.js",
+      "frontend/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.travel",
+      "target": "dmg"
+    },
+    "win": {
+      "target": "nsis"
+    }
   }
 }

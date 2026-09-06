@@ -1,6 +1,14 @@
-// City + district config. DISTRICTS.adcode links to a polygon in districts-geo.js.
+// Country + area (city / province / region) + district config.
+// DISTRICTS.adcode links to a polygon in districts-geo.js.
+// Areas are the middle level: usually a city, but can be any region you travel to.
+// Users can add their own countries and areas at runtime (see store.countries / store.areas).
+var COUNTRIES = {
+  "cn": { "name": "China", "cn": "\u4e2d\u56fd" }
+};
+
 var CITIES = {
   "shanghai": {
+    "country": "cn",
     "name": "Shanghai",
     "cn": "上海",
     "center": [
@@ -10,6 +18,7 @@ var CITIES = {
     "zoom": 11
   },
   "suzhou": {
+    "country": "cn",
     "name": "Suzhou",
     "cn": "苏州",
     "center": [
@@ -19,6 +28,7 @@ var CITIES = {
     "zoom": 11
   },
   "hangzhou": {
+    "country": "cn",
     "name": "Hangzhou",
     "cn": "杭州",
     "center": [

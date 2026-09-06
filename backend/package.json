@@ -2,19 +2,29 @@
   "name": "tripplanner-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Trip Planner backend — modular monolith (Express + SQLite).",
+  "description": "Trip Planner backend — modular monolith (Express + SQLite), invite-only, Cloudflare-fronted.",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "migrate": "node src/core/migrate.js",
-    "seed": "node db/seed.js"
+    "seed": "node scripts/seed.js",
+    "import-legacy": "node scripts/import-legacy.js",
+    "reset": "rm -f data/tripplanner.db* && npm run migrate && npm run seed",
+    "audit": "npm audit --omit=dev"
   },
   "dependencies": {
     "better-sqlite3": "^11.8.1",
-    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "zod": "^3.24.1"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
