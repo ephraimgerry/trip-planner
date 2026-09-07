@@ -14,7 +14,16 @@
 (function (global) {
   "use strict";
 
-  const BASE = global.PLANNER_API_BASE || "http://127.0.0.1:4177";
+  // The desktop shell passes the API's address in the query string, because the
+  // port is decided at launch. Falls back to the default for a plain browser.
+  function apiBase() {
+    try {
+      const q = new URLSearchParams(global.location.search).get("api");
+      if (q && /^https?:\/\//.test(q)) return q.replace(/\/$/, "");
+    } catch (e) {}
+    return global.PLANNER_API_BASE || "http://127.0.0.1:4177";
+  }
+  const BASE = apiBase();
   const LEGACY_KEY = "shanghai-planner-v1";
 
   class ApiError extends Error {

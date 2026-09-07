@@ -20,7 +20,13 @@ function createWindow() {
     },
   });
 
-  win.loadFile(path.join(__dirname, "frontend", "index.html"));
+  // Tell the renderer where the API actually is. Hardcoding a port meant the app
+  // broke the moment the backend ran anywhere else — on another machine, or
+  // because something local already had 4177.
+  const apiPort = process.env.PORT || process.env.API_PORT || 4177;
+  win.loadFile(path.join(__dirname, "frontend", "index.html"), {
+    search: "api=" + encodeURIComponent(`http://127.0.0.1:${apiPort}`),
+  });
 
   // surface renderer errors on the terminal — silent failures in the UI are
   // otherwise invisible when running from the CLI

@@ -1,0 +1,45 @@
+{
+  "base": "the-bund",
+  "status": { "yu-garden": "visited", "tianzifang": "want" },
+  "notes": { "the-bund": "go at dusk" },
+  "countries": [], "areas": [], "custom": [],
+  "trips": [{
+    "id": "trip-fixture-2026-11", "name": "Shanghai · Suzhou · Hangzhou",
+    "start": "2026-11-07", "end": "2026-11-21",
+    "outbound": { "flight": "SQ836", "date": "2026-11-07", "leg": "SIN 17:00 → Shanghai Pudong (PVG) 22:00" },
+    "inbound":  { "flight": "SQ827", "date": "2026-11-21", "leg": "Shanghai Pudong (PVG) 08:20 → SIN 14:10" },
+    "segments": [
+      { "city": "shanghai", "start": "2026-11-07", "end": "2026-11-12",
+        "hotel": { "name": "Hotel One Shanghai", "area": "Jing'an", "lat": 31.2288, "lng": 121.4451 } },
+      { "city": "suzhou", "start": "2026-11-12", "end": "2026-11-13",
+        "hotel": { "name": "Hotel Two Suzhou", "area": "Gusu", "lat": 31.3055, "lng": 120.6199 } },
+      { "city": "hangzhou", "start": "2026-11-13", "end": "2026-11-15",
+        "hotel": { "name": "Hotel Three Hangzhou", "area": "Shangcheng", "lat": 30.2536, "lng": 120.1689 } },
+      { "city": "hangzhou", "start": "2026-11-15", "end": "2026-11-16",
+        "hotel": { "name": "Hotel Four Hangzhou", "area": "Xihu", "lat": 30.2402, "lng": 120.1301 } },
+      { "city": "shanghai", "start": "2026-11-16", "end": "2026-11-21",
+        "hotel": { "name": "Hotel Five Shanghai", "area": "Waitan", "lat": 31.2344, "lng": 121.4881 } }
+    ],
+    "legs": [
+      { "from": "Pudong Airport", "to": "Shanghai", "date": "2026-11-07",
+        "options": ["Taxi / Didi to hotel — ~45 min", "Metro Line 2 — ~70 min"], "chosen": 0 },
+      { "from": "Shanghai", "to": "Suzhou", "date": "2026-11-12",
+        "options": ["G high-speed train — ~30 min", "Private car — ~1h20"], "chosen": 0 },
+      { "from": "Suzhou", "to": "Hangzhou", "date": "2026-11-13",
+        "options": ["G train — ~1h30", "Private car — ~2h"], "chosen": 0 },
+      { "from": "Hangzhou (Hubin)", "to": "Hangzhou Longwu", "date": "2026-11-15",
+        "options": ["Taxi / Didi across town — ~35 min", "Metro + short taxi — ~1h"], "chosen": 0 },
+      { "from": "Hangzhou", "to": "Shanghai", "date": "2026-11-16",
+        "options": ["G train — ~1h", "Private car — ~2h"], "chosen": 0 },
+      { "from": "Shanghai", "to": "Pudong Airport", "date": "2026-11-21",
+        "options": ["Taxi / Didi to PVG — ~45 min", "Metro Line 2 — ~75 min"], "chosen": 0 }
+    ],
+    "plan": {
+      "2026-11-08": ["the-bund", "yu-garden", "yuyuan-bazaar", "nanjing-rd", "shanghai-museum"],
+      "2026-11-09": ["lujiazui", "shanghai-tower", "oriental-pearl"],
+      "2026-11-14": ["west-lake", "leifeng-pagoda"],
+      "2026-11-17": ["xintiandi", "tianzifang"]
+    },
+    "wishlist": ["peoples-square", "lingering-garden", "humble-admin-garden"]
+  }]
+}

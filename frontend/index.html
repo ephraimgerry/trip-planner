@@ -948,7 +948,8 @@
     document.body.innerHTML = `<div class="fatal">
       <h1>Can't reach the trip server</h1>
       <p>${String(e.message).replace(/</g, "&lt;")}</p>
-      <p class="hintline">Start it with <code>cd backend &amp;&amp; npm start</code>, then reload.</p></div>`;
+      <p class="hintline">Start the whole app with <code>npm start</code> from the project root, then reload.</p>
+      <p class="hintline">Looking for it at <code>${PlannerAPI.BASE}</code>.</p></div>`;
     return;
   }
   const { Repo } = PlannerAPI;
@@ -1605,8 +1606,21 @@
     if (ui.city && ui.country && countryOf(ui.city) !== ui.country) ui.city = "";
     buildCityTabs(); setCity(ui.city);
   };
+  // Which area to open on. Once there are dozens of areas across several
+  // countries, "the first one" lands you somewhere empty — so prefer where you
+  // were last, then wherever your places actually are.
+  function openingArea() {
+    const last = store.prefs.lastArea;
+    if (last && CITIES[last]) return last;
+    const tally = {};
+    PLACES.forEach(p => { if (p.city) tally[p.city] = (tally[p.city] || 0) + 1; });
+    const best = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
+    return (best && best[0]) || Object.keys(CITIES)[0] || "shanghai";
+  }
+
   function setCity(city) {
     ui.city = city; ui.district = "";
+    if (city && store.prefs.lastArea !== city) savePrefs({ lastArea: city });
     document.getElementById("districtFilter").value = "";
     buildDistrictOptions();
     cityTabsEl.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.city === city));
@@ -3324,10 +3338,14 @@
   // ------------------------------------------------------------------ go
   try { COMMUTE_KINDS = await Repo.commuteKinds(); }
   catch (e) { console.warn("[boot] commute kinds unavailable:", e.message); }
+  // Scope the area tabs to the country you're opening in — with three countries
+  // and 44 areas, an unscoped tab strip is unusable.
+  const firstArea = openingArea();
+  ui.country = countryOf(firstArea);
   buildDistrictOptions();
   buildCountryOptions();
   buildCityTabs();
-  setCity(Object.keys(CITIES)[0] || "shanghai");
+  setCity(firstArea);
   applyTheme();
   nav("map");
   // Every trip's server state is the baseline, so an untouched trip is never re-pushed.

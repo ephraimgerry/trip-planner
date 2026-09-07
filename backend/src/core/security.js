@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const rateLimit = require("express-rate-limit");
+const { rateLimit, ipKeyGenerator } = require("express-rate-limit");
 const helmet = require("helmet");
 const config = require("./config");
 const logger = require("./logger");
@@ -78,7 +78,10 @@ function requireJsonIntent(req, _res, next) {
 }
 
 // ---- rate limiting ----------------------------------------------------------
-const keyFor = (req) => req.headers["cf-connecting-ip"] || req.ip;
+// Keying on a raw IPv6 address is worthless: a single client is routinely handed
+// a whole /64, so it could rotate addresses and never hit a limit. ipKeyGenerator
+// collapses IPv6 to its network prefix and leaves IPv4 alone.
+const keyFor = (req) => ipKeyGenerator(String(req.headers["cf-connecting-ip"] || req.ip || ""));
 const limiter = (max, windowMs, name) => rateLimit({
   windowMs, max, keyGenerator: keyFor,
   standardHeaders: true, legacyHeaders: false,

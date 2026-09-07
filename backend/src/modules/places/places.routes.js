@@ -20,6 +20,10 @@ router.post("/", validate({ body: S.placeCreate }), asyncHandler(async (req, res
   const body = { ...req.body };
   // Trust the polygons over whatever the client guessed.
   Object.assign(body, assignDistrict(body));
+  // A hotel with no stated policy gets the usual one, so the plan doesn't
+  // render "check in —" for every new booking.
+  if (body.kind === "lodging" && !(body.attrs && body.attrs.checkInTime))
+    body.attrs = Object.assign({ checkInTime: "15:00", checkOutTime: "11:00" }, body.attrs || {});
   const p = repo.create(body, req.user.id);
   audit.record(req, "place.create", "place", p.id, { name: p.name, kind: p.kind });
   res.status(201).json({ place: { ...p, images: repo.imagesFor(p.id) } });

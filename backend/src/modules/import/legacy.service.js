@@ -58,6 +58,9 @@ function ensureLodging(hotel, areaId, userId) {
     link: /^https?:\/\//i.test(hotel.link || "") ? hotel.link : null,
     source: "imported from your saved trip",
     visibility: "public",
+    // the usual policy, so a stay reads "check in 15:00" rather than "check in —".
+    // Editable per hotel; the stay can still override it.
+    attrs: { checkInTime: "15:00", checkOutTime: "11:00" },
   }, userId).id;
 }
 

@@ -9,15 +9,17 @@
     "dev": "node tools/dev.js",
     "app": "electron .",
     "backend": "npm --prefix backend start",
+    "setup": "npm --prefix backend install && node backend/scripts/setup.js",
     "db:reset": "npm --prefix backend run reset",
-    "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win"
+    "postinstall": "node tools/postinstall.js",
+    "dist:mac": "npx --yes electron-builder@26.15.3 --mac",
+    "dist:win": "npx --yes electron-builder@26.15.3 --win",
+    "test": "npm --prefix backend test"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^43.2.0",
-    "electron-builder": "^26.15.3"
+    "electron": "^44.2.0"
   },
   "build": {
     "appId": "com.gerry.tripplanner",
@@ -33,5 +35,12 @@
     "win": {
       "target": "nsis"
     }
+  },
+  "overrides": {
+    "fast-uri": "^3.1.7",
+    "@xmldom/xmldom": "^0.8.15"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }

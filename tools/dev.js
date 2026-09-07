@@ -1,65 +1,122 @@
 #!/usr/bin/env node
-// Start the API, wait until it answers, then launch the desktop shell.
-// Kills the API when the app exits so nothing is left holding port 4177.
-const { spawn } = require("child_process");
+// =============================================================================
+//  One command to run the whole app.
+//
+//  Works from a bare clone: installs the backend's own dependencies if they're
+//  missing, brings the database up to date, seeds it if empty, starts the API,
+//  waits until it actually answers, then launches the desktop shell — and takes
+//  the API down again when the app exits.
+// =============================================================================
+const { spawn, spawnSync } = require("child_process");
+const fs = require("fs");
 const path = require("path");
 
 const root = path.join(__dirname, "..");
+const backend = path.join(root, "backend");
 const PORT = process.env.PORT || 4177;
 
-// If something is already on the port, /health will answer and we would happily
-// drive a stale server running old code. Refuse instead — this cost an hour once.
+const say = (msg) => console.log(`[dev] ${msg}`);
+const die = (msg) => { console.error(`[dev] ${msg}`); process.exit(1); };
+
+// better-sqlite3 ships prebuilt binaries per Node ABI. On too old a Node it
+// either fails to load or segfaults, which is a miserable thing to debug.
+const major = Number(process.versions.node.split(".")[0]);
+if (major < 20) die(`Node ${process.versions.node} is too old — this needs Node 20 or newer.`);
+
+// ---- 1. the backend has its own package.json; a root install doesn't cover it
+function ensureBackendDeps() {
+  const probe = path.join(backend, "node_modules", "better-sqlite3", "package.json");
+  if (fs.existsSync(probe)) return;
+  say("installing backend dependencies (first run only)…");
+  const r = spawnSync("npm", ["install", "--no-fund", "--no-audit"], { cwd: backend, stdio: "inherit" });
+  if (r.status !== 0) die("backend dependency install failed — run `npm install` inside backend/ to see why.");
+}
+
+// better-sqlite3 is a native module: a Node upgrade or a different machine
+// needs it rebuilt, and the error it throws otherwise is inscrutable.
+function ensureNativeModule() {
+  const r = spawnSync(process.execPath, ["-e", "require('better-sqlite3')"], { cwd: backend, encoding: "utf8" });
+  if (r.status === 0) return;
+  if (/NODE_MODULE_VERSION|was compiled against a different Node|invalid ELF|mach-o/i.test(r.stderr || "")) {
+    say("better-sqlite3 was built for a different Node — rebuilding…");
+    const b = spawnSync("npm", ["rebuild", "better-sqlite3"], { cwd: backend, stdio: "inherit" });
+    if (b.status !== 0) die("rebuild failed — try `cd backend && npm rebuild better-sqlite3`.");
+    return;
+  }
+  die("the backend can't load better-sqlite3:\n" + (r.stderr || "").trim());
+}
+
+// ---- 2. schema + first-run seed
+function ensureDatabase() {
+  const r = spawnSync(process.execPath, ["scripts/setup.js"], { cwd: backend, stdio: "inherit" });
+  if (r.status !== 0) die("database setup failed.");
+}
+
+// ---- 3. refuse to drive someone else's server
 async function portBusy() {
   try {
-    const r = await fetch(`http://127.0.0.1:${PORT}/health`, { signal: AbortSignal.timeout(800) });
-    return r.ok;
+    const res = await fetch(`http://127.0.0.1:${PORT}/health`, { signal: AbortSignal.timeout(800) });
+    return res.ok;
   } catch (e) { return false; }
 }
 
-let api = null;
-
-let app = null;
-let stopping = false;
-const stop = (code) => {
+let api = null, app = null, stopping = false;
+function stop(code) {
   if (stopping) return;
   stopping = true;
   if (app && !app.killed) app.kill();
   if (api && !api.killed) api.kill("SIGTERM");
-  // don't leave an orphan holding the port if it ignores the polite signal
-  setTimeout(() => { if (api && !api.killed) api.kill("SIGKILL"); process.exit(code || 0); }, 1500).unref();
-  setTimeout(() => process.exit(code || 0), 1600).unref();
-};
+  setTimeout(() => { if (api && !api.killed) api.kill("SIGKILL"); process.exit(code || 0); }, 1200).unref();
+}
 
-async function waitForApi(tries = 40) {
+async function waitForApi(tries = 60) {
   for (let i = 0; i < tries; i++) {
+    if (api && api.exitCode !== null) return false;      // it died; stop waiting
     try {
-      const r = await fetch(`http://127.0.0.1:${PORT}/health`);
-      if (r.ok) return true;
+      const res = await fetch(`http://127.0.0.1:${PORT}/health`, { signal: AbortSignal.timeout(700) });
+      if (res.ok) return true;
     } catch (e) {}
     await new Promise(r => setTimeout(r, 250));
   }
   return false;
 }
 
+// Resolve Electron's binary from node_modules rather than shelling out to npx,
+// so there's no network round-trip and no ambiguity about which copy runs.
+function electronBinary() {
+  try { return require(path.join(root, "node_modules", "electron")); }
+  catch (e) { return null; }
+}
+
 (async () => {
+  ensureBackendDeps();
+  ensureNativeModule();
+  ensureDatabase();
+
   if (await portBusy()) {
     console.error(`[dev] something is already serving port ${PORT}.`);
     console.error("[dev] that is probably an older backend — it would shadow your changes.");
     console.error(`[dev] find it with:  lsof -nP -iTCP:${PORT} -sTCP:LISTEN`);
-    return process.exit(1);
+    process.exit(1);
   }
+
   api = spawn(process.execPath, ["src/server.js"], {
-    cwd: path.join(root, "backend"), stdio: "inherit",
+    cwd: backend, stdio: "inherit",
     env: Object.assign({}, process.env, { PORT }),
   });
-  api.on("exit", (code) => { if (code) { console.error("[dev] API exited with", code); stop(code); } });
+  api.on("exit", (code) => {
+    if (!stopping && code) { console.error(`[dev] the API exited with ${code}`); stop(code); }
+  });
 
-  if (!await waitForApi()) {
-    console.error("[dev] the API never came up.");
-    return stop(1);
-  }
-  console.log("[dev] API is up; starting the app");
-  app = spawn("npx", ["electron", "."], { cwd: root, stdio: "inherit" });
+  if (!await waitForApi()) die("the API never became healthy — see the log above.");
+  say("API is up; starting the app");
+
+  const bin = electronBinary();
+  if (!bin) die("Electron isn't installed — run `npm install` in the project root.");
+  app = spawn(bin, ["."], {
+    cwd: root, stdio: "inherit",
+    env: Object.assign({}, process.env, { PORT }),   // so the renderer knows where the API is
+  });
   app.on("exit", (code) => stop(code));
 })();
 

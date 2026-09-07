@@ -3,15 +3,30 @@
 A modular monolith. Express + SQLite, all data in the database, invite-only by
 design, built to sit behind Cloudflare.
 
+From the **project root**, one command does everything - installs the backend's
+dependencies, migrates, seeds an empty database, starts the API and launches the
+desktop app:
+
 ```bash
 npm install
-cp .env.example .env
-npm run migrate          # schema
-npm run seed             # geography, 38 districts + polygons, 237 places, images
-npm start                # http://127.0.0.1:4177
+npm start
 ```
 
-`npm run reset` does all three from scratch.
+Backend on its own:
+
+```bash
+npm install
+npm run setup            # migrate + seed if empty (idempotent)
+npm start                # http://127.0.0.1:4177
+npm test                 # integration suite, against a throwaway database
+```
+
+`npm run reset` rebuilds the database from scratch. `.env` is optional in
+development - the defaults in `config.js` are enough; copy `.env.example` when
+you want to change something.
+
+`PORT` is honoured end to end: `PORT=5000 npm start` from the root starts the API
+on 5000 and tells the renderer where to find it.
 
 ## Data model
 
