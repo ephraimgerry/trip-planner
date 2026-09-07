@@ -19,9 +19,13 @@ const say = (msg) => console.log(`[dev] ${msg}`);
 const die = (msg) => { console.error(`[dev] ${msg}`); process.exit(1); };
 
 // better-sqlite3 ships prebuilt binaries per Node ABI. On too old a Node it
-// either fails to load or segfaults, which is a miserable thing to debug.
+// segfaults rather than failing cleanly, which is a miserable thing to debug —
+// so check first and say so. .nvmrc pins the version this is developed against.
 const major = Number(process.versions.node.split(".")[0]);
-if (major < 20) die(`Node ${process.versions.node} is too old — this needs Node 20 or newer.`);
+if (major < 22) {
+  die(`Node ${process.versions.node} is too old — this needs Node 22 or newer.\n`
+    + "       With nvm:  nvm install && nvm use   (reads .nvmrc)");
+}
 
 // ---- 1. the backend has its own package.json; a root install doesn't cover it
 function ensureBackendDeps() {

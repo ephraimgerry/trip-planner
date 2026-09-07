@@ -3,6 +3,12 @@
 A modular monolith. Express + SQLite, all data in the database, invite-only by
 design, built to sit behind Cloudflare.
 
+Requires **Node 22 or newer**; `.nvmrc` pins the version this is developed
+against, so `nvm install && nvm use` in the project root gets you there.
+`better-sqlite3` ships prebuilt binaries per Node ABI and segfaults rather than
+failing cleanly on an older runtime, so `npm start` checks the version first
+and tells you what to do.
+
 From the **project root**, one command does everything - installs the backend's
 dependencies, migrates, seeds an empty database, starts the API and launches the
 desktop app:

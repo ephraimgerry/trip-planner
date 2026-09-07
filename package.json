@@ -41,6 +41,6 @@
     "@xmldom/xmldom": "^0.8.15"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }
