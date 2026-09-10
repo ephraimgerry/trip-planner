@@ -72,6 +72,7 @@
       country: p.country_code || "",
       lat: p.lat, lng: p.lng, address: p.address || "", attrs: p.attrs || {},
       link: p.link || "", desc: p.description || "", src: p.source || "",
+      brand: p.brand_id || "", branch: p.branch || "",
       images: p.images || [],
       mine: !!p.created_by,
     };
@@ -268,6 +269,12 @@
       color: d.color, city: d.area_id, blurb: d.blurb || "",
     });
 
+    // brands are the link between branches of the same business
+    const BRANDS = {};
+    (b.brands || []).forEach(x => BRANDS[x.id] = {
+      name: x.name, cn: x.name_local || "", link: x.link || "", desc: x.description || "",
+    });
+
     const status = {}, notes = {};
     b.userPlaces.forEach(u => {
       if (u.status) status[u.place_id] = u.status;
@@ -281,7 +288,7 @@
 
     return {
       me: b.me, authMode: b.authMode, imported,
-      PLACES: places, COUNTRIES, CITIES, DISTRICTS, GEOJSON: geojson,
+      PLACES: places, COUNTRIES, CITIES, DISTRICTS, BRANDS, GEOJSON: geojson,
       status, notes, prefs: state.prefs,
       trips: b.trips.map(d => toTrip(d, index)),
     };

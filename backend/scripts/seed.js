@@ -129,4 +129,12 @@ db.transaction(() => {
 })();
 step(`districts fixed ${moved} place(s) re-assigned by polygon`);
 
+// ---- 5. link branches of the same business ----------------------------------
+// The catalogue names them "Brand (Branch)"; migration 008 can only backfill a
+// database that already had places, and on a fresh install the seed runs after
+// the migrations — so the same rule is applied here.
+const brands = require("../src/modules/places/brands.repository");
+const derived = brands.deriveFromNames();
+step(`brands         ${derived.brands} brand(s), ${derived.linked} branch(es) linked`);
+
 console.log("\nDone. Legacy trips and marks import separately:  node scripts/import-legacy.js <dump.json>\n");

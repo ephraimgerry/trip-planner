@@ -21,6 +21,9 @@ const placeCreate = z.object({
   link: safeUrl.nullish(),
   description: txt(4000).nullish(),
   source: txt(120).nullish(),
+  // the same business behind another door — see migration 008
+  brandId: idStr.nullish(),
+  branch: txt(80).nullish(),
   visibility: z.enum(["public", "private"]).default("public"),
   images: z.array(safeUrl).max(12).optional(),
   // per-kind detail; a hotel's usual check-in policy lives here

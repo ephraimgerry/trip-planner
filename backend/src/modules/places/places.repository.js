@@ -3,7 +3,8 @@ const { id } = require("../../core/ids");
 const now = db.now;
 
 const COLS = `id,kind,name,name_local,category,country_code,area_id,district_id,
-              lat,lng,address,link,description,source,attrs,visibility,created_by,created_at`;
+              lat,lng,address,link,description,source,attrs,visibility,created_by,created_at,
+              brand_id,branch`;
 
 // attrs is stored as text; every caller wants it as an object
 const hydrate = (p) => {
@@ -32,9 +33,11 @@ const allImages = () => {
 function create(p, userId) {
   const pid = p.id || id(p.kind === "lodging" ? "htl" : "plc");
   db.prepare(`INSERT INTO places (id,kind,name,name_local,category,country_code,area_id,district_id,
-                lat,lng,address,link,description,source,attrs,visibility,created_by,created_at,updated_at)
+                lat,lng,address,link,description,source,attrs,visibility,created_by,created_at,updated_at,
+                brand_id,branch)
               VALUES (@id,@kind,@name,@name_local,@category,@country_code,@area_id,@district_id,
-                @lat,@lng,@address,@link,@description,@source,@attrs,@visibility,@created_by,@ts,@ts)`)
+                @lat,@lng,@address,@link,@description,@source,@attrs,@visibility,@created_by,@ts,@ts,
+                @brand_id,@branch)`)
     .run({
       id: pid, kind: p.kind || "poi", name: p.name, name_local: p.nameLocal || null,
       category: p.category || null, country_code: p.countryCode || null, area_id: p.areaId || null,
@@ -42,6 +45,7 @@ function create(p, userId) {
       address: p.address || null, link: p.link || null, description: p.description || null,
       source: p.source || null, visibility: p.visibility || "public",
       attrs: JSON.stringify(p.attrs || {}),
+      brand_id: p.brandId || null, branch: p.branch || null,
       created_by: userId || null, ts: now(),
     });
   if (p.images) setImages(pid, p.images);
@@ -50,7 +54,8 @@ function create(p, userId) {
 
 const FIELDS = { name: "name", nameLocal: "name_local", category: "category", kind: "kind",
   countryCode: "country_code", areaId: "area_id", districtId: "district_id", lat: "lat", lng: "lng",
-  address: "address", link: "link", description: "description", source: "source", visibility: "visibility" };
+  address: "address", link: "link", description: "description", source: "source", visibility: "visibility",
+  brandId: "brand_id", branch: "branch" };
 
 function update(pid, patch) {
   const sets = [], vals = [];
