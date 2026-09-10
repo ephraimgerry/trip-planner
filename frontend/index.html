@@ -588,11 +588,22 @@
     .st-sec > h3 .cnt { margin-left: auto; letter-spacing: .02em; text-transform: none; font-weight: 500; }
     .st-empty { font-size: 13px; color: var(--muted); padding: 34px 0; text-align: center; }
 
-    /* contents rail — jump straight to a section, or to a day */
-    .st-cols { display: flex; align-items: flex-start; gap: 26px; }
-    .st-body { flex: 1 1 0; min-width: 0; }
-    .st-toc { position: sticky; top: 0; flex: 0 0 148px; max-height: 100vh; overflow-y: auto;
-      padding: 8px 0 24px; scrollbar-width: thin; }
+    /* display size stepper */
+    .sizer { display: flex; align-items: center; gap: 8px; }
+    .sizer button { width: 30px; height: 30px; border: 1px solid var(--line); background: var(--panel);
+      color: var(--ink); border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1; }
+    .sizer button:hover { border-color: var(--accent-line); color: var(--accent); }
+    .sizer #sizeVal { min-width: 52px; text-align: center; font-size: 12.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .sizer .sizer-reset { width: auto; padding: 0 10px; margin-left: auto; font-size: 11.5px; }
+
+    /* contents rail — its own column down the left of the stage, not inside the text */
+    /* the column runs the full height so its edge reads as a wall; only the
+       list inside it sticks */
+    .stage-cols { display: flex; align-items: stretch; min-height: 100%; }
+    .stage-cols .stage-in { flex: 1 1 auto; min-width: 0; }
+    .st-toc { flex: 0 0 178px; border-right: 1px solid var(--line); background: var(--panel-3); }
+    .st-toc .toc-in { position: sticky; top: 0; max-height: 100vh; overflow-y: auto;
+      padding: 26px 12px 30px 18px; scrollbar-width: thin; }
     .st-toc::-webkit-scrollbar { width: 0; }
     .toc-i { display: flex; align-items: baseline; gap: 6px; width: 100%; text-align: left;
       border: none; background: none; cursor: pointer; color: var(--muted);
@@ -864,6 +875,16 @@
           <div class="set-label">Accent</div>
           <div class="accents" id="accentRow"></div>
           <div class="set-hint">Accent-coloured controls carry a soft LED halo. Text stays plain.</div>
+        </div>
+        <div class="set-group">
+          <div class="set-label">Display size</div>
+          <div class="sizer">
+            <button id="sizeDown" title="Smaller">&#8722;</button>
+            <span id="sizeVal">100%</span>
+            <button id="sizeUp" title="Bigger">+</button>
+            <button id="sizeReset" class="sizer-reset">Reset</button>
+          </div>
+          <div class="set-hint" id="sizeHint">Scales the whole app, map included.</div>
         </div>
       </div>
     </div>
@@ -2119,14 +2140,18 @@
   }
 
   // ---------- the contents rail ----------
+  // It is a column of the stage, level with the content and flush to the left
+  // edge — a rail indented inside the text column reads as a stray list.
+  const stageCols = (rail, inner) => `<div class="stage-cols">${rail}<div class="stage-in">${inner}</div></div>`;
+
   // Overview jumps to a section, plan jumps to a day. One markup, two uses.
-  const tocRail = (items, head) => !items.length ? "" : `<aside class="st-toc">
+  const tocRail = (items, head) => !items.length ? "" : `<aside class="st-toc"><div class="toc-in">
       ${head ? `<div class="toc-h">${esc(head)}</div>` : ""}
       ${items.map(i => `<button class="toc-i" data-toc="${i.id}"${i.day ? ` data-tocday="${i.day}"` : ""}>
         ${i.num ? `<span class="toc-d">${esc(i.num)}</span>` : ""}
         <span>${esc(i.label)}${i.sub ? `<br><span class="toc-sub">${esc(i.sub)}</span>` : ""}</span>
         ${i.n != null ? `<span class="toc-n">${i.n}</span>` : ""}</button>`).join("")}
-    </aside>`;
+    </div></aside>`;
 
   // Follow the scroll rather than the last click: the rail should say where you
   // are, even when you got there by scrolling.
@@ -2369,7 +2394,7 @@
 
     const toc = [];
     let b = "";
-    let h = `<div class="stage-in">${tabsBar()}
+    let h = `${tabsBar()}
       <h2 class="st-title">${esc(t.name)}</h2>
       <div class="st-sub">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days · ${plannedCount} places planned</div>
       <div class="st-chips">
@@ -2379,8 +2404,8 @@
 
     if (!t.segments.length) {
       h += `<div class="st-sec"><div class="tip-note">This trip has no city stays yet. Add one to build a day-by-day plan.</div>
-        <button class="btn primary" id="stStay2">${ic("plus", "sm")}Add first city stay</button></div></div>`;
-      stage.innerHTML = h; wireStage(t); return;
+        <button class="btn primary" id="stStay2">${ic("plus", "sm")}Add first city stay</button></div>`;
+      stage.innerHTML = stageCols("", h); wireStage(t); return;
     }
 
     // ---- getting around: flights, and anything else you're holding ----
@@ -2541,8 +2566,7 @@
       cant.forEach(id => { const p = placeById(id); b += wishRow(p); });
       b += `</div></section>`;
     }
-    h += `<div class="st-cols">` + tocRail(toc) + `<div class="st-body">` + b + `</div></div></div>`;
-    stage.innerHTML = h;
+    stage.innerHTML = stageCols(tocRail(toc), h + b);
     wireStage(t);
   }
 
@@ -2551,7 +2575,7 @@
     const days = dateRange(t.start, t.end);
     const toc = [];
     let b = "";
-    let h = `<div class="stage-in">${tabsBar()}
+    let h = `${tabsBar()}
       <h2 class="st-title">Plan</h2>
       <div class="st-sub">${esc(t.name)} · ${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days</div>
       <div class="st-crumb2">
@@ -2589,8 +2613,7 @@
         <div class="dsec-b">${open ? dayBody(t, date) : ""}</div>
       </section>`;
     });
-    h += `<div class="st-cols">` + tocRail(toc, "Days") + `<div class="st-body">` + b + `</div></div></div>`;
-    stage.innerHTML = h;
+    stage.innerHTML = stageCols(tocRail(toc, "Days"), h + b);
     wireStage(t);
   }
 
@@ -3358,6 +3381,35 @@
   }
   document.querySelectorAll("#modeSeg [data-tmode]").forEach(b => b.onclick = () => { theme.mode = b.dataset.tmode; applyTheme(); });
 
+  // ---- display size ----
+  // In Electron this is real browser zoom, so the map re-renders its tiles at
+  // the new size instead of being scaled up blurry. In a plain browser (the
+  // page opens there too) CSS zoom is the closest equivalent.
+  const ZOOM_STEPS = [0.8, 0.9, 1, 1.1, 1.25, 1.4, 1.6, 1.8, 2];
+  let uiScale = Number(store.prefs.uiScale) || 1;
+  function applyScale(f, persist) {
+    uiScale = Math.min(2, Math.max(0.8, Number(f) || 1));
+    if (window.desktop) window.desktop.setZoom(uiScale);
+    else document.documentElement.style.zoom = uiScale;
+    const v = document.getElementById("sizeVal");
+    if (v) v.textContent = Math.round(uiScale * 100) + "%";
+    if (persist !== false) savePrefs({ uiScale });
+  }
+  function stepScale(dir) {
+    const near = ZOOM_STEPS.reduce((best, v, n) =>
+      Math.abs(v - uiScale) < Math.abs(ZOOM_STEPS[best] - uiScale) ? n : best, 0);
+    applyScale(ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, near + dir))]);
+  }
+  document.getElementById("sizeUp").onclick = () => stepScale(+1);
+  document.getElementById("sizeDown").onclick = () => stepScale(-1);
+  document.getElementById("sizeReset").onclick = () => applyScale(1);
+  if (window.desktop) {
+    document.getElementById("sizeHint").textContent =
+      "Scales the whole app, map included. Also " + (navigator.platform.startsWith("Mac") ? "\u2318" : "Ctrl")
+      + "\u2212 / " + (navigator.platform.startsWith("Mac") ? "\u2318" : "Ctrl") + "=, or pinch on the trackpad.";
+    window.desktop.onZoom(f => applyScale(f));   // the View menu and its shortcuts
+  }
+
   // ---- the settings drawer ----
   const menuBtn = document.getElementById("menuBtn");
   const scrim = document.getElementById("scrim");
@@ -3468,6 +3520,7 @@
   buildCityTabs();
   setCity(firstArea);
   applyTheme();
+  applyScale(uiScale, false);   // already saved — don't write it straight back
   nav("map");
   // Every trip's server state is the baseline, so an untouched trip is never re-pushed.
   store.trips.forEach(t => {
