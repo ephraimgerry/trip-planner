@@ -588,6 +588,41 @@
     .st-sec > h3 .cnt { margin-left: auto; letter-spacing: .02em; text-transform: none; font-weight: 500; }
     .st-empty { font-size: 13px; color: var(--muted); padding: 34px 0; text-align: center; }
 
+    /* contents rail — jump straight to a section, or to a day */
+    .st-cols { display: flex; align-items: flex-start; gap: 26px; }
+    .st-body { flex: 1 1 0; min-width: 0; }
+    .st-toc { position: sticky; top: 0; flex: 0 0 148px; max-height: 100vh; overflow-y: auto;
+      padding: 8px 0 24px; scrollbar-width: thin; }
+    .st-toc::-webkit-scrollbar { width: 0; }
+    .toc-i { display: flex; align-items: baseline; gap: 6px; width: 100%; text-align: left;
+      border: none; background: none; cursor: pointer; color: var(--muted);
+      font: inherit; font-size: 12px; padding: 5px 9px; border-radius: 7px; line-height: 1.3;
+      border-left: 2px solid transparent; transition: color .12s, background .12s, border-color .12s; }
+    .toc-i:hover { color: var(--ink); background: var(--panel-2); }
+    .toc-i.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+    .toc-i .toc-n { margin-left: auto; font-size: 10.5px; opacity: .7; font-weight: 500; }
+    .toc-i .toc-d { font-weight: 700; font-size: 11px; letter-spacing: .02em; min-width: 20px; }
+    .toc-i .toc-sub { font-size: 10.5px; opacity: .75; }
+    .toc-h { font-size: 9.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+      color: var(--muted); opacity: .7; padding: 0 9px 7px; }
+    /* the rail is the first thing to go when the panel gets narrow */
+    body.map-open[data-view="trip"] .st-toc, body[data-view="trip"] .st-toc:empty { display: none; }
+    @media (max-width: 1000px) { .st-toc { display: none; } }
+
+    /* eat & drink lists on the overview */
+    .eat-list { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; }
+    .eatrow { display: flex; align-items: center; gap: 9px; padding: 8px 12px; font-size: 13px;
+      border-bottom: 1px solid var(--line); }
+    .eatrow:last-child { border-bottom: none; }
+    .eatrow:hover { background: var(--panel-2); }
+    .eatrow .eat-n { flex: 1; min-width: 0; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .eatrow .eat-n:hover { color: var(--accent); }
+    .eatrow .eat-city { font-size: 11px; color: var(--muted); }
+    .eatrow .eat-day { font-size: 10.5px; font-weight: 700; border: 1px solid var(--line); background: var(--panel);
+      color: var(--ink-2); border-radius: 6px; padding: 2px 7px; cursor: pointer; min-width: 34px; }
+    .eatrow .eat-day:hover { border-color: var(--accent-line); color: var(--accent); }
+    .eatrow .eat-day.none { border-style: dashed; cursor: default; color: var(--muted); font-weight: 500; }
+
     /* booking rows — the "what have I not booked yet" view */
     .bk { display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--line); border-radius: 12px;
       background: var(--panel); padding: 12px 14px; margin-bottom: 9px; }
@@ -2083,6 +2118,39 @@
     }, 50);
   }
 
+  // ---------- the contents rail ----------
+  // Overview jumps to a section, plan jumps to a day. One markup, two uses.
+  const tocRail = (items, head) => !items.length ? "" : `<aside class="st-toc">
+      ${head ? `<div class="toc-h">${esc(head)}</div>` : ""}
+      ${items.map(i => `<button class="toc-i" data-toc="${i.id}"${i.day ? ` data-tocday="${i.day}"` : ""}>
+        ${i.num ? `<span class="toc-d">${esc(i.num)}</span>` : ""}
+        <span>${esc(i.label)}${i.sub ? `<br><span class="toc-sub">${esc(i.sub)}</span>` : ""}</span>
+        ${i.n != null ? `<span class="toc-n">${i.n}</span>` : ""}</button>`).join("")}
+    </aside>`;
+
+  // Follow the scroll rather than the last click: the rail should say where you
+  // are, even when you got there by scrolling.
+  function syncToc() {
+    const items = [...stage.querySelectorAll("[data-toc]")];
+    if (!items.length) return;
+    const line = stage.getBoundingClientRect().top + 96;
+    let cur = items[0].dataset.toc;
+    items.forEach(btn => {
+      const el = document.getElementById(btn.dataset.toc);
+      if (el && el.getBoundingClientRect().top <= line) cur = btn.dataset.toc;
+    });
+    // a short final section never reaches the line, so the bottom of the scroll
+    // always belongs to the last entry
+    if (stage.scrollTop + stage.clientHeight >= stage.scrollHeight - 4)
+      cur = items[items.length - 1].dataset.toc;
+    items.forEach(btn => btn.classList.toggle("on", btn.dataset.toc === cur));
+  }
+  let tocTick = 0;
+  stage.addEventListener("scroll", () => {
+    if (tocTick) return;
+    tocTick = requestAnimationFrame(() => { tocTick = 0; syncToc(); });
+  });
+
   // ---------- stage ----------
   function renderStage(t) {
     if (!t) { renderStageList(); return; }
@@ -2299,6 +2367,8 @@
     const plannedCount = new Set(Object.values(t.plan).flat().filter(id => placeById(id))).size;
     const cant = (t.wishlist || []).filter(id => placeById(id));
 
+    const toc = [];
+    let b = "";
     let h = `<div class="stage-in">${tabsBar()}
       <h2 class="st-title">${esc(t.name)}</h2>
       <div class="st-sub">${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days · ${plannedCount} places planned</div>
@@ -2314,11 +2384,12 @@
     }
 
     // ---- getting around: flights, and anything else you're holding ----
-    h += `<div class="st-sec"><h3>${ic("plane", "sm")}Getting there
+    toc.push({ id: "ov-transport", label: "Getting there" });
+    b += `<section class="st-sec" id="ov-transport"><h3>${ic("plane", "sm")}Getting there
       <button class="h3btn" id="stCommute">${ic("plus", "sm")}Add transport</button></h3>`;
     [["Out", t.outbound], ["Back", t.inbound]].forEach(([lbl, f]) => {
       const has = f && (f.flight || f.leg);
-      h += bkRow({
+      b += bkRow({
         icon: "plane", when: lbl + " · " + (f && f.date ? fmtDay(f.date) : "no date"),
         name: has ? esc(f.flight || "Flight") : "Not booked",
         meta: has ? esc(f.leg || "") : "Add the flight number and times.",
@@ -2330,7 +2401,7 @@
     (t.commutes || []).forEach((c, ci) => {
       const k = commuteKind(c.kind);
       const span = c.endDate && c.endDate !== c.startDate;
-      h += bkRow({
+      b += bkRow({
         icon: k.icon, when: k.label + " · " + (span
           ? fmtDay(c.startDate) + " → " + fmtDay(c.endDate) + " · " + spanDays(c) + " days"
           : fmtDay(c.startDate)),
@@ -2346,20 +2417,21 @@
         missing: c.status !== "booked",
       });
     });
-    h += `</div>`;
+    b += `</section>`;
 
     // ---- who's coming, and for how long ----
-    h += `<div class="st-sec"><h3>${ic("users", "sm")}Who's coming<span class="cnt">${(t.participants || []).length || "just you"}</span>
+    toc.push({ id: "ov-people", label: "Who's coming" });
+    b += `<section class="st-sec" id="ov-people"><h3>${ic("users", "sm")}Who's coming<span class="cnt">${(t.participants || []).length || "just you"}</span>
       <button class="h3btn" id="stPerson">${ic("plus", "sm")}Add someone</button></h3>`;
     if (!(t.participants || []).length) {
-      h += `<div class="tip-note">Nobody listed yet. Add the people travelling with you — each can have their own dates, because people don't always come for the whole trip.</div>`;
+      b += `<div class="tip-note">Nobody listed yet. Add the people travelling with you — each can have their own dates, because people don't always come for the whole trip.</div>`;
     } else {
       t.participants.forEach((p, pi) => {
         const when = p.wholeTrip
           ? "whole trip"
           : p.dates.map(d => fmtDay(d.startDate) + " → " + fmtDay(d.endDate)).join(", ");
         const nights = p.wholeTrip ? days.length : p.dates.reduce((n, d) => n + dateRange(d.startDate, d.endDate).length, 0);
-        h += `<div class="person" data-person="${pi}">
+        b += `<div class="person" data-person="${pi}">
           <span class="pav" style="${p.colour ? `background:${esc(p.colour)}` : ""}">${esc((p.name || "?").trim()[0] || "?")}</span>
           <span class="pb"><span class="pn">${esc(p.name)}${p.isOrganiser ? `<span class="ptag">organiser</span>` : ""}</span>
             <span class="pw">${esc(when)} · ${nights} day${nights === 1 ? "" : "s"}</span></span>
@@ -2367,14 +2439,15 @@
             <button data-rmperson="${pi}">${ic("trash", "sm")}</button></span></div>`;
       });
     }
-    h += `</div>`;
+    b += `</section>`;
 
     // ---- stays ----
-    h += `<div class="st-sec"><h3>${ic("bed", "sm")}Stays<span class="cnt">${booked} of ${stays} booked</span>
+    toc.push({ id: "ov-stays", label: "Stays", n: stays });
+    b += `<section class="st-sec" id="ov-stays"><h3>${ic("bed", "sm")}Stays<span class="cnt">${booked} of ${stays} booked</span>
       <button class="h3btn" id="stStay">${ic("plus", "sm")}Add stay</button></h3>`;
     t.segments.forEach((seg, si) => {
       const ho = seg.hotel;
-      h += bkRow({
+      b += bkRow({
         icon: "bed",
         when: areaName(seg.city) + " · " + countryName(countryOf(seg.city)),
         name: ho ? esc(ho.name) : "No hotel booked",
@@ -2391,14 +2464,15 @@
         tag: ho ? "booked" : "to book", missing: !ho,
       });
     });
-    h += `</div>`;
+    b += `</section>`;
 
     // ---- transport between areas ----
     if (t.legs.length) {
-      h += `<div class="st-sec"><h3>${ic("train", "sm")}Between cities</h3>`;
+      toc.push({ id: "ov-legs", label: "Between cities", n: t.legs.length });
+      b += `<section class="st-sec" id="ov-legs"><h3>${ic("train", "sm")}Between cities</h3>`;
       t.legs.forEach((l, li) => {
         const chosen = l.options[l.chosen];
-        h += bkRow({
+        b += bkRow({
           icon: commuteKind((l.kinds || [])[l.chosen]).icon, when: fmtDay(l.date),
           name: esc(l.from) + " → " + esc(l.to),
           meta: chosen ? esc(chosen) : "No option chosen yet.",
@@ -2406,33 +2480,68 @@
           tag: chosen ? "chosen" : "to pick", missing: !chosen,
         });
       });
-      h += `</div>`;
+      b += `</section>`;
     }
 
+    // ---- eating and drinking, lifted out of the days so you can see it as a list ----
+    // Scope is the trip, not the catalogue: what's on a day plus what you shortlisted.
+    const dayOf = {};
+    days.forEach(d => (t.plan[d] || []).forEach(id => { if (!dayOf[id]) dayOf[id] = d; }));
+    const inTrip = [...new Set([...Object.values(t.plan).flat(), ...(t.wishlist || [])])]
+      .map(placeById).filter(Boolean);
+    const eatSec = (id, icon, label, cats, empty) => {
+      const list = inTrip.filter(p => cats.includes(p.c)).sort((x, y) => {
+        const dx = dayOf[x.id] ? days.indexOf(dayOf[x.id]) : 99;
+        const dy = dayOf[y.id] ? days.indexOf(dayOf[y.id]) : 99;
+        return dx - dy || x.name.localeCompare(y.name);
+      });
+      toc.push({ id: "ov-" + id, label, n: list.length });
+      b += `<section class="st-sec" id="ov-${id}"><h3>${ic(icon, "sm")}${esc(label)}<span class="cnt">${list.length}</span></h3>`;
+      if (!list.length) { b += `<div class="tip-note">${esc(empty)}</div></section>`; return; }
+      b += `<div class="eat-list">`;
+      list.forEach(p => {
+        const d = dayOf[p.id];
+        b += `<div class="eatrow">
+          <span class="eat-ic">${catIc(p, "sm")}</span>
+          <span class="eat-n" data-fly="${p.id}">${esc(p.name)}${p.cn ? ` <span class="pcn2">${esc(p.cn)}</span>` : ""}</span>
+          <span class="eat-city">${esc(areaName(p.city))}</span>
+          ${d ? `<button class="eat-day" data-day="${d}" title="Open ${esc(fmtDay(d))} in the plan">D${days.indexOf(d) + 1}</button>`
+              : `<span class="eat-day none" title="Saved for this trip, not on a day yet">—</span>`}
+        </div>`;
+      });
+      b += `</div></section>`;
+    };
+    eatSec("coffee", "coffee", "Coffee & matcha", ["coffee", "matcha"],
+      "No cafes on this trip yet — add one to a day, or shortlist it for later.");
+    eatSec("food", "food", "Restaurants", ["food"],
+      "No restaurants on this trip yet — add one to a day, or shortlist it for later.");
+
     // ---- days ----
-    h += `<div class="st-sec"><h3>${ic("calendar", "sm")}Days<span class="cnt">tap to open in the plan</span></h3>`;
+    toc.push({ id: "ov-days", label: "Days", n: days.length });
+    b += `<section class="st-sec" id="ov-days"><h3>${ic("calendar", "sm")}Days<span class="cnt">tap to open in the plan</span></h3>`;
     days.forEach((date, i) => {
       const nP = (t.plan[date] || []).filter(id => placeById(id)).length;
       const flags = [];
       if (t.outbound.date === date) flags.push("arrive");
       if (t.inbound.date === date) flags.push("depart");
       if (isTravelDay(t, date)) flags.push("travel");
-      h += `<div class="dayrow" data-day="${date}">
+      b += `<div class="dayrow" data-day="${date}">
         <span class="dnum">D${i + 1}</span>
         <span class="dr-date">${fmtDay(date)}</span>
         <span class="dr-city">${esc(cityLabel(t, date))}${flags.length ? ` · <span class="dr-flag">${flags.join(" · ")}</span>` : ""}</span>
         <span class="dr-n">${nP ? nP + " place" + (nP > 1 ? "s" : "") : "free"}</span>
         <span class="dr-go">${ic("back", "sm")}</span></div>`;
     });
-    h += `</div>`;
+    b += `</section>`;
 
     // ---- couldn't fit ----
     if (cant.length) {
-      h += `<div class="st-sec"><h3>${ic("layers", "sm")}Not scheduled<span class="cnt">${cant.length}</span></h3><div class="ov-list">`;
-      cant.forEach(id => { const p = placeById(id); h += wishRow(p); });
-      h += `</div></div>`;
+      toc.push({ id: "ov-cant", label: "Not scheduled", n: cant.length });
+      b += `<section class="st-sec" id="ov-cant"><h3>${ic("layers", "sm")}Not scheduled<span class="cnt">${cant.length}</span></h3><div class="ov-list">`;
+      cant.forEach(id => { const p = placeById(id); b += wishRow(p); });
+      b += `</div></section>`;
     }
-    h += `</div>`;
+    h += `<div class="st-cols">` + tocRail(toc) + `<div class="st-body">` + b + `</div></div></div>`;
     stage.innerHTML = h;
     wireStage(t);
   }
@@ -2440,6 +2549,8 @@
   // ---------- plan: every day as an expand/collapse section, all open by default ----------
   function renderStagePlan(t) {
     const days = dateRange(t.start, t.end);
+    const toc = [];
+    let b = "";
     let h = `<div class="stage-in">${tabsBar()}
       <h2 class="st-title">Plan</h2>
       <div class="st-sub">${esc(t.name)} · ${fmtDay(t.start)} – ${fmtDay(t.end)} · ${days.length} days</div>
@@ -2448,7 +2559,7 @@
         <button class="btn sm" id="stCollapse">Collapse all</button>
       </div>`;
     if (!t.segments.length)
-      h += `<div class="tip-note">No city stays yet — add one on the overview so these days know where you are.</div>`;
+      b += `<div class="tip-note">No city stays yet — add one on the overview so these days know where you are.</div>`;
     days.forEach((date, i) => {
       const cities = citiesForDate(t, date);
       const nP = (t.plan[date] || []).filter(id => placeById(id)).length;
@@ -2460,7 +2571,9 @@
       if (isTravelDay(t, date, cities)) flags.push("travel");
       const cityBits = cities.map((c, n) =>
         `<span class="dcity">${n ? `<span class="darrow">→</span>` : ""}${esc(areaName(c))}</span>`).join("");
-      h += `<section class="dsec${open ? " open" : ""}${stageDate === date ? " cur" : ""}${cities.length > 1 ? " twocity" : ""}" id="day-${date}">
+      toc.push({ id: "day-" + date, day: date, num: "D" + (i + 1), label: fmtDay(date),
+        sub: cities.map(areaName).join(" → "), n: nP || null });
+      b += `<section class="dsec${open ? " open" : ""}${stageDate === date ? " cur" : ""}${cities.length > 1 ? " twocity" : ""}" id="day-${date}">
         <header class="dsec-h" data-toggle="${date}">
           <span class="dsec-cv">${ic("down", "sm")}</span>
           <span class="dnum">D${i + 1}</span>
@@ -2476,7 +2589,7 @@
         <div class="dsec-b">${open ? dayBody(t, date) : ""}</div>
       </section>`;
     });
-    h += `</div>`;
+    h += `<div class="st-cols">` + tocRail(toc, "Days") + `<div class="st-body">` + b + `</div></div></div>`;
     stage.innerHTML = h;
     wireStage(t);
   }
@@ -2677,6 +2790,13 @@
     byId("stStay2", () => addCityStay(t));
     byId("stExpand", () => { collapsedDays = new Set(); renderStage(t); });
     byId("stCollapse", () => { collapsedDays = new Set(dateRange(t.start, t.end)); renderStage(t); });
+    stage.querySelectorAll("[data-toc]").forEach(btn => btn.onclick = () => {
+      // a day in the rail opens that day properly (expand, select, focus the map);
+      // a section just scrolls
+      if (btn.dataset.tocday) { openDay(t, btn.dataset.tocday); return; }
+      const el = document.getElementById(btn.dataset.toc);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
     stage.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
       stageTab = b.dataset.tab; stageDate = null;
       focusedDate = null; dayFocusIds = new Set(); dayFocusOrder = {};
@@ -2777,6 +2897,7 @@
       t.wishlist = t.wishlist.filter(x => x !== b.dataset.wrm); save(); renderStage(t);
     });
     wireSwipes(stage);
+    syncToc();
     if (altOpenDate) renderAlts();
   }
 
