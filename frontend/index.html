@@ -2003,6 +2003,16 @@
   // What you set by hand always wins over the guess below. A place with a real
   // clock time sorts by that time; one with only a slot sorts into that block.
   const SLOT_RANK = { morning: 0, noon: 1, evening: 2 };
+  // Where each label sits in a day. Pinned slots and guessed ones are ranked on
+  // the same scale, otherwise a stop you pinned to midday sorts after one the
+  // app guessed into the afternoon.
+  const DAY_ORDER = { breakfast: 0, morning: 1, lunch: 2, midday: 2, noon: 2,
+    afternoon: 3, coffee: 3, snack: 4, anytime: 4, dinner: 5, evening: 6, night: 6 };
+  function labelRank(label) {
+    const m = /^(\d{1,2}):/.exec(String(label));
+    if (m) { const h = +m[1]; return h < 10 ? 0 : h < 12 ? 1 : h < 15 ? 2 : h < 17 ? 3 : h < 19 ? 5 : 6; }
+    return DAY_ORDER[String(label).toLowerCase()] ?? 4;
+  }
   function sequenceDay(places, timing, date) {
     if (timing && date) {
       const fixed = [], loose = [];
@@ -2011,22 +2021,16 @@
         (tm && (tm.slot || tm.startTime) ? fixed : loose).push(p);
       });
       if (fixed.length) {
-        const guessed = rawSequence(loose);
-        const rank = (p) => {
-          const tm = timing[date + "|" + p.id] || {};
-          if (tm.startTime) return Number(tm.startTime.slice(0, 2)) < 12 ? 0 : Number(tm.startTime.slice(0, 2)) < 17 ? 1 : 2;
-          return SLOT_RANK[tm.slot] ?? 1;
-        };
         const label = (p) => {
           const tm = timing[date + "|" + p.id] || {};
           if (tm.startTime) return tm.startTime + (tm.endTime ? "–" + tm.endTime : "");
           return tm.slot === "morning" ? "Morning" : tm.slot === "evening" ? "Evening" : "Midday";
         };
-        const out = fixed.map(p => ({ slot: label(p), p, rank: rank(p), pinned: true }))
-          .concat(guessed.map(x => ({ ...x, rank: /morning|breakfast/i.test(x.slot) ? 0
-            : /evening|dinner|night/i.test(x.slot) ? 2 : 1 })));
-        return out.sort((a, b) => a.rank - b.rank ||
-          ((a.slot > b.slot) ? 1 : (a.slot < b.slot) ? -1 : 0));
+        const out = fixed.map(p => ({ slot: label(p), p, pinned: true }))
+          .concat(rawSequence(loose))
+          .map(x => ({ ...x, rank: labelRank(x.slot) }));
+        // stable sort, so stops sharing a rank keep the order they were built in
+        return out.sort((a, b) => a.rank - b.rank);
       }
     }
     return rawSequence(places);
@@ -3058,14 +3062,17 @@
     if (!t || !date) { closeAlts(); return; }
     t.wishlist = t.wishlist || [];
     const body = document.getElementById("alt-body"), foot = document.getElementById("alt-foot");
-    const city = segCity(t, date);
-    const cname = areaName(city) || "this trip";
+    // Every city the day touches, not just the one you sleep in last: on the day
+    // you leave Suzhou for Hangzhou, the Suzhou list is exactly what you need.
+    const cities = citiesForDate(t, date);
+    const inScope = p => altAllCities || !cities.length || cities.includes(p.city);
+    const cname = cities.map(areaName).filter(Boolean).join(" · ") || "this trip";
     const di = dateRange(t.start, t.end).indexOf(date);
     document.getElementById("alt-sub").textContent =
       (di >= 0 ? "D" + (di + 1) + " · " : "") + fmtDay(date) + " · " + cname;
 
     const planned = t.plan[date] || [];
-    const alts = t.wishlist.map(placeById).filter(p => p && (altAllCities || !city || p.city === city));
+    const alts = t.wishlist.map(placeById).filter(p => p && inScope(p));
     if (!alts.length) {
       body.innerHTML = `<div class="day-empty">No alternatives ${altAllCities ? "parked yet" : "for " + esc(cname)}. Park one below, or open a place on the map and choose “Add as an alternative”.</div>`;
     } else {
@@ -3085,7 +3092,7 @@
     }
     // footer: park another place here
     const pool = allPlaces()
-      .filter(p => (altAllCities || !city || p.city === city) && !t.wishlist.includes(p.id) && !planned.includes(p.id))
+      .filter(p => inScope(p) && !t.wishlist.includes(p.id) && !planned.includes(p.id))
       .sort((a, b) => a.name.localeCompare(b.name));
     foot.innerHTML = `<select id="altAdd"><option value="">Park a place here as an alternative…</option>${
       pool.map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("")}</select>`;
