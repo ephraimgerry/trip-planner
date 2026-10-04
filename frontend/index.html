@@ -207,8 +207,6 @@
       background: var(--panel); border-left: 1px solid var(--line); box-shadow: var(--shadow); z-index: 480; }
     #webpanel[hidden] { display: none; }
     #web-detail { flex: 0 0 auto; max-height: 42%; overflow-y: auto; padding: 11px 13px; border-bottom: 1px solid var(--line); }
-    #web-detail .ext-gal { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 9px; }
-    #web-detail .ext-gal img { height: 104px; border-radius: 9px; object-fit: cover; flex: 0 0 auto; background: var(--panel-3); }
     #web-detail .ext-cn { color: var(--muted); font-size: 12.5px; margin: 2px 0 6px; }
     #web-detail .ext-dist { display: inline-block; font-size: 12px; background: var(--chip-bg); color: var(--chip-ink); border-radius: 999px; padding: 3px 10px; font-weight: 600; margin-bottom: 8px; }
     #web-detail p { font-size: 12.5px; line-height: 1.5; color: var(--ink-2); margin: 0 0 10px; }
@@ -384,8 +382,22 @@
     .mrow .btn { flex: 0 0 auto; }
 
     .controls { padding: 12px 16px; border-bottom: 1px solid var(--line); }
-    #countrySel { width: 100%; margin-bottom: 9px; padding: 7px 9px; border: 1px solid var(--line);
-      border-radius: 8px; background: var(--panel); color: var(--ink); font-size: 12.5px; }
+    /* single select, dressed exactly like the multi-select button: same box, same
+       label on the left, same caret — only the behaviour differs */
+    .ssel { position: relative; display: flex; align-items: center; gap: 8px; height: 34px; box-sizing: border-box; padding: 0 10px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; }
+    .ssel:hover { border-color: var(--line-2); }
+    .ssel:focus-within { border-color: var(--accent); box-shadow: var(--glow); }
+    .ssel .msel-k { flex: 0 0 auto; font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .ssel select { flex: 1; min-width: 0; appearance: none; -webkit-appearance: none; border: none; outline: none;
+      background: transparent; color: var(--ink); font: inherit; font-size: 12.5px; padding: 0 22px 0 0; height: 100%; cursor: pointer;
+      text-overflow: ellipsis; }
+    .ssel .caret { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .ssel:has(select:disabled) { opacity: .6; cursor: default; }
+    .ssel select:disabled { cursor: default; }
+    .row .ssel { flex: 1; min-width: 0; }
+    .controls > .ssel:first-child { margin-bottom: 9px; }
+    .msel-btn { height: 34px; box-sizing: border-box; }
     .searchrow { display: flex; gap: 7px; align-items: stretch; }
     .searchrow #search { flex: 1; }
     .iconbtn { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
@@ -432,7 +444,6 @@
     .msel-foot button:hover { border-color: var(--accent); color: var(--accent); }
     .kindseg { margin-top: 10px; }
     .controls .searchrow { margin-top: 9px; }
-    #districtFilter:disabled { color: var(--muted); opacity: .75; }
 
     /* events: square pins, so they never read as a place */
     .ev-pin { border-radius: 6px; background: #d6336c; color: #fff; display: flex; align-items: center;
@@ -451,7 +462,7 @@
     .pop .evtrip[disabled] { opacity: .55; cursor: default; }
 
     .row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
-    .row select {
+    .row > select {
       flex: 1; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit;
       background: var(--panel); font-size: 13px; color: var(--ink);
     }
@@ -561,7 +572,9 @@
     .dsec.cur { border-color: var(--accent-line); box-shadow: var(--glow); }
     .dsec-h { display: flex; align-items: center; gap: 11px; padding: 11px 14px; cursor: pointer; user-select: none; }
     .dsec-h:hover { background: var(--hover); }
-    .dsec-cv { display: flex; color: var(--muted); transform: rotate(-90deg); transition: transform .2s; }
+    .dsec-cv { display: flex; color: var(--muted); transform: rotate(-90deg); transition: transform .2s;
+      border: none; background: none; padding: 4px; margin: -4px; border-radius: 6px; cursor: pointer; }
+    .dsec-cv:hover { color: var(--accent); background: var(--accent-soft); }
     .dsec.open .dsec-cv { transform: none; }
     .dsec .dnum { font-weight: 700; font-size: 11.5px; color: var(--panel); background: var(--ink); border-radius: 6px; padding: 2px 7px; }
     .dsec.cur .dnum { background: var(--accent); color: var(--on-accent); }
@@ -684,13 +697,6 @@
     .eatrow .eat-day { font-size: 10.5px; font-weight: 700; border: 1px solid var(--line); background: var(--panel);
       color: var(--ink-2); border-radius: 6px; padding: 2px 7px; cursor: pointer; min-width: 34px; }
     .eatrow .eat-day:hover { border-color: var(--accent-line); color: var(--accent); }
-    .evrow .evday { font: inherit; font-size: 11px; padding: 3px 6px; border: 1px solid var(--line);
-      border-radius: 6px; background: var(--panel); color: var(--ink-2); max-width: 132px; }
-    .evrow .evrm { border: none; background: none; color: var(--muted); cursor: pointer; display: flex; padding: 2px; }
-    .evrow .evrm:hover { color: var(--accent); }
-    .evday-row { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 8px; cursor: pointer;
-      font-size: 13px; border: 1px dashed color-mix(in srgb, #d6336c 45%, transparent); }
-    .evday-row:hover { border-color: #d6336c; }
     .eatrow .eat-day.none { border-style: dashed; cursor: default; color: var(--muted); font-weight: 500; }
 
     /* booking rows — the "what have I not booked yet" view */
@@ -830,10 +836,6 @@
       box-shadow: 0 6px 20px rgba(0,0,0,.3); max-width: 320px; color: var(--ink);
     }
     .leaflet-tooltip.place-tt::before { display: none; }
-    .place-tt .gal { display: flex; }
-    .place-tt .gal img { display: block; width: 104px; height: 96px; object-fit: cover; background: var(--panel-3); }
-    .place-tt .gal.solo img { width: 220px; height: 130px; }
-    .place-tt .gal.duo img { width: 145px; height: 110px; }
     .place-tt .ttname { padding: 6px 9px; font-size: 12.5px; font-weight: 600; line-height: 1.25; }
     .place-tt .ttname small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
     .place-tt .ttdist { display: flex; align-items: center; gap: 5px; padding: 0 9px 7px; font-size: 11px; color: var(--muted); }
@@ -841,8 +843,6 @@
     .place-tt .ttname > div { min-width: 0; }
 
     /* photo strip in popup */
-    .pop .strip { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 2px; }
-    .pop .strip img { height: 110px; border-radius: 7px; object-fit: cover; flex: 0 0 auto; background: var(--panel-3); }
 
 
     /* distance badges */
@@ -956,10 +956,10 @@
       <div id="mapPanel" class="panel">
         <div class="controls">
           <!-- where: country, then any number of its areas, then a district inside them -->
-          <select id="countrySel"></select>
+          <label class="ssel"><span class="msel-k">Country</span><select id="countrySel"></select><svg class="ic sm caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></svg></label>
           <div class="msel" id="areaSel"></div>
           <div class="row">
-            <select id="districtFilter"><option value="">No districts</option></select>
+            <label class="ssel"><span class="msel-k">District</span><select id="districtFilter"><option value="">No districts</option></select><svg class="ic sm caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></svg></label>
             <label class="toggle"><input type="checkbox" id="zonesToggle" checked /> Zones</label>
           </div>
           <!-- what: places, events, or both — then the types within them -->
@@ -972,13 +972,13 @@
           </div>
           <div class="msel" id="catSel"></div>
           <div class="row">
-            <select id="statusFilter">
+            <label class="ssel"><span class="msel-k">Status</span><select id="statusFilter">
               <option value="">Any status</option>
               <option value="want">Want to go</option>
               <option value="planned">Planned</option>
               <option value="visited">Visited</option>
               <option value="marked">Any I've marked</option>
-            </select>
+            </select><svg class="ic sm caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></svg></label>
             <label class="toggle"><input type="checkbox" id="listToggle" /> My list only</label>
           </div>
           <div class="row">
@@ -1442,17 +1442,6 @@
   }
 
   // pick up to a few images (real geosearched ones if available, else representative)
-  function imagesFor(p) {
-    if (p.images && p.images.length) return p.images.slice(0, 4);
-    const C = (typeof IMG_CAT !== "undefined") ? IMG_CAT : {};
-    const cc = p.sub || p.c;
-    const extra = { coffee: [C.bakery, C.matcha], matcha: [C.tea, C.coffee], food: [C.shengjian, C.noodle],
-      sight: [C.street, C.skyline], culture: [C.temple, C.museum], nature: [C.watertown, C.garden],
-      shopping: [C.street], nightlife: [C.cocktail] }[cc] || [];
-    return [...new Set([imageFor(p), ...extra].filter(Boolean))].slice(0, 3);
-  }
-
-  // pick a representative image: explicit > landmark photo > keyword > category
   function imageFor(p) {
     if (p.img) return p.img;
     if (p.images && p.images.length) return p.images[0];
@@ -1477,21 +1466,10 @@
   }
   const q = s => encodeURIComponent(s);
   const cityName = p => areaName(p.city) || "Shanghai";
-  function linksHtml(p) {
-    const term = (p.name + " " + (p.cn || "") + " " + cityName(p)).trim();
-    const parts = [];
-    if (p.link) parts.push(`<a href="${p.link}" target="_blank" rel="noopener">${ic("globe", "sm")}Website</a>`);
-    parts.push(`<a href="https://www.google.com/maps/search/?api=1&query=${q(term)}" target="_blank" rel="noopener">${ic("map", "sm")}Map</a>`);
-    parts.push(`<a href="https://www.google.com/search?tbm=isch&q=${q(term)}" target="_blank" rel="noopener">${ic("camera", "sm")}Photos</a>`);
-    parts.push(`<a href="https://www.xiaohongshu.com/search_result?keyword=${q(p.cn || p.name)}" target="_blank" rel="noopener">${ic("bookmark", "sm")}RED</a>`);
-    return `<div class="links">${parts.join("")}</div>`;
-  }
+
   function tooltipHtml(p) {
-    const imgs = imagesFor(p);
-    const cls = imgs.length === 1 ? "solo" : imgs.length === 2 ? "duo" : "";
     const d = distInfo(p);
-    return `<div><div class="gal ${cls}">${imgs.map(u => `<img src="${u}" loading="lazy" alt="">`).join("")}</div>
-      <div class="ttname">${catIc(p)}<div>${p.name}<small>${p.cn || ""}</small></div></div>
+    return `<div><div class="ttname">${catIc(p)}<div>${p.name}<small>${p.cn || ""}</small></div></div>
       ${d ? `<div class="ttdist">${ic("pin", "sm")}${kmText(d.km)} from ${d.base.name} · ${d.est}</div>` : ""}</div>`;
   }
   function distHtml(p) {
@@ -1540,14 +1518,12 @@
       `<button data-st="${v}" class="${st===v?'sel '+v:''}">${label}</button>`;
     const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : (p.d || "");
     return `<div class="pop">
-      <div class="strip">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" alt="" onerror="this.remove()">`).join("")}</div>
       <h3>${catIc(p)}${p.name}${p.hot?' <span class="hot-badge">'+ic('flame','sm')+'Trending</span>':''}</h3>
       <div class="pcn">${p.cn || ""} · ${cat.label}${dName?(" · "+dName):""}${p.city?(" · "+esc(areaName(p.city))):""}</div>
       ${branchHtml(p)}
       ${distHtml(p)}
       ${p.desc?`<p>${p.desc}</p>`:""}
       ${p.src?`<div class="srcline">found via ${p.src}</div>`:""}
-      ${linksHtml(p)}
       <div class="statusbtns">
         ${btn("want","Want")}${btn("planned","Plan")}${btn("visited","Been")}
       </div>
@@ -1657,7 +1633,6 @@
       ${evPrice(e) || booking ? `<div class="evline">${ic("ticket", "sm")}${esc([evPrice(e), booking].filter(Boolean).join(" · "))}</div>` : ""}
       ${e.address ? `<div class="evline">${ic("pin", "sm")}${esc(e.address)}</div>` : ""}
       ${e.desc ? `<p>${esc(e.desc)}</p>` : ""}
-      ${linksHtml(e)}
       ${btn}
     </div>`;
   }
@@ -2895,20 +2870,16 @@
     toc.push({ id: "ov-events", label: "Events", n: tEvents.length });
     b += `<section class="st-sec" id="ov-events"><h3>${ic("ticket", "sm")}Events<span class="cnt">${tEvents.length}</span></h3>`;
     if (!tEvents.length)
-      b += `<div class="tip-note">No events yet. In Explore, switch to Events — anything on while you're here can be added from its pin.</div>`;
+      b += `<div class="tip-note">No events yet. Add one to a day with the day's ＋ in the plan, or from its pin in Explore.</div>`;
     else {
       b += `<div class="eat-list">`;
       tEvents.forEach(({ x, e }) => {
-        // only the days it's actually on
-        const onDays = days.filter(d => d >= e.start && d <= (e.end || e.start));
-        b += `<div class="eatrow evrow">
+        b += `<div class="eatrow">
           <span class="eat-ic">${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)}</span>
           <span class="eat-n" data-evfly="${e.id}">${esc(e.name)} <span class="pcn2">${esc(evWhen(e))}${evHours(e) ? " · " + esc(evHours(e)) : ""}${e.free ? " · Free" : ""}</span></span>
-          <select class="evday" data-evday="${x.id}" title="Which day of the trip">
-            <option value="">Shortlist</option>
-            ${onDays.map(d => `<option value="${d}" ${x.date === d ? "selected" : ""}>D${days.indexOf(d) + 1} · ${esc(fmtDay(d))}</option>`).join("")}
-          </select>
-          <button class="evrm" data-evrm="${x.id}" title="Remove from this trip">${ic("x", "sm")}</button>
+          <span class="eat-city">${esc(areaName(e.city))}</span>
+          ${x.date ? `<button class="eat-day" data-day="${x.date}" title="Open ${esc(fmtDay(x.date))} in the plan">D${days.indexOf(x.date) + 1}</button>`
+                   : `<span class="eat-day none" title="Saved for this trip, not on a day yet">—</span>`}
         </div>`;
       });
       b += `</div>`;
@@ -2933,10 +2904,13 @@
     });
     b += `</section>`;
 
-    // ---- couldn't fit ----
-    if (cant.length) {
-      toc.push({ id: "ov-cant", label: "Not scheduled", n: cant.length });
-      b += `<section class="st-sec" id="ov-cant"><h3>${ic("layers", "sm")}Not scheduled<span class="cnt">${cant.length}</span></h3><div class="ov-list">`;
+    // ---- couldn't fit: places and events saved for the trip but not on a day ----
+    const cantEvents = tEvents.filter(r => !r.x.date);
+    if (cant.length || cantEvents.length) {
+      const n = cant.length + cantEvents.length;
+      toc.push({ id: "ov-cant", label: "Not scheduled", n });
+      b += `<section class="st-sec" id="ov-cant"><h3>${ic("layers", "sm")}Not scheduled<span class="cnt">${n}</span></h3><div class="ov-list">`;
+      cantEvents.forEach(({ x, e }) => { b += eventWishRow(e, x); });
       cant.forEach(id => { const p = placeById(id); b += wishRow(p); });
       b += `</div></section>`;
     }
@@ -2971,8 +2945,8 @@
       toc.push({ id: "day-" + date, day: date, num: "D" + (i + 1), label: fmtDay(date),
         sub: cities.map(areaName).join(" → "), n: nP || null });
       b += `<section class="dsec${open ? " open" : ""}${stageDate === date ? " cur" : ""}${cities.length > 1 ? " twocity" : ""}" id="day-${date}">
-        <header class="dsec-h" data-toggle="${date}">
-          <span class="dsec-cv">${ic("down", "sm")}</span>
+        <header class="dsec-h" data-daysel="${date}">
+          <button class="dsec-cv" data-toggle="${date}" title="${open ? "Collapse" : "Expand"} this day">${ic("down", "sm")}</button>
           <span class="dnum">D${i + 1}</span>
           <span class="dsec-date">${fmtDay(date)}</span>
           <span class="dsec-city">${cityBits}${flags.length ? ` <span class="dr-flag">${flags.join(" · ")}</span>` : ""}</span>
@@ -3008,7 +2982,13 @@
       const opts = allPlaces().filter(p => (!pick || p.city === pick) && !ids.includes(p.id))
         .sort((a, b) => a.name.localeCompare(b.name))
         .map(p => `<option value="${p.id}">${esc(p.name)}${p.cn ? " · " + esc(p.cn) : ""}</option>`).join("");
-      h += `<select class="add-place-sel" data-adddate="${date}"><option value="">Add a ${esc(areaName(pick) || "")} place…</option>${opts}</select>
+      // events: only ones actually on that day, in that city, and not already on the trip
+      const taken = new Set((t.events || []).filter(x => x.date).map(x => x.eventId));
+      const evOpts = EVENTS.filter(e => (!pick || e.city === pick) && date >= e.start && date <= (e.end || e.start) && !taken.has(e.id))
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(e => `<option value="ev:${e.id}">${esc(e.name)} · ${esc(evCatLabel(e.ec))}</option>`).join("");
+      h += `<select class="add-place-sel" data-adddate="${date}"><option value="">Add a ${esc(areaName(pick) || "")} place or event…</option>
+        ${evOpts ? `<optgroup label="Events on this day">${evOpts}</optgroup><optgroup label="Places">${opts}</optgroup>` : opts}</select>
         <button class="addrow-new" data-newplace="${pick}" data-newdate="${date}">${ic("plus", "sm")}Add a place that isn't listed</button>
       </div>`;
     }
@@ -3067,10 +3047,7 @@
     const dayEvents = (t.events || []).filter(x => x.date === date)
       .map(x => ({ x, e: eventById(x.eventId) })).filter(r => r.e);
     dayEvents.forEach(({ x, e }) => {
-      h += `<div class="slot"><div class="slot-tag">${esc(x.startTime || "Event")}</div><div class="slot-p">
-        <div class="evday-row" data-evfly="${e.id}">${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)}
-          <span class="pname">${esc(e.name)} <span class="pcn2">${esc(evCatLabel(e.ec))}${evHours(e) ? " · " + esc(evHours(e)) : ""}${e.free ? " · Free" : ""}</span></span>
-        </div></div></div>`;
+      h += `<div class="slot"><div class="slot-tag">${esc(x.startTime || "Event")}</div><div class="slot-p">${dayEventRow(e, x)}</div></div>`;
     });
 
     if (!dayPlaces.length && !dayEvents.length && t.outbound.date !== date && t.inbound.date !== date && li < 0)
@@ -3102,6 +3079,16 @@
       `<button class="sw-edit" data-edititem="${p.id}" data-itemdate="${date}"
                title="Timing and notes for this stop">${ic("pencil", "sm")}</button>`);
   };
+
+  // events, built from the same rows as places so they read and behave the same
+  const dayEventRow = (e, x) => swipeRow("dplace", `data-evfly="${e.id}"`,
+    `<span class="pemoji">${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)}</span>
+     <span class="pname">${esc(e.name)} <span class="pcn2">${esc(evCatLabel(e.ec))}${evHours(e) ? " · " + esc(evHours(e)) : ""}${e.free ? " · Free" : ""}</span></span>
+     <span class="pcity">${esc(areaName(e.city))}</span>`,
+    `data-evrm="${x.id}"`);
+  const eventWishRow = (e, x) => swipeRow("ov-item", `data-evfly="${e.id}"`,
+    `<span class="wname">${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)} ${esc(e.name)} <span class="pcn2">${esc(evWhen(e))}</span></span>`,
+    `data-evrm="${x.id}"`);
 
   const wishRow = p => swipeRow("ov-item", `data-fly="${p.id}"`,
     `<span class="wname">${catIc(p, "sm")} ${esc(p.name)} <span class="pcn2">${esc(areaName(p.city))}</span></span>`,
@@ -3202,24 +3189,22 @@
       const el = document.getElementById(btn.dataset.toc);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     });
-    stage.querySelectorAll("[data-evfly]").forEach(el => el.onclick = () => {
+    stage.querySelectorAll("[data-evfly]").forEach(el => el.onclick = (ev) => {
+      if (ev.target.closest("[data-swipeopen]")) return;
+      const front = el.closest(".sw-front");
+      if (front && front.dataset.drag === "1") return;
+      if (el.closest(".swipe.open")) { shutSwipes(); return; }
       const e = eventById(el.dataset.evfly); if (!e) return;
       const wasOpen = mapOpen();
       setMapOpen(true);
       setTimeout(() => focusEvent(e), wasOpen ? 0 : 400);
     });
-    stage.querySelectorAll("[data-evday]").forEach(sel => sel.onchange = async () => {
-      const x = (t.events || []).find(v => v.id === sel.dataset.evday); if (!x) return;
-      try { const te = await Repo.updateTripEvent(t.id, x.id, { date: sel.value || null }); x.date = te.date; }
-      catch (err) { showHint("Couldn't move that event: " + err.message); }
-      renderStage(t); refreshMarkers();
-    });
-    stage.querySelectorAll("[data-evrm]").forEach(bt => bt.onclick = async () => {
+    stage.querySelectorAll("[data-evrm]").forEach(bt => bt.onclick = async (ev) => {
+      ev.stopPropagation();
       const x = (t.events || []).find(v => v.id === bt.dataset.evrm); if (!x) return;
-      const e = eventById(x.eventId);
-      if (!await confirmModal("Remove " + (e ? e.name : "this event") + " from this trip?", "Remove")) return;
       try { await Repo.removeTripEvent(t.id, x.id); t.events = t.events.filter(v => v !== x); }
       catch (err) { showHint("Couldn't remove that: " + err.message); return; }
+      if (focusedDate) setDayFocus(t, focusedDate);
       renderStage(t); refreshMarkers();
     });
     stage.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
@@ -3229,11 +3214,16 @@
       renderStage(t); stage.scrollTop = 0;
     });
 
-    stage.querySelectorAll("[data-toggle]").forEach(hd => hd.onclick = (e) => {
-      if (e.target.closest("button")) return;
-      const date = hd.dataset.toggle;
+    // the chevron folds a day; the rest of the header picks it
+    stage.querySelectorAll("[data-toggle]").forEach(b => b.onclick = (e) => {
+      e.stopPropagation();
+      const date = b.dataset.toggle;
       if (collapsedDays.has(date)) collapsedDays.delete(date); else collapsedDays.add(date);
-      stageDate = date; renderStage(t);
+      renderStage(t);
+    });
+    stage.querySelectorAll("[data-daysel]").forEach(hd => hd.onclick = (e) => {
+      if (e.target.closest("button")) return;
+      selectDay(t, hd.dataset.daysel);
     });
     stage.querySelectorAll("[data-dadd]").forEach(b => b.onclick = (e) => {
       e.stopPropagation();
@@ -3292,9 +3282,14 @@
       const date = b.dataset.date;
       t.plan[date] = (t.plan[date] || []).filter(x => x !== b.dataset.rm); save(); renderTrip();
     });
-    stage.querySelectorAll("[data-adddate]").forEach(sel => sel.onchange = () => {
+    stage.querySelectorAll("[data-adddate]").forEach(sel => sel.onchange = async () => {
       if (!sel.value) return;
       const date = sel.dataset.adddate;
+      if (sel.value.startsWith("ev:")) {                 // an event: its own endpoint, not the plan
+        const e = eventById(sel.value.slice(3));
+        if (e && await addEventToTrip(t, e, date)) { if (focusedDate === date) setDayFocus(t, date); renderTrip(); }
+        return;
+      }
       (t.plan[date] = t.plan[date] || []).push(sel.value); save();
       if (focusedDate === date) setDayFocus(t, date);   // keep the map in step
       renderTrip();
@@ -3362,6 +3357,14 @@
     refreshMarkers();
     drawHotels(t, date);          // only the beds that matter on this day
     return ordered;
+  }
+  // Picking a day without picking a place in it: highlight the card, light up its
+  // route and beds on the map (if the map is out), and leave the layout alone.
+  function selectDay(t, date) {
+    stageDate = date;
+    markCurrentDay(date);
+    setDayFocus(t, date);
+    if (mapOpen()) focusDayOnMap(t, date);
   }
   function focusDayOnMap(t, date) {
     if (!date) return;
@@ -3514,7 +3517,6 @@
       `${catIc(p)}<div>${esc(p.name)}<small id="web-sub">${esc(p.cn || "")}${p.cn ? " · " : ""}${esc(cat.label)}${cityNm ? " · " + esc(cityNm) : ""}</small></div>`;
     const det = document.getElementById("web-detail");
     det.innerHTML = `
-      <div class="ext-gal">${imagesFor(p).map(u => `<img src="${u}" loading="lazy" onerror="this.remove()">`).join("")}</div>
       ${dName ? `<div class="ext-cn">${esc(dName)}</div>` : ""}
       ${d ? `<span class="ext-dist">${ic("pin", "sm")}${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
       ${p.desc ? `<p>${esc(p.desc)}</p>` : ""}
