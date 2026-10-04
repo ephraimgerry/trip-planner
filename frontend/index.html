@@ -382,21 +382,15 @@
     .mrow .btn { flex: 0 0 auto; }
 
     .controls { padding: 12px 16px; border-bottom: 1px solid var(--line); }
-    /* single select, dressed exactly like the multi-select button: same box, same
-       label on the left, same caret — only the behaviour differs */
-    .ssel { position: relative; display: flex; align-items: center; gap: 8px; height: 34px; box-sizing: border-box; padding: 0 10px;
-      border: 1px solid var(--line); border-radius: 8px; background: var(--panel); cursor: pointer; }
-    .ssel:hover { border-color: var(--line-2); }
-    .ssel:focus-within { border-color: var(--accent); box-shadow: var(--glow); }
-    .ssel .msel-k { flex: 0 0 auto; font-size: 9.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-    .ssel select { flex: 1; min-width: 0; appearance: none; -webkit-appearance: none; border: none; outline: none;
-      background: transparent; color: var(--ink); font: inherit; font-size: 12.5px; padding: 0 22px 0 0; height: 100%; cursor: pointer;
-      text-overflow: ellipsis; }
-    .ssel .caret { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-    .ssel:has(select:disabled) { opacity: .6; cursor: default; }
-    .ssel select:disabled { cursor: default; }
-    .row .ssel { flex: 1; min-width: 0; }
-    .controls > .ssel:first-child { margin-bottom: 9px; }
+    /* single select: the same button and panel as the multi-select, with a tick
+       instead of checkboxes. The native <select> stays hidden as the source of truth. */
+    .msel > select.native { display: none; }
+    .sel-opt .tick { flex: 0 0 14px; display: flex; color: var(--accent); }
+    .sel-opt.on { color: var(--accent); font-weight: 600; }
+    .sel-opt.sep { border-top: 1px solid var(--line); border-radius: 0 0 7px 7px; margin-top: 4px; padding-top: 8px; }
+    .msel.disabled .msel-btn { opacity: .6; cursor: default; }
+    .row .msel { flex: 1; min-width: 0; margin-top: 0; }
+    .controls > .msel:first-child { margin-top: 0; }
     .msel-btn { height: 34px; box-sizing: border-box; }
     .searchrow { display: flex; gap: 7px; align-items: stretch; }
     .searchrow #search { flex: 1; }
@@ -414,7 +408,6 @@
 
     /* multi-select dropdown: a summary button over a grouped checklist */
     .msel { position: relative; margin-top: 9px; }
-    #countrySel + .msel { margin-top: 0; }
     .msel-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px;
       border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink);
       font: inherit; font-size: 12.5px; cursor: pointer; text-align: left; }
@@ -442,7 +435,6 @@
     .msel-foot button { flex: 1; font-size: 11.5px; padding: 5px; border: 1px solid var(--line); border-radius: 7px;
       background: var(--panel); color: var(--ink-2); cursor: pointer; }
     .msel-foot button:hover { border-color: var(--accent); color: var(--accent); }
-    .kindseg { margin-top: 10px; }
     .controls .searchrow { margin-top: 9px; }
 
     /* events: square pins, so they never read as a place */
@@ -543,7 +535,10 @@
     .st-head .st-head-b { flex: 1; min-width: 0; }
     .st-head .btn { flex: 0 0 auto; }
     .st-crumb { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .st-crumb .btn { padding: 5px 11px; font-size: 12px; }
+    .st-crumb .btn { padding: 5px 11px; font-size: 12px; white-space: nowrap; }
+    .st-tabs button { white-space: nowrap; }
+    body.map-open[data-view="trip"] .st-crumb { gap: 6px; }
+    body.map-open[data-view="trip"] .st-tabs button { padding-left: 10px; padding-right: 10px; }
     .st-crumb .spacer { margin-left: auto; }
     .st-crumb2 { display: flex; gap: 8px; margin: 16px 0 6px; }
     .st-tabs { display: flex; align-items: stretch; }
@@ -697,6 +692,24 @@
     .eatrow .eat-day { font-size: 10.5px; font-weight: 700; border: 1px solid var(--line); background: var(--panel);
       color: var(--ink-2); border-radius: 6px; padding: 2px 7px; cursor: pointer; min-width: 34px; }
     .eatrow .eat-day:hover { border-color: var(--accent-line); color: var(--accent); }
+    /* zoning */
+    .zone-list { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+    .zrow { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 10px; padding: 9px 12px; border: 1px solid var(--line);
+      border-radius: 10px; background: var(--panel); cursor: pointer; font-size: 13px; }
+    .zrow:hover { border-color: var(--line-2); }
+    .zrow.on { border-color: color-mix(in srgb, var(--zc) 55%, var(--line)); }
+    .zrow.empty { opacity: .5; cursor: default; }
+    .zrow input { accent-color: var(--zc); margin: 0; }
+    .zrow .zsw { width: 12px; height: 12px; border-radius: 3px; background: var(--zc); opacity: .3; }
+    .zrow.on .zsw { opacity: 1; }
+    .zrow .dnum { font-weight: 700; font-size: 11.5px; color: var(--panel); background: var(--ink); border-radius: 6px; padding: 2px 7px; }
+    .zrow .zdate { font-weight: 600; min-width: 92px; }
+    .zrow .zcity { color: var(--muted); font-size: 12px; flex: 1; min-width: 80px; }
+    .zrow .zmeta { font-size: 11.5px; color: var(--muted); }
+    .zrow .zclash { font-size: 10.5px; font-weight: 700; color: var(--warn-ink); background: var(--danger-bg);
+      border: 1px solid var(--danger-line); border-radius: 999px; padding: 1px 8px; }
+    .zone-day { color: #fff; font-size: 11px; font-weight: 800; border-radius: 6px; padding: 1px 6px; text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,.45); white-space: nowrap; }
     .eatrow .eat-day.none { border-style: dashed; cursor: default; color: var(--muted); font-weight: 500; }
 
     /* booking rows — the "what have I not booked yet" view */
@@ -956,29 +969,26 @@
       <div id="mapPanel" class="panel">
         <div class="controls">
           <!-- where: country, then any number of its areas, then a district inside them -->
-          <label class="ssel"><span class="msel-k">Country</span><select id="countrySel"></select><svg class="ic sm caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></svg></label>
+          <div class="msel"><select id="countrySel" class="native"></select></div>
           <div class="msel" id="areaSel"></div>
           <div class="row">
-            <label class="ssel"><span class="msel-k">District</span><select id="districtFilter"><option value="">No districts</option></select><svg class="ic sm caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></svg></label>
+            <div class="msel"><select id="districtFilter" class="native"><option value="">No districts</option></select></div>
             <label class="toggle"><input type="checkbox" id="zonesToggle" checked /> Zones</label>
           </div>
-          <!-- what: places, events, or both — then the types within them -->
-          <div class="seg kindseg" id="kindSeg">
-            <button data-kind="places">Places</button><button data-kind="events">Events</button><button data-kind="both">Both</button>
-          </div>
+          <!-- what: the types dropdown covers places and events both -->
           <div class="searchrow">
             <input id="search" type="search" placeholder="Search places and events…" autocomplete="off" />
             <button id="webSearchBtn" class="iconbtn" title="Search the web for this"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/></svg></button>
           </div>
           <div class="msel" id="catSel"></div>
           <div class="row">
-            <label class="ssel"><span class="msel-k">Status</span><select id="statusFilter">
+            <div class="msel"><select id="statusFilter" class="native">
               <option value="">Any status</option>
               <option value="want">Want to go</option>
               <option value="planned">Planned</option>
               <option value="visited">Visited</option>
               <option value="marked">Any I've marked</option>
-            </select><svg class="ic sm caret" viewBox="0 0 24 24" aria-hidden="true"><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/></svg></label>
+            </select></div>
             <label class="toggle"><input type="checkbox" id="listToggle" /> My list only</label>
           </div>
           <div class="row">
@@ -1227,8 +1237,7 @@
 
   const activeCats = new Set(Object.keys(CATEGORIES));
   // cities: the areas ticked in the area dropdown — empty means "all of the country"
-  // kind: what the Explore list and map show — places, events, or both
-  const ui = { search: "", district: "", status: "", listOnly: false, cities: new Set(), country: "", kind: "both" };
+  const ui = { search: "", district: "", status: "", listOnly: false, cities: new Set(), country: "" };
 
   // ---- events: their own taxonomy (SmartShanghai's), one colour so they read as a class ----
   const EVENTS = BOOT.EVENTS || [];
@@ -1288,7 +1297,8 @@
     hotelLayer.clearLayers();
     for (const k in hotelMarkers) delete hotelMarkers[k];
     if (!t) return;
-    const only = date ? new Set(segsForDate(t, date).map(x => x.i)) : null;
+    // one date, several (zoning), or none for the whole trip
+    const only = date ? new Set((Array.isArray(date) ? date : [date]).flatMap(d => segsForDate(t, d).map(x => x.i))) : null;
     t.segments.forEach((s, si) => {
       if (only && !only.has(si)) return;
       const ho = s.hotel; if (!ho || typeof ho.lat !== "number") return;
@@ -1678,6 +1688,7 @@
 
   // ------------------------------------------------------------------ filtering
   function visible(p) {
+    if (zoning) return zoning.ids.has(p.id);
     // when a trip is open, the map is scoped to that trip's places
     if (scopeTrip) {
       const inTrip = tripIdSet(scopeTrip).has(p.id);
@@ -1687,7 +1698,6 @@
       if (scopeMode === "unvisited") return inTrip || (catOk && store.status[p.id] !== "visited");
       return inTrip || catOk;                                          // "all"
     }
-    if (ui.kind === "events") return false;
     if (!inScopeArea(p.city)) return false;
     const catKey = CATEGORIES[p.c] ? p.c : "custom";
     if (!activeCats.has(catKey)) return false;
@@ -1709,13 +1719,13 @@
   // Events have no want/planned/visited of their own; "on one of my trips" is
   // their equivalent of being on your list.
   function visibleEvent(e) {
+    if (zoning) return zoning.ids.has(e.id);
     if (scopeTrip) {
       const inTrip = (scopeTrip.events || []).some(x => x.eventId === e.id);
       if (scopeMode === "day") return (dayFocusIds.size || dayFocusEventIds.size) ? dayFocusEventIds.has(e.id) : inTrip;
       if (scopeMode === "trip") return inTrip;
       return inTrip || (activeEventCats.has(e.ec) && overlapsTrip(e, scopeTrip));
     }
-    if (ui.kind === "places") return false;
     if ((e.end || e.start) < todayIso()) return false;          // over — nothing to plan around
     if (!inScopeArea(e.city)) return false;
     if (!activeEventCats.has(e.ec)) return false;
@@ -1755,8 +1765,7 @@
     const shownEvents = EVENTS.filter(visibleEvent).sort((a, b) => a.start.localeCompare(b.start) || a.name.localeCompare(b.name));
     listEl.innerHTML = "";
     if (!shown.length && !shownEvents.length) {
-      const what = ui.kind === "events" ? "events" : ui.kind === "places" ? "places" : "places or events";
-      listEl.innerHTML = `<div class="empty">No ${what} match.<br>Try clearing filters or the search box.</div>`;
+      listEl.innerHTML = `<div class="empty">No places or events match.<br>Try clearing filters or the search box.</div>`;
       return;
     }
     if (shownEvents.length) {
@@ -1901,8 +1910,52 @@
     return { setGroups(g) { groups = g; paint(); }, refresh: paint };
   }
 
-  // ---------- what to show: places / events / both, and the types within them ----------
-  const kindNoun = { places: "places", events: "events", both: "places and events" };
+  // ---------- single select, in the multi-select's clothes ----------
+  // The native <select> stays in the page, hidden, as the source of truth — so
+  // everything that reads or sets .value, rebuilds the options or listens for
+  // "change" keeps working untouched. This only draws it and its list.
+  function enhanceSelect(sel, label) {
+    const root = sel.parentElement;
+    root.insertAdjacentHTML("afterbegin", `<button type="button" class="msel-btn"><span class="msel-k"></span>`
+      + `<span class="msel-v"></span>${ic("down", "sm caret")}</button><div class="msel-panel" hidden></div>`);
+    const btn = root.querySelector(".msel-btn"), panel = root.querySelector(".msel-panel");
+    const close = () => { panel.hidden = true; root.classList.remove("open"); };
+    openMsels.add(close);
+    const native = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+    function paint() {
+      const cur = sel.options[sel.selectedIndex];
+      btn.querySelector(".msel-k").textContent = label;
+      btn.querySelector(".msel-v").textContent = cur ? cur.textContent : "";
+      root.classList.toggle("disabled", sel.disabled);
+      panel.innerHTML = [...sel.options].map((o, i) => `<div class="msel-row sel-opt${i === sel.selectedIndex ? " on" : ""}${o.value === "__new" ? " sep" : ""}"
+        data-v="${esc(o.value)}"><span class="tick">${i === sel.selectedIndex ? ic("check", "sm") : ""}</span><span>${esc(o.textContent)}</span></div>`).join("");
+      panel.querySelectorAll("[data-v]").forEach(r => r.onclick = () => {
+        close();
+        if (native.get.call(sel) === r.dataset.v) return;
+        native.set.call(sel, r.dataset.v);
+        paint();
+        sel.dispatchEvent(new Event("change"));
+      });
+    }
+    // a programmatic `.value = …` fires no event, so repaint on it explicitly
+    Object.defineProperty(sel, "value", { configurable: true,
+      get() { return native.get.call(this); }, set(v) { native.set.call(this, v); paint(); } });
+    new MutationObserver(paint).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ["disabled"] });
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      if (sel.disabled) return;
+      const opening = panel.hidden;
+      closeMsels();
+      if (opening) {
+        panel.hidden = false; root.classList.add("open");
+        const on = panel.querySelector(".on"); if (on) on.scrollIntoView({ block: "nearest" });
+      }
+    };
+    panel.onclick = (e) => e.stopPropagation();
+    paint();
+  }
+
+  // ---------- what to show: place and event types, in one dropdown ----------
   const catSel = makeMultiSelect(document.getElementById("catSel"), {
     label: "Types",
     sel: (g) => g === "events" ? activeEventCats : activeCats,
@@ -1916,21 +1969,13 @@
     onChange: () => renderList(),
   });
   function buildCatSelect() {
-    const groups = [];
-    if (ui.kind !== "events") groups.push({ id: "places", label: "Places", items: Object.entries(CATEGORIES).map(([k, c]) =>
-      ({ id: k, label: c.label, icon: ic(k === "lodging" ? "bed" : (CAT_ICON[k] || k), "sm", c.color) })) });
-    if (ui.kind !== "places") groups.push({ id: "events", label: "Events", items: EVENT_CATS.map(c =>
-      ({ id: c.id, label: c.label, icon: ic(EVENT_ICON[c.id] || "ticket", "sm", EVENT_COLOR) })) });
-    catSel.setGroups(groups);
+    catSel.setGroups([
+      { id: "places", label: "Places", items: Object.entries(CATEGORIES).map(([k, c]) =>
+        ({ id: k, label: c.label, icon: ic(k === "lodging" ? "bed" : (CAT_ICON[k] || k), "sm", c.color) })) },
+      { id: "events", label: "Events", items: EVENT_CATS.map(c =>
+        ({ id: c.id, label: c.label, icon: ic(EVENT_ICON[c.id] || "ticket", "sm", EVENT_COLOR) })) },
+    ]);
   }
-  function setKind(k, persist = true) {
-    ui.kind = k;
-    document.querySelectorAll("#kindSeg [data-kind]").forEach(b => b.classList.toggle("on", b.dataset.kind === k));
-    document.getElementById("search").placeholder = "Search " + kindNoun[k] + "…";
-    buildCatSelect(); renderList();
-    if (persist && store.prefs.exploreKind !== k) savePrefs({ exploreKind: k });
-  }
-  document.querySelectorAll("#kindSeg [data-kind]").forEach(b => b.onclick = () => setKind(b.dataset.kind));
 
   // ---------- where: country, then any number of its areas ----------
   const countrySel = document.getElementById("countrySel");
@@ -2364,7 +2409,7 @@
     }
     setTimeout(() => map.invalidateSize(), 360);
   }
-  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusEventIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); showMapOverlay(false); closeAlts(); refreshMarkers(); }
+  function clearScope() { endZoning(); scopeTrip = null; dayFocusIds = new Set(); dayFocusEventIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); showMapOverlay(false); closeAlts(); refreshMarkers(); }
 
   // The reference trip is seeded server-side (backend/scripts/seed.js) and any
   // trip you had in the old browser store is imported on first boot. Nothing is
@@ -2502,9 +2547,174 @@
 
   // ---------- stage ----------
   function renderStage(t) {
+    if (!t || stageTab !== "zoning") endZoning();
     if (!t) { renderStageList(); return; }
     if (stageTab === "plan") renderStagePlan(t);
+    else if (stageTab === "zoning") renderStageZoning(t);
     else renderStageOverview(t);
+  }
+
+  // ==================================================================
+  //  ZONING — each day's footprint, as an outline on the map
+  // ==================================================================
+  // An experiment: wrap everything a day touches — its places, its events and
+  // the bed(s) that night — in the tightest outline (a convex hull), so days
+  // that overlap, or sprawl, stand out at a glance.
+  const ZONE_COLORS = ["#e63946", "#2a9d8f", "#f4a261", "#7b61ff", "#0096c7", "#e84393", "#6a994e",
+    "#ff7f11", "#3a86ff", "#b5179e", "#8d6e63", "#06d6a0", "#ef476f", "#118ab2", "#c9a227"];
+  const zoneLayer = L.layerGroup().addTo(map);
+  let zoning = null;           // { ids: Set } while the tab is open — scopes the markers
+  const zoneDays = {};         // tripId -> Set of ticked dates (kept while the app is open)
+
+  function dayPoints(t, date) {
+    const pts = [];
+    (t.plan[date] || []).map(placeById).filter(p => p && typeof p.lat === "number")
+      .forEach(p => pts.push({ lat: p.lat, lng: p.lng, kind: "place", id: p.id }));
+    (t.events || []).filter(x => x.date === date).map(x => eventById(x.eventId)).filter(e => e && typeof e.lat === "number")
+      .forEach(e => pts.push({ lat: e.lat, lng: e.lng, kind: "event", id: e.id }));
+    segsForDate(t, date).forEach(({ s: seg }) => {
+      const ho = seg.hotel;
+      if (ho && typeof ho.lat === "number") pts.push({ lat: ho.lat, lng: ho.lng, kind: "hotel" });
+    });
+    return pts;
+  }
+  // Andrew's monotone chain, on points already in flat km
+  function convexHull(pts) {
+    const P = [...new Map(pts.map(p => [p.x.toFixed(4) + "," + p.y.toFixed(4), p])).values()]
+      .sort((a, b) => a.x - b.x || a.y - b.y);
+    if (P.length < 3) return P;
+    const cross = (o, a, b) => (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+    const lower = [], upper = [];
+    for (const p of P) { while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop(); lower.push(p); }
+    for (let i = P.length - 1; i >= 0; i--) { const p = P[i];
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop(); upper.push(p); }
+    return lower.slice(0, -1).concat(upper.slice(0, -1));
+  }
+  const polyArea = (h) => h.length < 3 ? 0
+    : Math.abs(h.reduce((a, p, i) => { const q = h[(i + 1) % h.length]; return a + p.x * q.y - q.x * p.y; }, 0)) / 2;
+  // Two convex outlines overlap unless some edge direction separates them.
+  function hullsOverlap(A, B) {
+    if (A.length < 3 || B.length < 3) return false;
+    for (const poly of [A, B]) for (let i = 0; i < poly.length; i++) {
+      const p = poly[i], q = poly[(i + 1) % poly.length];
+      const nx = q.y - p.y, ny = p.x - q.x;
+      const proj = pts => pts.map(v => v.x * nx + v.y * ny);
+      const a = proj(A), b = proj(B);
+      if (Math.max(...a) <= Math.min(...b) || Math.max(...b) <= Math.min(...a)) return false;
+    }
+    return true;
+  }
+  // One flat projection for the whole trip, so outlines can be compared to each other.
+  function computeZones(t, days, ticked) {
+    const per = {};
+    days.forEach(d => { const pts = dayPoints(t, d); if (pts.length) per[d] = pts; });
+    const all = Object.values(per).flat();
+    if (!all.length) return {};
+    const lat0 = all.reduce((a, p) => a + p.lat, 0) / all.length;
+    const kx = 111.32 * Math.cos(lat0 * Math.PI / 180), ky = 110.57;
+    const out = {};
+    for (const [d, pts] of Object.entries(per)) {
+      const flat = pts.map(p => ({ x: p.lng * kx, y: p.lat * ky, p }));
+      const hull = convexHull(flat);
+      const beds = flat.filter(v => v.p.kind === "hotel"), stops = flat.filter(v => v.p.kind !== "hotel");
+      // how far the day strays from where you sleep: the furthest stop from its nearest bed
+      const spread = beds.length && stops.length
+        ? Math.max(...stops.map(s => Math.min(...beds.map(b => Math.hypot(s.x - b.x, s.y - b.y))))) : 0;
+      // Clashes are judged on the stops alone. Every outline includes that night's
+      // hotel, so days leaving the same hotel in the same direction always meet
+      // near it — that's not a clash, it's just where you sleep.
+      out[d] = { hull, stopHull: convexHull(stops), area: polyArea(hull), stops: stops.length, spread, overlaps: [] };
+    }
+    const on = Object.keys(out).filter(d => ticked.has(d));
+    on.forEach((d1, i) => on.slice(i + 1).forEach(d2 => {
+      if (hullsOverlap(out[d1].stopHull, out[d2].stopHull)) { out[d1].overlaps.push(d2); out[d2].overlaps.push(d1); }
+    }));
+    return out;
+  }
+  const zoneColor = (days, d) => ZONE_COLORS[days.indexOf(d) % ZONE_COLORS.length];
+
+  function renderStageZoning(t) {
+    const days = dateRange(t.start, t.end);
+    const ticked = zoneDays[t.id] || (zoneDays[t.id] = new Set(days.filter(d => dayPoints(t, d).length)));
+    const zones = computeZones(t, days, ticked);
+    const dn = d => "D" + (days.indexOf(d) + 1);
+    let h = `<h2 class="st-title">Zoning</h2>
+      <div class="st-sub">Each day's outline wraps its places, events and that night's hotel; a big one is a day that sprawls.
+        Days sharing a hotel always meet near it, so <b>overlap</b> is flagged only where the stops themselves overlap —
+        those are days that could be merged or swapped.</div>
+      <div class="st-crumb2"><button class="btn sm" id="znAll">All days</button><button class="btn sm" id="znNone">None</button></div>
+      <div class="zone-list">`;
+    days.forEach(d => {
+      const z = zones[d], on = ticked.has(d) && !!z;
+      const meta = !z ? "nothing to draw"
+        : [z.stops ? z.stops + " stop" + (z.stops === 1 ? "" : "s") : "hotel only",
+           z.area >= .05 ? z.area.toFixed(z.area < 10 ? 1 : 0) + " km²" : "",
+           z.spread ? "furthest " + z.spread.toFixed(1) + " km from bed" : ""].filter(Boolean).join(" · ");
+      h += `<label class="zrow${on ? " on" : ""}${z ? "" : " empty"}" style="--zc:${zoneColor(days, d)}">
+        <input type="checkbox" data-zday="${d}" ${on ? "checked" : ""} ${z ? "" : "disabled"}>
+        <span class="zsw"></span>
+        <span class="dnum">${dn(d)}</span>
+        <span class="zdate">${esc(fmtDay(d))}</span>
+        <span class="zcity">${esc(cityLabel(t, d))}</span>
+        <span class="zmeta">${esc(meta)}</span>
+        ${on && z.overlaps.length ? `<span class="zclash" title="These days' stops overlap">overlaps ${z.overlaps.map(dn).join(", ")}</span>` : ""}
+      </label>`;
+    });
+    h += `</div>`;
+    stage.innerHTML = stagePage(tabsBar(), "", h);
+    wireStage(t);
+    const redraw = () => { renderStageZoning(t); fitZones(); };
+    stage.querySelectorAll("[data-zday]").forEach(cb => cb.onchange = () => {
+      if (cb.checked) ticked.add(cb.dataset.zday); else ticked.delete(cb.dataset.zday);
+      redraw();
+    });
+    const byId = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    byId("znAll", () => { days.forEach(d => { if (zones[d]) ticked.add(d); }); redraw(); });
+    byId("znNone", () => { ticked.clear(); redraw(); });
+    startZoning(t, days, ticked, zones);
+  }
+
+  function startZoning(t, days, ticked, zones) {
+    const first = !zoning;
+    zoning = { ids: new Set() };
+    zoneLayer.clearLayers();
+    zoneGroup.clearLayers(); labelGroup.clearLayers();   // district shading would read as more outlines
+    showMapOverlay(false);                              // nor does the day/trip scope picker apply here
+    days.forEach(d => {
+      const z = zones[d]; if (!z || !ticked.has(d)) return;
+      (t.plan[d] || []).forEach(id => zoning.ids.add(id));
+      (t.events || []).filter(x => x.date === d).forEach(x => zoning.ids.add(x.eventId));
+      const col = zoneColor(days, d), ll = z.hull.map(v => [v.p.lat, v.p.lng]);
+      const label = `${"D" + (days.indexOf(d) + 1)} · ${fmtDay(d)} — ${z.stops} stop${z.stops === 1 ? "" : "s"}`
+        + (z.area >= .05 ? ` · ${z.area.toFixed(1)} km²` : "");
+      const shape = ll.length >= 3 ? L.polygon(ll, { color: col, weight: 2, fillColor: col, fillOpacity: .13 })
+        : ll.length === 2 ? L.polyline(ll, { color: col, weight: 3, dashArray: "6 6" })
+        : L.circleMarker(ll[0], { radius: 12, color: col, weight: 2, fillColor: col, fillOpacity: .18 });
+      shape.bindTooltip(label, { sticky: true }).addTo(zoneLayer);
+      const c = ll.reduce((a, p) => [a[0] + p[0] / ll.length, a[1] + p[1] / ll.length], [0, 0]);
+      L.marker(c, { interactive: false, icon: L.divIcon({ className: "", iconSize: [34, 18], iconAnchor: [17, 9],
+        html: `<div class="zone-day" style="background:${col}">D${days.indexOf(d) + 1}</div>` }) }).addTo(zoneLayer);
+    });
+    refreshMarkers();
+    drawHotels(t, [...ticked]);
+    if (first) {                       // opening the tab: bring the map out and frame everything
+      if (!mapOpen()) setMapOpen(true);
+      setTimeout(fitZones, 380);
+    }
+  }
+  function fitZones() {
+    const layers = zoneLayer.getLayers().filter(l => l.getBounds);
+    if (!layers.length) return;
+    const b = L.featureGroup(layers).getBounds();
+    if (b.isValid()) map.flyToBounds(b, { padding: [40, 40], maxZoom: 14, duration: .5 });
+  }
+  function endZoning() {
+    if (!zoning) return;
+    zoning = null;
+    zoneLayer.clearLayers();
+    drawZones();
+    if (scopeTrip) showMapOverlay(true);
+    refreshMarkers();
   }
 
   // the trip list itself now lives on the stage
@@ -2552,6 +2762,7 @@
       <div class="st-tabs">
         <button data-tab="overview" class="${stageTab === "overview" ? "on" : ""}">Overview</button>
         <button data-tab="plan" class="${stageTab === "plan" ? "on" : ""}">Plan</button>
+        <button data-tab="zoning" class="${stageTab === "zoning" ? "on" : ""}">Zoning</button>
       </div>
       <span class="spacer"></span>
       <button class="btn sm" id="stDel" title="Delete this trip">${ic("trash", "sm")}</button>
@@ -3927,7 +4138,11 @@
   buildCountryOptions();
   buildAreaSelect();
   setAreas(firstAreas, true, false);          // already the saved value — don't write it back
-  setKind(["places", "events", "both"].includes(store.prefs.exploreKind) ? store.prefs.exploreKind : "both", false);
+  buildCatSelect();
+  // dress the single selects last: they draw with `esc`, which is defined late
+  enhanceSelect(countrySel, "Country");
+  enhanceSelect(dSel, "District");
+  enhanceSelect(document.getElementById("statusFilter"), "Status");
   applyTheme();
   applyScale(uiScale, false);   // already saved — don't write it straight back
   nav("map");
