@@ -7,6 +7,7 @@ const modules = [
   { name: "geo",       mount: "/api/geo",       router: () => require("../modules/geo/geo.routes") },
   { name: "places",    mount: "/api/places",    router: () => require("../modules/places/places.routes") },
   { name: "brands",    mount: "/api/brands",    router: () => require("../modules/places/brands.routes") },
+  { name: "events",    mount: "/api/events",    router: () => require("../modules/events/events.routes") },
   { name: "trips",     mount: "/api/trips",     router: () => require("../modules/trips/trips.routes") },
   { name: "bootstrap", mount: "/api/bootstrap", router: () => require("../modules/bootstrap/bootstrap.routes") },
   { name: "import",    mount: "/api/import",    router: () => require("../modules/import/import.routes") },

@@ -400,14 +400,55 @@
     }
     #search:focus { border-color: var(--accent); background: var(--panel); box-shadow: var(--glow); }
 
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-    .chip {
-      display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; font-size: 12.5px;
-      border: 1px solid var(--line); border-radius: 999px; background: var(--panel); cursor: pointer;
-      user-select: none; transition: .14s;
-    }
-    .chip.off { opacity: .35; }
-    .chip:hover { border-color: var(--line-2); }
+    /* multi-select dropdown: a summary button over a grouped checklist */
+    .msel { position: relative; margin-top: 9px; }
+    #countrySel + .msel { margin-top: 0; }
+    .msel-btn { width: 100%; display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+      border: 1px solid var(--line); border-radius: 8px; background: var(--panel); color: var(--ink);
+      font: inherit; font-size: 12.5px; cursor: pointer; text-align: left; }
+    .msel-btn:hover { border-color: var(--line-2); }
+    .msel-btn .msel-k { flex: 0 0 auto; font-size: 9.5px; font-weight: 700; letter-spacing: .14em;
+      text-transform: uppercase; color: var(--muted); }
+    .msel-btn .msel-v { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .msel-btn .caret { color: var(--muted); transition: transform .15s; }
+    .msel.open .msel-btn { border-color: var(--accent); box-shadow: var(--glow); }
+    .msel.open .msel-btn .caret { transform: rotate(180deg); }
+    .msel-panel { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 900;
+      background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow);
+      max-height: 56vh; overflow-y: auto; padding: 6px; }
+    .msel-panel[hidden] { display: none; }
+    .msel-g + .msel-g { margin-top: 6px; border-top: 1px solid var(--line); padding-top: 6px; }
+    .msel-row { display: flex; align-items: center; gap: 8px; padding: 5px 7px; border-radius: 7px;
+      font-size: 12.5px; cursor: pointer; user-select: none; }
+    .msel-row:hover { background: var(--panel-2); }
+    .msel-row.head { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+    .msel-row input { accent-color: var(--accent); margin: 0; flex: 0 0 auto; }
+    .msel-row small { color: var(--muted); margin-left: auto; font-size: 11px; letter-spacing: 0; text-transform: none; font-weight: 500; }
+    .msel-row .ic { flex: 0 0 auto; }
+    .msel-empty { font-size: 12px; color: var(--muted); padding: 8px; }
+    .msel-foot { display: flex; gap: 6px; padding: 6px 2px 0; margin-top: 6px; border-top: 1px solid var(--line); }
+    .msel-foot button { flex: 1; font-size: 11.5px; padding: 5px; border: 1px solid var(--line); border-radius: 7px;
+      background: var(--panel); color: var(--ink-2); cursor: pointer; }
+    .msel-foot button:hover { border-color: var(--accent); color: var(--accent); }
+    .kindseg { margin-top: 10px; }
+    .controls .searchrow { margin-top: 9px; }
+    #districtFilter:disabled { color: var(--muted); opacity: .75; }
+
+    /* events: square pins, so they never read as a place */
+    .ev-pin { border-radius: 6px; background: #d6336c; color: #fff; display: flex; align-items: center;
+      justify-content: center; box-shadow: 0 0 0 2px #fff, 0 1px 4px rgba(0,0,0,.45); position: relative; }
+    .ev-pin .ic { width: 12px; height: 12px; }
+    .ev-pin.focus::after { content: ""; position: absolute; inset: -7px; border-radius: 9px;
+      border: 2px solid var(--focus); box-shadow: 0 0 12px -2px var(--focus); animation: ping 1.5s ease-out infinite; }
+    .ev-when, .ev-cat, .ev-free, .ev-trip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px;
+      padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+    .ev-when { background: color-mix(in srgb, #d6336c 14%, transparent); color: #d6336c; }
+    .ev-cat { background: var(--chip-bg); color: var(--chip-ink); }
+    .ev-free { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+    .ev-trip { background: var(--accent-soft); color: var(--accent); }
+    .pop .evline { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-2); margin: 3px 0; }
+    .pop .evline b { color: var(--ink); font-weight: 600; }
+    .pop .evtrip[disabled] { opacity: .55; cursor: default; }
 
     .row { display: flex; gap: 8px; margin-top: 10px; align-items: center; }
     .row select {
@@ -643,6 +684,13 @@
     .eatrow .eat-day { font-size: 10.5px; font-weight: 700; border: 1px solid var(--line); background: var(--panel);
       color: var(--ink-2); border-radius: 6px; padding: 2px 7px; cursor: pointer; min-width: 34px; }
     .eatrow .eat-day:hover { border-color: var(--accent-line); color: var(--accent); }
+    .evrow .evday { font: inherit; font-size: 11px; padding: 3px 6px; border: 1px solid var(--line);
+      border-radius: 6px; background: var(--panel); color: var(--ink-2); max-width: 132px; }
+    .evrow .evrm { border: none; background: none; color: var(--muted); cursor: pointer; display: flex; padding: 2px; }
+    .evrow .evrm:hover { color: var(--accent); }
+    .evday-row { display: flex; align-items: center; gap: 8px; padding: 6px 9px; border-radius: 8px; cursor: pointer;
+      font-size: 13px; border: 1px dashed color-mix(in srgb, #d6336c 45%, transparent); }
+    .evday-row:hover { border-color: #d6336c; }
     .eatrow .eat-day.none { border-style: dashed; cursor: default; color: var(--muted); font-weight: 500; }
 
     /* booking rows — the "what have I not booked yet" view */
@@ -796,15 +844,6 @@
     .pop .strip { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 8px; padding-bottom: 2px; }
     .pop .strip img { height: 110px; border-radius: 7px; object-fit: cover; flex: 0 0 auto; background: var(--panel-3); }
 
-    /* city tabs */
-    .city-tabs { display: flex; gap: 6px; margin-bottom: 10px; }
-    .city-tabs button {
-      flex: 1; padding: 8px 4px; font-size: 12.5px; font-weight: 600; border: 1px solid var(--line);
-      background: var(--panel); border-radius: 9px; cursor: pointer; color: var(--muted); transition: .14s;
-    }
-    .city-tabs button small { font-weight: 400; opacity: .7; }
-    .city-tabs button:hover { border-color: var(--line-2); }
-    .city-tabs button.on { background: var(--accent); color: var(--on-accent); border-color: var(--accent); box-shadow: var(--glow); }
 
     /* distance badges */
     .dist-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; padding: 2px 8px; border-radius: 999px; background: var(--chip-bg); color: var(--chip-ink); font-weight: 600; }
@@ -916,17 +955,22 @@
 
       <div id="mapPanel" class="panel">
         <div class="controls">
+          <!-- where: country, then any number of its areas, then a district inside them -->
           <select id="countrySel"></select>
-          <div class="city-tabs" id="cityTabs"></div>
-          <div class="searchrow">
-            <input id="search" type="search" placeholder="Search places…" autocomplete="off" />
-            <button id="webSearchBtn" class="iconbtn" title="Search the web for this"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/></svg></button>
-          </div>
-          <div class="chips" id="catChips"></div>
+          <div class="msel" id="areaSel"></div>
           <div class="row">
-            <select id="districtFilter"><option value="">All districts</option></select>
+            <select id="districtFilter"><option value="">No districts</option></select>
             <label class="toggle"><input type="checkbox" id="zonesToggle" checked /> Zones</label>
           </div>
+          <!-- what: places, events, or both — then the types within them -->
+          <div class="seg kindseg" id="kindSeg">
+            <button data-kind="places">Places</button><button data-kind="events">Events</button><button data-kind="both">Both</button>
+          </div>
+          <div class="searchrow">
+            <input id="search" type="search" placeholder="Search places and events…" autocomplete="off" />
+            <button id="webSearchBtn" class="iconbtn" title="Search the web for this"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/></svg></button>
+          </div>
+          <div class="msel" id="catSel"></div>
           <div class="row">
             <select id="statusFilter">
               <option value="">Any status</option>
@@ -1063,6 +1107,8 @@
     train: '<rect x="5.5" y="3.5" width="13" height="12.2" rx="3.2"/><path d="M5.5 10.4h13M8.8 20l1.7-2.6M15.2 20l-1.7-2.6"/><circle cx="9.3" cy="13" r=".9"/><circle cx="14.7" cy="13" r=".9"/>',
     pin: '<path d="M12 21s6.8-5.9 6.8-11a6.8 6.8 0 1 0-13.6 0C5.2 15.1 12 21 12 21Z"/><circle cx="12" cy="10" r="2.4"/>',
     calendar: '<rect x="3.5" y="5.2" width="17" height="15.3" rx="2.6"/><path d="M3.5 10.2h17M8 3v4.2M16 3v4.2"/>',
+    ticket: '<path d="M3.8 7.4h16.4v3.1a1.7 1.7 0 0 0 0 3.4v3.1H3.8v-3.1a1.7 1.7 0 0 0 0-3.4V7.4Z"/><path d="M14.4 7.6v1.6M14.4 11.2v1.6M14.4 14.8v1.6"/>',
+    music: '<path d="M9 17.8V6.4l10-2.2v11.2"/><circle cx="6.8" cy="17.8" r="2.2"/><circle cx="16.8" cy="15.4" r="2.2"/>',
     check: '<path d="m5 12.6 4.6 4.6L19 7.4"/>',
     search: '<circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/>',
     back: '<path d="M14.8 5.5 8 12l6.8 6.5"/>',
@@ -1180,7 +1226,27 @@
   }
 
   const activeCats = new Set(Object.keys(CATEGORIES));
-  const ui = { search: "", district: "", status: "", listOnly: false, city: "shanghai", country: "" };
+  // cities: the areas ticked in the area dropdown — empty means "all of the country"
+  // kind: what the Explore list and map show — places, events, or both
+  const ui = { search: "", district: "", status: "", listOnly: false, cities: new Set(), country: "", kind: "both" };
+
+  // ---- events: their own taxonomy (SmartShanghai's), one colour so they read as a class ----
+  const EVENTS = BOOT.EVENTS || [];
+  const EVENT_CATS = BOOT.EVENT_CATEGORIES || [];
+  const EVENT_COLOR = "#d6336c";
+  const EVENT_ICON = { activities: "ticket", art: "culture", classes: "note", clubbing: "nightlife", comedy: "ticket",
+    community: "users", food: "food", festivals: "shopping", concerts: "music", family: "users", talks: "note",
+    "live-music": "music", musicals: "ticket", networking: "users", nightlife: "nightlife", "pub-quiz": "nightlife",
+    sports: "target", stage: "ticket" };
+  const activeEventCats = new Set(EVENT_CATS.map(c => c.id));
+  const evCatLabel = id => (EVENT_CATS.find(c => c.id === id) || {}).label || "Event";
+  const eventById = id => EVENTS.find(e => e.id === id) || null;
+  const todayIso = () => { const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); };
+  const overlapsTrip = (e, t) => e.start <= t.end && (e.end || e.start) >= t.start;
+  // a place's area is in scope when it's ticked — or, with nothing ticked, when it's in the country
+  const inScopeArea = city => ui.cities.size ? ui.cities.has(city)
+    : (!ui.country || countryOf(city || "shanghai") === ui.country);
 
   // ------------------------------------------------------------------ map
   const map = L.map("map", { zoomControl: true }).setView([31.235, 121.49], 12);
@@ -1282,11 +1348,11 @@
     zoneGroup.clearLayers(); labelGroup.clearLayers();
     if (!zonesOn()) return;
     for (const [key, l] of Object.entries(districtLayers)) {
-      if (ui.city && DISTRICTS[key].city !== ui.city) continue;
+      if (!inScopeArea(DISTRICTS[key].city)) continue;
       l.setStyle(styleFor(key, false)); zoneGroup.addLayer(l);
     }
     for (const [key, l] of Object.entries(districtLabels)) {
-      if (ui.city && DISTRICTS[key].city !== ui.city) continue;
+      if (!inScopeArea(DISTRICTS[key].city)) continue;
       labelGroup.addLayer(l);
     }
   }
@@ -1345,6 +1411,7 @@
   //   all       — everything
   let scopeMode = "day";
   let dayFocusIds = new Set(); // ids highlighted for the selected day
+  let dayFocusEventIds = new Set(); // events on the selected day
   let dayFocusOrder = {};      // id -> order number within the day
   function tripIdSet(t) { const s = new Set(); Object.values(t.plan || {}).forEach(a => a.forEach(id => s.add(id))); return s; }
   const allPlaces = () => PLACES;
@@ -1549,6 +1616,91 @@
   // authoritative. The client copy is only used to prefill a dropped pin.
   allPlaces().forEach(addMarker);
 
+  // ---- events on the map: square pins, their own popup ----
+  const eventMarkers = {};
+  function eventIcon(e) {
+    const focus = dayFocusEventIds.has(e.id);
+    const size = focus ? 26 : 20;
+    return L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
+      html: `<div class="ev-pin${focus ? " focus" : ""}" style="width:${size}px;height:${size}px">${ic(EVENT_ICON[e.ec] || "ticket", "sm")}</div>` });
+  }
+  const fmtShort = (d) => new Date(d + "T12:00:00").toLocaleDateString("en-GB", {
+    day: "numeric", month: "short", year: d.slice(0, 4) !== String(new Date().getFullYear()) ? "numeric" : undefined });
+  // the one line that answers "is it on while I'm there?"
+  function evWhen(e) {
+    if (!e.end || e.end === e.start) return fmtDay(e.start);
+    return e.start <= todayIso() ? "until " + fmtShort(e.end) : fmtShort(e.start) + " – " + fmtShort(e.end);
+  }
+  const evHours = e => { const a = e.attrs || {}; return a.opensAt ? a.opensAt + (a.closesAt ? "–" + a.closesAt : "") : ""; };
+  const evPrice = e => e.free ? "Free" : ((e.attrs || {}).price || "");
+  const tripsWithEvent = e => (store.trips || []).filter(t => (t.events || []).some(x => x.eventId === e.id));
+  // the trip an event would go on: the open one if it's on then, else the first it overlaps
+  const tripForEvent = e => (store.trips || []).find(t => t.id === openTripId && overlapsTrip(e, t))
+    || (store.trips || []).find(t => overlapsTrip(e, t)) || null;
+
+  function eventPopupHtml(e) {
+    const on = tripsWithEvent(e);
+    const target = tripForEvent(e);
+    const a = e.attrs || {};
+    const where = [e.venue, DISTRICTS[e.d] ? DISTRICTS[e.d].name : "", areaName(e.city)].filter(Boolean).join(" · ");
+    const booking = a.booking === "required" ? "Booking required" : a.booking === "recommended" ? "Booking recommended"
+      : a.booking === "none" ? "No booking needed" : "";
+    let btn;
+    if (on.length) btn = `<button class="wishbtn evtrip" disabled>${ic("check", "sm")}On ${esc(on.map(t => t.name).join(", "))}</button>`;
+    else if (target) btn = `<button class="wishbtn evtrip" data-evtrip="${target.id}">${ic("plus", "sm")}Add to ${esc(target.name)}</button>`;
+    else btn = `<button class="wishbtn evtrip" disabled>Not on during any of your trips</button>`;
+    return `<div class="pop">
+      <h3>${ic(EVENT_ICON[e.ec] || "ticket", "", EVENT_COLOR)}${esc(e.name)}</h3>
+      <div class="pcn">${e.cn ? esc(e.cn) + " · " : ""}${esc(evCatLabel(e.ec))}${where ? " · " + esc(where) : ""}</div>
+      <div class="evline">${ic("calendar", "sm")}<b>${esc(evWhen(e))}</b>${evHours(e) ? " · " + esc(evHours(e)) : ""}</div>
+      ${a.hoursNote ? `<div class="evline">${esc(a.hoursNote)}</div>` : ""}
+      ${evPrice(e) || booking ? `<div class="evline">${ic("ticket", "sm")}${esc([evPrice(e), booking].filter(Boolean).join(" · "))}</div>` : ""}
+      ${e.address ? `<div class="evline">${ic("pin", "sm")}${esc(e.address)}</div>` : ""}
+      ${e.desc ? `<p>${esc(e.desc)}</p>` : ""}
+      ${linksHtml(e)}
+      ${btn}
+    </div>`;
+  }
+  function addEventMarker(e) {
+    if (typeof e.lat !== "number" || typeof e.lng !== "number") return;
+    const m = L.marker([e.lat, e.lng], { icon: eventIcon(e), zIndexOffset: 500 });
+    eventMarkers[e.id] = m;
+    m.bindPopup(() => eventPopupHtml(e), { minWidth: 240, maxWidth: 270 });
+    // lazy, like the popup: markers are built before `esc` exists further down
+    m.bindTooltip(() => `${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)} ${esc(e.name)} · ${esc(evWhen(e))}`,
+      { direction: "top", offset: [0, -8] });
+    m.on("popupopen", (ev) => {
+      const el = ev.popup.getElement(); if (!el) return;
+      const b = el.querySelector("[data-evtrip]");
+      if (b) b.onclick = async () => {
+        const t = (store.trips || []).find(x => x.id === b.dataset.evtrip);
+        if (t && await addEventToTrip(t, e, null)) ev.popup.setContent(eventPopupHtml(e));
+      };
+    });
+  }
+  EVENTS.forEach(addEventMarker);
+
+  // Events go on a trip one at a time, through their own endpoint — never inside
+  // the plan document, so no stale window can save over them.
+  async function addEventToTrip(t, e, date) {
+    try {
+      const te = await Repo.addTripEvent(t.id, { eventId: e.id, date: date || null });
+      t.events = (t.events || []).filter(x => x.eventId !== e.id).concat([{
+        id: te.id, eventId: te.event_id, date: te.date, startTime: te.start_time, note: te.note }]);
+      showHint(e.name + (te.date ? " added to " + fmtDay(te.date) : " shortlisted on " + t.name));
+      if (openTripId === t.id && document.body.dataset.view === "trip") renderStage(t);
+      renderList();
+      return te;
+    } catch (err) { showHint("Couldn't add that event: " + err.message); return null; }
+  }
+  function focusEvent(e) {
+    activeId = e.id;
+    if (typeof e.lat === "number") map.flyTo([e.lat, e.lng], Math.max(map.getZoom(), 15), { duration: .6 });
+    const m = eventMarkers[e.id];
+    if (m) { if (!map.hasLayer(m)) m.addTo(map); setTimeout(() => m.openPopup(), 350); }
+    renderList();
+  }
+
   // ------------------------------------------------------------------ filtering
   function visible(p) {
     // when a trip is open, the map is scoped to that trip's places
@@ -1560,8 +1712,8 @@
       if (scopeMode === "unvisited") return inTrip || (catOk && store.status[p.id] !== "visited");
       return inTrip || catOk;                                          // "all"
     }
-    if (ui.city && (p.city || "shanghai") !== ui.city) return false;
-    if (!ui.city && ui.country && countryOf(p.city) !== ui.country) return false;
+    if (ui.kind === "events") return false;
+    if (!inScopeArea(p.city)) return false;
     const catKey = CATEGORIES[p.c] ? p.c : "custom";
     if (!activeCats.has(catKey)) return false;
     if (ui.district && p.d !== ui.district) return false;
@@ -1579,16 +1731,44 @@
     return true;
   }
 
+  // Events have no want/planned/visited of their own; "on one of my trips" is
+  // their equivalent of being on your list.
+  function visibleEvent(e) {
+    if (scopeTrip) {
+      const inTrip = (scopeTrip.events || []).some(x => x.eventId === e.id);
+      if (scopeMode === "day") return (dayFocusIds.size || dayFocusEventIds.size) ? dayFocusEventIds.has(e.id) : inTrip;
+      if (scopeMode === "trip") return inTrip;
+      return inTrip || (activeEventCats.has(e.ec) && overlapsTrip(e, scopeTrip));
+    }
+    if (ui.kind === "places") return false;
+    if ((e.end || e.start) < todayIso()) return false;          // over — nothing to plan around
+    if (!inScopeArea(e.city)) return false;
+    if (!activeEventCats.has(e.ec)) return false;
+    if (ui.district && e.d !== ui.district) return false;
+    if ((ui.listOnly || ui.status) && !tripsWithEvent(e).length) return false;
+    if (ui.search) {
+      const hay = [e.name, e.cn, e.desc, e.venue, e.address, evCatLabel(e.ec)].join(" ").toLowerCase();
+      if (!hay.includes(ui.search.toLowerCase())) return false;
+    }
+    return true;
+  }
+
   function applyMarkerVisibility() {
     allPlaces().forEach(p => {
       const m = markers[p.id]; if (!m) return;
       if (visible(p)) { if (!map.hasLayer(m)) m.addTo(map); }
       else { if (map.hasLayer(m)) map.removeLayer(m); }
     });
+    EVENTS.forEach(e => {
+      const m = eventMarkers[e.id]; if (!m) return;
+      if (visibleEvent(e)) { if (!map.hasLayer(m)) m.addTo(map); }
+      else { if (map.hasLayer(m)) map.removeLayer(m); }
+    });
   }
   // re-icon (for highlight changes) + re-apply visibility (for scope changes)
   function refreshMarkers() {
     allPlaces().forEach(p => { const m = markers[p.id]; if (m) m.setIcon(markerIcon(p)); });
+    EVENTS.forEach(e => { const m = eventMarkers[e.id]; if (m) m.setIcon(eventIcon(e)); });
     applyMarkerVisibility();
   }
 
@@ -1597,10 +1777,18 @@
   function renderList() {
     applyMarkerVisibility();
     const shown = allPlaces().filter(visible);
+    const shownEvents = EVENTS.filter(visibleEvent).sort((a, b) => a.start.localeCompare(b.start) || a.name.localeCompare(b.name));
     listEl.innerHTML = "";
-    if (!shown.length) {
-      listEl.innerHTML = `<div class="empty">No places match.<br>Try clearing filters or the search box.</div>`;
+    if (!shown.length && !shownEvents.length) {
+      const what = ui.kind === "events" ? "events" : ui.kind === "places" ? "places" : "places or events";
+      listEl.innerHTML = `<div class="empty">No ${what} match.<br>Try clearing filters or the search box.</div>`;
       return;
+    }
+    if (shownEvents.length) {
+      const g = document.createElement("div"); g.className = "district-group";
+      g.innerHTML = `<div class="district-head"><span class="swatch" style="background:${EVENT_COLOR}"></span><b>Events</b><small>on now or coming up</small><span class="count">${shownEvents.length}</span></div>`;
+      shownEvents.forEach(e => g.appendChild(eventRow(e)));
+      listEl.appendChild(g);
     }
     // group by district; places outside the mapped districts group by their area instead
     const groups = {};
@@ -1627,6 +1815,26 @@
       items.forEach(p => g.appendChild(placeRow(p)));
       listEl.appendChild(g);
     });
+  }
+
+  function eventRow(e) {
+    const on = tripsWithEvent(e);
+    const row = document.createElement("div");
+    row.className = "place" + (activeId === e.id ? " active" : "");
+    row.innerHTML = `
+      <div class="pin">${ic(EVENT_ICON[e.ec] || "ticket", "", EVENT_COLOR)}</div>
+      <div class="body">
+        <div class="title">${esc(e.name)} <span class="cn">${esc(e.cn || "")}</span></div>
+        ${e.desc ? `<div class="desc">${esc(e.desc)}</div>` : ""}
+        <div class="meta">
+          <span class="ev-when">${ic("calendar", "sm")}${esc(evWhen(e))}</span>
+          <span class="ev-cat">${esc(evCatLabel(e.ec))}</span>
+          ${e.free ? `<span class="ev-free">Free</span>` : ""}
+          ${on.length ? `<span class="ev-trip">${ic("check", "sm")}${esc(on[0].name)}</span>` : ""}
+        </div>
+      </div>`;
+    row.onclick = () => focusEvent(e);
+    return row;
   }
 
   function placeRow(p) {
@@ -1661,84 +1869,172 @@
     renderList();
   }
 
-  // category chips
-  const chipsEl = document.getElementById("catChips");
-  for (const [key, c] of Object.entries(CATEGORIES)) {
-    const chip = document.createElement("div");
-    chip.className = "chip"; chip.dataset.cat = key;
-    chip.innerHTML = ic(key, "sm", c.color) + " " + c.label;
-    chip.onclick = () => {
-      if (activeCats.has(key)) activeCats.delete(key); else activeCats.add(key);
-      chip.classList.toggle("off", !activeCats.has(key));
-      renderList();
+  // ---------- multi-select dropdown: a summary button over a grouped checklist ----------
+  // groups: [{ id, label, items: [{ id, label, icon?, sub? }] }]. `sel(groupId)` returns the
+  // Set that holds that group's ticks, so one dropdown can drive several Sets. A group
+  // header ticks or clears everything under it — "all events" is one click.
+  const openMsels = new Set();
+  function closeMsels() { openMsels.forEach(f => f()); }
+  document.addEventListener("click", closeMsels);
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMsels(); });
+  function makeMultiSelect(root, opts) {
+    root.innerHTML = `<button type="button" class="msel-btn"><span class="msel-k"></span><span class="msel-v"></span>`
+      + ic("down", "sm caret") + `</button><div class="msel-panel" hidden></div>`;
+    const btn = root.querySelector(".msel-btn"), panel = root.querySelector(".msel-panel");
+    let groups = [];
+    const close = () => { panel.hidden = true; root.classList.remove("open"); };
+    openMsels.add(close);
+    function paint() {
+      btn.querySelector(".msel-k").textContent = opts.label;
+      btn.querySelector(".msel-v").textContent = opts.summary(groups);
+      const keep = panel.scrollTop;
+      panel.innerHTML = (groups.some(g => g.items.length) ? groups.map(g => {
+        const s = opts.sel(g.id);
+        const n = g.items.filter(i => s.has(i.id)).length;
+        return `<div class="msel-g">
+          <label class="msel-row head"><input type="checkbox" data-g="${g.id}" ${n && n === g.items.length ? "checked" : ""}
+            ${n && n < g.items.length ? 'data-some="1"' : ""}>${esc(g.label)}<small>${n}/${g.items.length}</small></label>
+          ${g.items.map(i => `<label class="msel-row"><input type="checkbox" data-g="${g.id}" data-i="${esc(i.id)}"
+            ${s.has(i.id) ? "checked" : ""}>${i.icon || ""}<span>${esc(i.label)}</span>${i.sub ? `<small>${esc(i.sub)}</small>` : ""}</label>`).join("")}
+        </div>`;
+      }).join("") : `<div class="msel-empty">${esc(opts.empty || "Nothing to choose from")}</div>`)
+        + `<div class="msel-foot"><button type="button" data-all>Select all</button><button type="button" data-none>Clear</button></div>`;
+      panel.scrollTop = keep;
+      panel.querySelectorAll('[data-some="1"]').forEach(x => { x.indeterminate = true; });
+      const changed = () => { paint(); opts.onChange(); };
+      panel.querySelectorAll("input[data-i]").forEach(inp => inp.onchange = () => {
+        const s = opts.sel(inp.dataset.g);
+        if (inp.checked) s.add(inp.dataset.i); else s.delete(inp.dataset.i);
+        changed();
+      });
+      panel.querySelectorAll("input[data-g]:not([data-i])").forEach(inp => inp.onchange = () => {
+        const g = groups.find(x => x.id === inp.dataset.g), s = opts.sel(g.id);
+        const allOn = g.items.every(i => s.has(i.id));
+        g.items.forEach(i => { if (allOn) s.delete(i.id); else s.add(i.id); });
+        changed();
+      });
+      panel.querySelector("[data-all]").onclick = () => { groups.forEach(g => g.items.forEach(i => opts.sel(g.id).add(i.id))); changed(); };
+      panel.querySelector("[data-none]").onclick = () => { groups.forEach(g => g.items.forEach(i => opts.sel(g.id).delete(i.id))); changed(); };
+    }
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      const opening = panel.hidden;
+      closeMsels();
+      if (opening) { panel.hidden = false; root.classList.add("open"); }
     };
-    chipsEl.appendChild(chip);
+    panel.onclick = (e) => e.stopPropagation();
+    return { setGroups(g) { groups = g; paint(); }, refresh: paint };
   }
 
-  // city tabs
-  const cityTabsEl = document.getElementById("cityTabs");
+  // ---------- what to show: places / events / both, and the types within them ----------
+  const kindNoun = { places: "places", events: "events", both: "places and events" };
+  const catSel = makeMultiSelect(document.getElementById("catSel"), {
+    label: "Types",
+    sel: (g) => g === "events" ? activeEventCats : activeCats,
+    summary: (groups) => groups.map(g => {
+      const s = g.id === "events" ? activeEventCats : activeCats;
+      const on = g.items.filter(i => s.has(i.id));
+      const what = on.length === g.items.length ? "all" : !on.length ? "none"
+        : on.length <= 2 ? on.map(i => i.label).join(", ") : on.length + " of " + g.items.length;
+      return groups.length > 1 ? g.label + ": " + what : (what === "all" ? "All " + g.label.toLowerCase() : what);
+    }).join(" · "),
+    onChange: () => renderList(),
+  });
+  function buildCatSelect() {
+    const groups = [];
+    if (ui.kind !== "events") groups.push({ id: "places", label: "Places", items: Object.entries(CATEGORIES).map(([k, c]) =>
+      ({ id: k, label: c.label, icon: ic(k === "lodging" ? "bed" : (CAT_ICON[k] || k), "sm", c.color) })) });
+    if (ui.kind !== "places") groups.push({ id: "events", label: "Events", items: EVENT_CATS.map(c =>
+      ({ id: c.id, label: c.label, icon: ic(EVENT_ICON[c.id] || "ticket", "sm", EVENT_COLOR) })) });
+    catSel.setGroups(groups);
+  }
+  function setKind(k, persist = true) {
+    ui.kind = k;
+    document.querySelectorAll("#kindSeg [data-kind]").forEach(b => b.classList.toggle("on", b.dataset.kind === k));
+    document.getElementById("search").placeholder = "Search " + kindNoun[k] + "…";
+    buildCatSelect(); renderList();
+    if (persist && store.prefs.exploreKind !== k) savePrefs({ exploreKind: k });
+  }
+  document.querySelectorAll("#kindSeg [data-kind]").forEach(b => b.onclick = () => setKind(b.dataset.kind));
+
+  // ---------- where: country, then any number of its areas ----------
   const countrySel = document.getElementById("countrySel");
-  // country picker drives which area tabs are on offer
   function buildCountryOptions() {
     const cs = Object.entries(allCountries()).sort((a, b) => a[1].name.localeCompare(b[1].name));
     countrySel.innerHTML = `<option value="">All countries</option>` +
       cs.map(([k, c]) => `<option value="${k}" ${ui.country === k ? "selected" : ""}>${esc(c.name)}${c.cn ? " · " + esc(c.cn) : ""}</option>`).join("") +
       `<option value="__new">＋ New country…</option>`;
   }
-  function buildCityTabs() {
-    const areas = Object.entries(allAreas())
-      .filter(([, a]) => !ui.country || (a.country || "cn") === ui.country)
-      .sort((a, b) => a[1].name.localeCompare(b[1].name));
-    cityTabsEl.innerHTML = "";
-    for (const [key, c] of [...areas, ["", { name: "All", cn: "全部" }]]) {
-      const b = document.createElement("button");
-      b.dataset.city = key;
-      b.className = ui.city === key ? "on" : "";
-      b.innerHTML = `${esc(c.name)}<br><small>${esc(c.cn || "")}</small>`;
-      b.onclick = () => setCity(key);
-      cityTabsEl.appendChild(b);
-    }
+  const areasInScope = () => Object.entries(allAreas())
+    .filter(([, a]) => !ui.country || (a.country || "cn") === ui.country)
+    .sort((a, b) => a[1].name.localeCompare(b[1].name));
+  const areaSel = makeMultiSelect(document.getElementById("areaSel"), {
+    label: "Area",
+    sel: () => ui.cities,
+    empty: "No areas in this country yet — add one with “＋ Area”.",
+    summary: () => {
+      const names = [...ui.cities].map(areaName);
+      if (!names.length) return ui.country ? "All of " + countryName(ui.country) : "Everywhere";
+      return names.length <= 2 ? names.join(", ") : names[0] + " + " + (names.length - 1) + " more";
+    },
+    onChange: () => applyAreas(true, true),
+  });
+  // grouped by country — which only shows as more than one group when no country is picked
+  function buildAreaSelect() {
+    const byCountry = {};
+    areasInScope().forEach(([id, a]) => (byCountry[a.country || "cn"] ||= []).push({ id, label: a.name, sub: a.cn || "" }));
+    areaSel.setGroups(Object.entries(byCountry)
+      .sort((x, y) => countryName(x[0]).localeCompare(countryName(y[0])))
+      .map(([c, items]) => ({ id: c, label: countryName(c), items })));
   }
   countrySel.onchange = async () => {
     if (countrySel.value === "__new") { countrySel.value = ui.country; await addCountry(); return; }
     ui.country = countrySel.value;
-    // if the current area isn't in this country any more, widen to All
-    if (ui.city && ui.country && countryOf(ui.city) !== ui.country) ui.city = "";
-    buildCityTabs(); setCity(ui.city);
+    buildAreaSelect(); applyAreas(true, true);
   };
-  // Which area to open on. Once there are dozens of areas across several
-  // countries, "the first one" lands you somewhere empty — so prefer where you
-  // were last, then wherever your places actually are.
-  function openingArea() {
-    const last = store.prefs.lastArea;
-    if (last && CITIES[last]) return last;
+  // Drop ticks that fell outside the country, then redraw everything that hangs off them.
+  function applyAreas(fly, persist) {
+    for (const c of [...ui.cities]) if (!areaOf(c) || (ui.country && countryOf(c) !== ui.country)) ui.cities.delete(c);
+    ui.district = "";
+    areaSel.refresh();
+    buildDistrictOptions(); drawZones(); renderList();
+    if (fly) flyToAreas();
+    const ids = [...ui.cities];
+    if (persist && JSON.stringify(ids) !== JSON.stringify(store.prefs.lastAreas || [])) savePrefs({ lastAreas: ids });
+  }
+  function setAreas(ids, fly = true, persist = true) { ui.cities = new Set(ids.filter(Boolean)); applyAreas(fly, persist); }
+  function flyToAreas() {
+    const ids = ui.cities.size ? [...ui.cities] : areasInScope().map(([id]) => id);
+    const pts = ids.map(areaOf).filter(a => a && a.center);
+    if (pts.length === 1) map.flyTo(pts[0].center, pts[0].zoom || 11, { duration: .6 });
+    else if (pts.length) map.flyToBounds(L.latLngBounds(pts.map(a => a.center)).pad(.3), { duration: .6, maxZoom: 10 });
+    else map.flyTo([30.9, 120.8], 8, { duration: .6 });
+  }
+  // the one area to default to when something needs a single answer (a new pin, a web search)
+  const primaryArea = () => [...ui.cities][0] || (areasInScope()[0] || [])[0] || "shanghai";
+  // Which areas to open on. Prefer where you were last, then wherever your places are.
+  function openingAreas() {
+    const last = (store.prefs.lastAreas || []).filter(a => CITIES[a]);
+    if (last.length) return last;
+    if (store.prefs.lastArea && CITIES[store.prefs.lastArea]) return [store.prefs.lastArea];
     const tally = {};
     PLACES.forEach(p => { if (p.city) tally[p.city] = (tally[p.city] || 0) + 1; });
     const best = Object.entries(tally).sort((a, b) => b[1] - a[1])[0];
-    return (best && best[0]) || Object.keys(CITIES)[0] || "shanghai";
+    return [(best && best[0]) || Object.keys(CITIES)[0] || "shanghai"];
   }
 
-  function setCity(city) {
-    ui.city = city; ui.district = "";
-    if (city && store.prefs.lastArea !== city) savePrefs({ lastArea: city });
-    document.getElementById("districtFilter").value = "";
-    buildDistrictOptions();
-    cityTabsEl.querySelectorAll("button").forEach(b => b.classList.toggle("on", b.dataset.city === city));
-    drawZones(); renderList();
-    const a = areaOf(city);
-    if (a && a.center) map.flyTo(a.center, a.zoom || 11, { duration: .6 });
-    else map.flyTo([30.9, 120.8], 8, { duration: .6 });
-  }
-
-  // district dropdown (populated per selected city)
+  // ---------- district: only ever the districts of the ticked areas ----------
+  // With no area ticked, or areas that have no mapped districts (most outside
+  // Shanghai), there is nothing to offer — so it says so rather than listing
+  // another country's districts.
   const dSel = document.getElementById("districtFilter");
   function buildDistrictOptions() {
-    dSel.innerHTML = '<option value="">All districts</option>';
-    for (const [key, d] of Object.entries(DISTRICTS)) {
-      if (ui.city && d.city !== ui.city) continue;
-      const o = document.createElement("option"); o.value = key; o.textContent = `${d.name} · ${d.cn}`;
-      dSel.appendChild(o);
-    }
+    const ds = Object.entries(DISTRICTS).filter(([, d]) => ui.cities.has(d.city))
+      .sort((a, b) => a[1].name.localeCompare(b[1].name));
+    dSel.disabled = !ds.length;
+    dSel.innerHTML = !ds.length ? '<option value="">No districts</option>'
+      : '<option value="">All districts</option>' + ds.map(([key, d]) =>
+          `<option value="${key}">${esc(d.name)} · ${esc(d.cn)}${ui.cities.size > 1 ? " — " + esc(areaName(d.city)) : ""}</option>`).join("");
   }
   dSel.onchange = () => { ui.district = dSel.value; drawZones(); renderList();
     if (ui.district && districtLayers[ui.district]) map.fitBounds(districtLayers[ui.district].getBounds(), { padding: [30, 30] }); };
@@ -1757,7 +2053,7 @@
     map.getContainer().style.cursor = on ? "crosshair" : "";
     if (on) showHint("Click anywhere on the map to drop your pin");
   }
-  document.getElementById("addBtn").onclick = () => addPlaceFlow({ city: ui.city || "shanghai" });
+  document.getElementById("addBtn").onclick = () => addPlaceFlow({ city: primaryArea() });
   document.getElementById("addAreaBtn").onclick = () => addArea();
   // you can still drop a pin by clicking the map — it just prefills the form
   function addPinAt(latlng) {
@@ -1765,7 +2061,7 @@
     const guess = districtOfPoint(latlng.lat, latlng.lng);
     addPlaceFlow({
       lat: +latlng.lat.toFixed(5), lng: +latlng.lng.toFixed(5),
-      city: guess ? DISTRICTS[guess].city : (ui.city || "shanghai"),
+      city: guess ? DISTRICTS[guess].city : primaryArea(),
     });
   }
   map.on("click", (e) => { if (addMode) addPinAt(e.latlng); });
@@ -1867,7 +2163,7 @@
     } catch (e) { showHint("Couldn't add that area: " + e.message); return null; }
     CITIES[id] = { name: v.name, cn: v.cn || "", country, center: [ll.lat, ll.lng], zoom: +v.zoom || 11, kind: "city" };
     buildCountryOptions(); ui.country = country; countrySel.value = country;
-    buildCityTabs(); setCity(id);
+    buildAreaSelect(); setAreas([id]);
     showHint(v.name + " added — drop places into it now");
     return id;
   }
@@ -1980,7 +2276,10 @@
     }
     addMarker(p);
     // jump to wherever it landed so it's visible straight away
-    if (ui.city && ui.city !== p.city) { ui.country = countryOf(p.city); countrySel.value = ui.country; buildCityTabs(); setCity(p.city); }
+    if (!inScopeArea(p.city)) {
+      if (ui.country && countryOf(p.city) !== ui.country) { ui.country = countryOf(p.city); countrySel.value = ui.country; buildAreaSelect(); }
+      ui.cities.add(p.city); applyAreas(false, true);
+    }
     renderList(); refreshMarkers();
     focusPlace(p);
     showHint(p.name + " added to " + areaName(p.city));
@@ -2090,7 +2389,7 @@
     }
     setTimeout(() => map.invalidateSize(), 360);
   }
-  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); showMapOverlay(false); closeAlts(); refreshMarkers(); }
+  function clearScope() { scopeTrip = null; dayFocusIds = new Set(); dayFocusEventIds = new Set(); dayFocusOrder = {}; focusedDate = null; hotelLayer.clearLayers(); showMapOverlay(false); closeAlts(); refreshMarkers(); }
 
   // The reference trip is seeded server-side (backend/scripts/seed.js) and any
   // trip you had in the old browser store is imported on first boot. Nothing is
@@ -2161,7 +2460,7 @@
   function openTripById(id, tab) {
     openTripId = id; stageTab = tab || "overview"; stageDate = null;
     collapsedDays = new Set(); addOpenDate = null;
-    focusedDate = null; dayFocusIds = new Set(); dayFocusOrder = {};   // no day in focus yet
+    focusedDate = null; dayFocusIds = new Set(); dayFocusEventIds = new Set(); dayFocusOrder = {};   // no day in focus yet
     renderTrip();
     if (tab === "plan") stage.scrollTop = 0;
   }
@@ -2590,6 +2889,32 @@
     eatSec("food", "food", "Restaurants", ["food"],
       "No restaurants on this trip yet — add one to a day, or shortlist it for later.");
 
+    // ---- events: on for a while, so the only question is which day ----
+    const tEvents = (t.events || []).map(x => ({ x, e: eventById(x.eventId) })).filter(r => r.e)
+      .sort((p1, p2) => (p1.x.date || "~").localeCompare(p2.x.date || "~") || p1.e.start.localeCompare(p2.e.start));
+    toc.push({ id: "ov-events", label: "Events", n: tEvents.length });
+    b += `<section class="st-sec" id="ov-events"><h3>${ic("ticket", "sm")}Events<span class="cnt">${tEvents.length}</span></h3>`;
+    if (!tEvents.length)
+      b += `<div class="tip-note">No events yet. In Explore, switch to Events — anything on while you're here can be added from its pin.</div>`;
+    else {
+      b += `<div class="eat-list">`;
+      tEvents.forEach(({ x, e }) => {
+        // only the days it's actually on
+        const onDays = days.filter(d => d >= e.start && d <= (e.end || e.start));
+        b += `<div class="eatrow evrow">
+          <span class="eat-ic">${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)}</span>
+          <span class="eat-n" data-evfly="${e.id}">${esc(e.name)} <span class="pcn2">${esc(evWhen(e))}${evHours(e) ? " · " + esc(evHours(e)) : ""}${e.free ? " · Free" : ""}</span></span>
+          <select class="evday" data-evday="${x.id}" title="Which day of the trip">
+            <option value="">Shortlist</option>
+            ${onDays.map(d => `<option value="${d}" ${x.date === d ? "selected" : ""}>D${days.indexOf(d) + 1} · ${esc(fmtDay(d))}</option>`).join("")}
+          </select>
+          <button class="evrm" data-evrm="${x.id}" title="Remove from this trip">${ic("x", "sm")}</button>
+        </div>`;
+      });
+      b += `</div>`;
+    }
+    b += `</section>`;
+
     // ---- days ----
     toc.push({ id: "ov-days", label: "Days", n: days.length });
     b += `<section class="st-sec" id="ov-days"><h3>${ic("calendar", "sm")}Days<span class="cnt">tap to open in the plan</span></h3>`;
@@ -2739,7 +3064,16 @@
     if (t.inbound.date === date && (t.inbound.flight || t.inbound.leg))
       h += `<div class="flight"><span class="fno">${ic("plane", "sm")}${esc(t.inbound.flight)}</span><span class="leg">depart ${esc(t.inbound.leg)}</span></div>`;
 
-    if (!dayPlaces.length && t.outbound.date !== date && t.inbound.date !== date && li < 0)
+    const dayEvents = (t.events || []).filter(x => x.date === date)
+      .map(x => ({ x, e: eventById(x.eventId) })).filter(r => r.e);
+    dayEvents.forEach(({ x, e }) => {
+      h += `<div class="slot"><div class="slot-tag">${esc(x.startTime || "Event")}</div><div class="slot-p">
+        <div class="evday-row" data-evfly="${e.id}">${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)}
+          <span class="pname">${esc(e.name)} <span class="pcn2">${esc(evCatLabel(e.ec))}${evHours(e) ? " · " + esc(evHours(e)) : ""}${e.free ? " · Free" : ""}</span></span>
+        </div></div></div>`;
+    });
+
+    if (!dayPlaces.length && !dayEvents.length && t.outbound.date !== date && t.inbound.date !== date && li < 0)
       h += `<div class="day-empty">Free day — nothing planned yet.</div>`;
     return h;
   }
@@ -2868,9 +3202,29 @@
       const el = document.getElementById(btn.dataset.toc);
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+    stage.querySelectorAll("[data-evfly]").forEach(el => el.onclick = () => {
+      const e = eventById(el.dataset.evfly); if (!e) return;
+      const wasOpen = mapOpen();
+      setMapOpen(true);
+      setTimeout(() => focusEvent(e), wasOpen ? 0 : 400);
+    });
+    stage.querySelectorAll("[data-evday]").forEach(sel => sel.onchange = async () => {
+      const x = (t.events || []).find(v => v.id === sel.dataset.evday); if (!x) return;
+      try { const te = await Repo.updateTripEvent(t.id, x.id, { date: sel.value || null }); x.date = te.date; }
+      catch (err) { showHint("Couldn't move that event: " + err.message); }
+      renderStage(t); refreshMarkers();
+    });
+    stage.querySelectorAll("[data-evrm]").forEach(bt => bt.onclick = async () => {
+      const x = (t.events || []).find(v => v.id === bt.dataset.evrm); if (!x) return;
+      const e = eventById(x.eventId);
+      if (!await confirmModal("Remove " + (e ? e.name : "this event") + " from this trip?", "Remove")) return;
+      try { await Repo.removeTripEvent(t.id, x.id); t.events = t.events.filter(v => v !== x); }
+      catch (err) { showHint("Couldn't remove that: " + err.message); return; }
+      renderStage(t); refreshMarkers();
+    });
     stage.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => {
       stageTab = b.dataset.tab; stageDate = null;
-      focusedDate = null; dayFocusIds = new Set(); dayFocusOrder = {};
+      focusedDate = null; dayFocusIds = new Set(); dayFocusEventIds = new Set(); dayFocusOrder = {};
       refreshMarkers(); drawHotels(t);
       renderStage(t); stage.scrollTop = 0;
     });
@@ -3004,6 +3358,7 @@
     const ordered = sequenceDay((t.plan[date] || []).map(placeById).filter(Boolean), t.timing, date).map(x => x.p.id);
     dayFocusIds = new Set(ordered);
     dayFocusOrder = {}; ordered.forEach((id, n) => dayFocusOrder[id] = n + 1);
+    dayFocusEventIds = new Set((t.events || []).filter(x => x.date === date).map(x => x.eventId));
     refreshMarkers();
     drawHotels(t, date);          // only the beds that matter on this day
     return ordered;
@@ -3336,12 +3691,13 @@
   // "＋" in the mini browser: record what you just found
   document.getElementById("web-add").onclick = () => {
     const p = placeById(selectedPlaceId);
-    addPlaceFlow(p ? { name: p.name, cn: p.cn, city: p.city, c: p.c } : { name: webQ.value.trim(), city: ui.city || "shanghai" });
+    addPlaceFlow(p ? { name: p.name, cn: p.cn, city: p.city, c: p.c } : { name: webQ.value.trim(), city: primaryArea() });
   };
   // "search the web" beside the Explore search box
   document.getElementById("webSearchBtn").onclick = () => {
     const term = (document.getElementById("search").value || "").trim();
-    openWebQuery(term ? term + (ui.city ? " " + areaName(ui.city) : "") : (ui.city ? areaName(ui.city) + " things to do" : "places to visit"));
+    const where = ui.cities.size === 1 ? areaName(primaryArea()) : "";
+    openWebQuery(term ? term + (where ? " " + where : "") : (where ? where + " things to do" : "places to visit"));
   };
   const miniweb = document.getElementById("miniweb");
   document.getElementById("web-back").onclick = () => { try { if (miniweb.canGoBack()) miniweb.goBack(); } catch (e) {} };
@@ -3564,12 +3920,12 @@
   catch (e) { console.warn("[boot] commute kinds unavailable:", e.message); }
   // Scope the area tabs to the country you're opening in — with three countries
   // and 44 areas, an unscoped tab strip is unusable.
-  const firstArea = openingArea();
-  ui.country = countryOf(firstArea);
-  buildDistrictOptions();
+  const firstAreas = openingAreas();
+  ui.country = countryOf(firstAreas[0]);
   buildCountryOptions();
-  buildCityTabs();
-  setCity(firstArea);
+  buildAreaSelect();
+  setAreas(firstAreas, true, false);          // already the saved value — don't write it back
+  setKind(["places", "events", "both"].includes(store.prefs.exploreKind) ? store.prefs.exploreKind : "both", false);
   applyTheme();
   applyScale(uiScale, false);   // already saved — don't write it straight back
   nav("map");

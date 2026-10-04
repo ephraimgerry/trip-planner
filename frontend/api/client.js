@@ -78,6 +78,21 @@
     };
   }
 
+  // event row -> the flat shape the UI uses. `kind: "event"` is what tells the
+  // shared map/list code it isn't a place; `ec` is its event category.
+  function toEvent(e) {
+    return {
+      id: e.id, kind: "event", name: e.name, cn: e.name_local || "",
+      ec: e.category, city: e.area_id || "", country: e.country_code || "",
+      d: e.district_id || "_other", lat: e.lat, lng: e.lng, address: e.address || "",
+      start: e.start_date, end: e.end_date || e.start_date,
+      free: !!e.is_free, attrs: e.attrs || {},
+      venue: e.venue_name || "", venuePlaceId: e.venue_place_id || "",
+      link: e.link || "", desc: e.description || "", src: e.source || "",
+      mine: !!e.created_by,
+    };
+  }
+
   // trip document -> the legacy trip shape (segments/legs/plan/wishlist).
   // Hotels are places on the server; here they're inlined onto the stay so the
   // existing hotel cards and map pins keep working unchanged.
@@ -140,6 +155,8 @@
       // the server owns "where were you, and was this a travel day" — it can see
       // the commutes' resolved areas, which the flat client shape can't
       areasByDay: (doc.days || []).reduce((a, d) => { a[d.date] = d.areaIds; return a; }, {}),
+      // saved one at a time, never through the plan document
+      events: (doc.events || []).map(e => ({ ...e })),
       travelDays: (doc.days || []).reduce((a, d) => { if (d.travel) a[d.date] = true; return a; }, {}),
       peopleByDay: (doc.days || []).reduce((a, d) => { a[d.date] = d.participantIds; return a; }, {}),
       plan: (doc.days || []).reduce((acc, d) => {
@@ -289,6 +306,8 @@
     return {
       me: b.me, authMode: b.authMode, imported,
       PLACES: places, COUNTRIES, CITIES, DISTRICTS, BRANDS, GEOJSON: geojson,
+      EVENTS: (b.events || []).map(toEvent),
+      EVENT_CATEGORIES: (b.eventCategories || []).map(c => ({ id: c.id, label: c.label })),
       status, notes, prefs: state.prefs,
       trips: b.trips.map(d => toTrip(d, index)),
     };
@@ -369,6 +388,19 @@
     updateParticipant: (tripId, pid, p) => patch(`/api/trips/${tripId}/participants/${pid}`, p).then(r => r.participants),
     removeParticipant: (tripId, pid) => del(`/api/trips/${tripId}/participants/${pid}`),
 
+    // ---- events ----
+    async createEvent(e) {
+      return toEvent((await post("/api/events", e)).event);
+    },
+    async updateEvent(id, e) {
+      return toEvent((await patch("/api/events/" + id, e)).event);
+    },
+    deleteEvent: (id) => del("/api/events/" + id),
+    // on a trip: one at a time, never via the plan document
+    addTripEvent: (tripId, body) => post(`/api/trips/${tripId}/events`, body).then(r => r.tripEvent),
+    updateTripEvent: (tripId, teId, body) => patch(`/api/trips/${tripId}/events/${teId}`, body).then(r => r.tripEvent),
+    removeTripEvent: (tripId, teId) => del(`/api/trips/${tripId}/events/${teId}`),
+
     // ---- geography ----
     createCountry: (c) => post("/api/geo/countries", { code: c.id, name: c.name, nameLocal: c.cn || null })
       .then(r => r.country),
@@ -382,5 +414,5 @@
     savePrefs: (prefs) => put("/api/users/me/prefs", prefs).then(r => r.prefs),
   };
 
-  global.PlannerAPI = { boot, Repo, ApiError, toPlace, toTrip, toPlanDoc, BASE };
+  global.PlannerAPI = { boot, Repo, ApiError, toPlace, toEvent, toTrip, toPlanDoc, BASE };
 })(window);

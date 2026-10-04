@@ -8,6 +8,9 @@ const repo = require("./trips.repository");
 const members = require("./members.repository");
 const people = require("./participants.repository");
 const commutes = require("./commutes.repository");
+const tripEvents = require("./tripEvents.repository");
+const events = require("../events/events.repository");
+const ES = require("../events/events.schema");
 const users = require("../users/users.repository");
 const service = require("./trips.service");
 const audit = require("../../core/audit");
@@ -73,6 +76,45 @@ router.get("/:tripId/days/:date/suggestions",
   requireTripRole("viewer"), asyncHandler(async (req, res) => {
     const allAreas = req.query.allAreas === "1";
     res.json({ suggestions: service.suggestionsFor(req.params.tripId, req.params.date, req.user.id, { allAreas }) });
+  }));
+
+// ---- events on the trip: added and removed one at a time, never via PUT /plan ----
+// A date has to be inside the trip AND inside the event's run: "is it on while
+// I'm there?" is the entire reason events are their own thing.
+function checkDate(trip, ev, date) {
+  if (!date) return;
+  if (date < trip.start_date || date > trip.end_date) throw badRequest("That date isn't in this trip");
+  const end = ev.end_date || ev.start_date;
+  if (date < ev.start_date || date > end)
+    throw badRequest(`${ev.name} isn't on that day — it runs ${ev.start_date}${end !== ev.start_date ? " to " + end : ""}`);
+}
+
+router.post("/:tripId/events", validate({ params: S.tripParams, body: ES.tripEventCreate }),
+  requireTripRole("editor"), asyncHandler(async (req, res) => {
+    const trip = repo.byId(req.params.tripId);
+    const ev = events.byId(req.body.eventId);
+    if (!ev || (ev.visibility === "private" && ev.created_by !== req.user.id)) throw notFound("Event not found");
+    checkDate(trip, ev, req.body.date);
+    const te = tripEvents.upsert(req.params.tripId, req.body, req.user.id);
+    audit.record(req, "trip.event.add", "trip", req.params.tripId, { eventId: ev.id, date: te.date });
+    res.status(201).json({ tripEvent: te });
+  }));
+
+router.patch("/:tripId/events/:tripEventId", validate({ params: ES.tripEventParams, body: ES.tripEventPatch }),
+  requireTripRole("editor"), asyncHandler(async (req, res) => {
+    const cur = tripEvents.byId(req.params.tripId, req.params.tripEventId);
+    if (!cur) throw notFound("That event isn't on this trip");
+    if (req.body.date) checkDate(repo.byId(req.params.tripId), events.byId(cur.event_id), req.body.date);
+    const te = tripEvents.update(req.params.tripId, cur.id, req.body);
+    audit.record(req, "trip.event.update", "trip", req.params.tripId, { tripEventId: cur.id, ...req.body });
+    res.json({ tripEvent: te });
+  }));
+
+router.delete("/:tripId/events/:tripEventId", validate({ params: ES.tripEventParams }),
+  requireTripRole("editor"), asyncHandler(async (req, res) => {
+    if (!tripEvents.remove(req.params.tripId, req.params.tripEventId)) throw notFound("That event isn't on this trip");
+    audit.record(req, "trip.event.remove", "trip", req.params.tripId, { tripEventId: req.params.tripEventId });
+    res.status(204).end();
   }));
 
 // ---- who is actually on the trip (distinct from who may edit it) ----

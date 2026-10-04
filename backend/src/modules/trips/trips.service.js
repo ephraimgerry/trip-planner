@@ -1,4 +1,5 @@
 const repo = require("./trips.repository");
+const tripEvents = require("./tripEvents.repository");
 const commutesRepo = require("./commutes.repository");
 const people = require("./participants.repository");
 const members = require("./members.repository");
@@ -143,6 +144,10 @@ function document(tripId, userId) {
     participants,
     alternatives: repo.alternatives(tripId).map(a => ({
       id: a.id, placeId: a.place_id, date: a.date, note: a.note,
+    })),
+    // separate from the plan, so a PUT /plan from any window can't touch them
+    events: tripEvents.forTrip(tripId).map(e => ({
+      id: e.id, eventId: e.event_id, date: e.date, startTime: e.start_time, note: e.note,
     })),
     days,
     members: members.listFor(tripId),

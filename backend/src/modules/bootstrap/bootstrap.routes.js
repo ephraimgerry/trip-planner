@@ -7,6 +7,7 @@ const { requireAuth } = require("../auth/auth.middleware");
 const geo = require("../geo/geo.repository");
 const places = require("../places/places.repository");
 const brands = require("../places/brands.repository");
+const events = require("../events/events.repository");
 const trips = require("../trips/trips.repository");
 const tripService = require("../trips/trips.service");
 const users = require("../users/users.repository");
@@ -25,6 +26,8 @@ router.get("/", asyncHandler(async (req, res) => {
     districts: geo.districts(),
     places: places.visibleTo(uid).map(p => ({ ...p, images: images[p.id] || [] })),
     brands: brands.all(),
+    events: events.visibleTo(uid),
+    eventCategories: events.categories(),
     userPlaces: places.userPlaces(uid),
     trips: trips.listFor(uid).map(t => tripService.document(t.id, uid)),
     prefs: users.prefs(uid),
