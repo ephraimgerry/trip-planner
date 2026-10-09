@@ -297,6 +297,11 @@
       if (u.status) status[u.place_id] = u.status;
       if (u.note) notes[u.place_id] = u.note;
     });
+    // events share the maps: their ids never collide with a place's
+    (b.userEvents || []).forEach(u => {
+      if (u.status) status[u.event_id] = u.status;
+      if (u.note) notes[u.event_id] = u.note;
+    });
 
     // Polygons are a separate, cacheable request — they're a quarter of a megabyte.
     let geojson = { type: "FeatureCollection", features: [] };
@@ -396,6 +401,7 @@
       return toEvent((await patch("/api/events/" + id, e)).event);
     },
     deleteEvent: (id) => del("/api/events/" + id),
+    setEventMine: (id, body) => put(`/api/events/${id}/me`, body).then(r => r.userEvent),
     // on a trip: one at a time, never via the plan document
     addTripEvent: (tripId, body) => post(`/api/trips/${tripId}/events`, body).then(r => r.tripEvent),
     updateTripEvent: (tripId, teId, body) => patch(`/api/trips/${tripId}/events/${teId}`, body).then(r => r.tripEvent),

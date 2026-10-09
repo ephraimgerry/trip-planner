@@ -50,6 +50,12 @@ const eventQuery = z.object({
   areas: z.string().max(2000).optional(),          // comma-separated area ids
 }).strict();
 
+// what I think of it — same values as a place
+const userEventPatch = z.object({
+  status: z.enum(["want", "planned", "visited"]).nullable().optional(),
+  note: txt(2000).nullable().optional(),
+}).strict();
+
 // putting an event on a trip
 const tripEventCreate = z.object({
   eventId: idStr,
@@ -60,5 +66,5 @@ const tripEventCreate = z.object({
 const tripEventPatch = tripEventCreate.omit({ eventId: true }).partial().strict();
 const tripEventParams = z.object({ tripId: idStr, tripEventId: idStr });
 
-module.exports = { eventCreate, eventPatch, eventParams, eventQuery,
+module.exports = { eventCreate, eventPatch, eventParams, eventQuery, userEventPatch,
   tripEventCreate, tripEventPatch, tripEventParams };

@@ -392,6 +392,13 @@
     .row .msel { flex: 1; min-width: 0; margin-top: 0; }
     .controls > .msel:first-child { margin-top: 0; }
     .msel-btn { height: 34px; box-sizing: border-box; }
+    .controls [hidden] { display: none !important; }
+    .daterow { margin-top: 7px; }
+    .daterow span { color: var(--muted); font-size: 12px; }
+    .daterow input { flex: 1; min-width: 0; height: 34px; box-sizing: border-box; padding: 0 8px; border: 1px solid var(--line);
+      border-radius: 8px; background: var(--panel); color: var(--ink); font: inherit; font-size: 12.5px; }
+    .daterow input:focus { outline: none; border-color: var(--accent); box-shadow: var(--glow); }
+    :root[data-mode="dark"] .daterow input { color-scheme: dark; }
     .searchrow { display: flex; gap: 7px; align-items: stretch; }
     .searchrow #search { flex: 1; }
     .iconbtn { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
@@ -981,6 +988,10 @@
             <button id="webSearchBtn" class="iconbtn" title="Search the web for this"><svg class="ic sm" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.4"/><path d="m15.5 15.5 4.7 4.7"/></svg></button>
           </div>
           <div class="msel" id="catSel"></div>
+          <div class="msel" id="dateBox" hidden><select id="dateFilter" class="native"></select></div>
+          <div class="row daterow" id="dateCustom" hidden>
+            <input type="date" id="dateFrom" aria-label="From"><span>→</span><input type="date" id="dateTo" aria-label="To">
+          </div>
           <div class="row">
             <div class="msel"><select id="statusFilter" class="native">
               <option value="">Any status</option>
@@ -1556,8 +1567,12 @@
   function wirePopup(popup, p) {
     const el = popup.getElement(); if (!el) return;
     const refresh = () => { popup.setContent(popupHtml(p)); setTimeout(() => wirePopup(popup, p), 0); renderList(); };
+    // These clicks re-draw the popup, which takes the button out of the page while
+    // the click is still travelling. Leaflet then can't tell it came from inside a
+    // popup, treats it as a click on the map, and closes the popup. Stop it here.
     el.querySelectorAll(".statusbtns button").forEach(b =>
-      b.onclick = () => {
+      b.onclick = (ev) => {
+        ev.stopPropagation();
         const v = b.dataset.st;
         const next = (store.status[p.id] === v) ? null : v;
         if (next) store.status[p.id] = next; else delete store.status[p.id];
@@ -1576,7 +1591,7 @@
       if (other) focusPlace(other);          // hop to the branch you meant
     });
     const sb = el.querySelector(".setbase");
-    if (sb) sb.onclick = () => { store.base = p.id; savePrefs({ basePlaceId: p.id }); refresh(); showHint("Base set to " + p.name); };
+    if (sb) sb.onclick = (ev) => { ev.stopPropagation(); store.base = p.id; savePrefs({ basePlaceId: p.id }); refresh(); showHint("Base set to " + p.name); };
     const eb = el.querySelector(".extbtn");
     if (eb) eb.onclick = () => { markers[p.id] && markers[p.id].closePopup(); selectPlace(p); };
     const wb = el.querySelector(".wishbtn");
@@ -1606,9 +1621,11 @@
   const eventMarkers = {};
   function eventIcon(e) {
     const focus = dayFocusEventIds.has(e.id);
-    const size = focus ? 26 : 20;
+    const st = store.status[e.id];
+    const ring = st === "want" ? "#d99e0b" : st === "planned" ? "#2b7fd6" : st === "visited" ? "#2ca24a" : "#ffffff";
+    const size = focus ? 26 : st ? 22 : 20;
     return L.divIcon({ className: "", iconSize: [size, size], iconAnchor: [size / 2, size / 2],
-      html: `<div class="ev-pin${focus ? " focus" : ""}" style="width:${size}px;height:${size}px">${ic(EVENT_ICON[e.ec] || "ticket", "sm")}</div>` });
+      html: `<div class="ev-pin${focus ? " focus" : ""}" style="width:${size}px;height:${size}px;box-shadow:0 0 0 ${st ? 3 : 2}px ${ring},0 1px 4px rgba(0,0,0,.45)">${ic(EVENT_ICON[e.ec] || "ticket", "sm")}</div>` });
   }
   const fmtShort = (d) => new Date(d + "T12:00:00").toLocaleDateString("en-GB", {
     day: "numeric", month: "short", year: d.slice(0, 4) !== String(new Date().getFullYear()) ? "numeric" : undefined });
@@ -1624,44 +1641,70 @@
   const tripForEvent = e => (store.trips || []).find(t => t.id === openTripId && overlapsTrip(e, t))
     || (store.trips || []).find(t => overlapsTrip(e, t)) || null;
 
+  // Laid out like a place's popup — same marks, same notes, same two actions —
+  // with the lines that only an event has: when it's on, hours, price, booking.
   function eventPopupHtml(e) {
-    const on = tripsWithEvent(e);
-    const target = tripForEvent(e);
     const a = e.attrs || {};
+    const st = store.status[e.id] || "";
+    const note = store.notes[e.id] || "";
+    const btn = (v, label) => `<button data-st="${v}" class="${st === v ? "sel " + v : ""}">${label}</button>`;
     const where = [e.venue, DISTRICTS[e.d] ? DISTRICTS[e.d].name : "", areaName(e.city)].filter(Boolean).join(" · ");
     const booking = a.booking === "required" ? "Booking required" : a.booking === "recommended" ? "Booking recommended"
       : a.booking === "none" ? "No booking needed" : "";
-    let btn;
-    if (on.length) btn = `<button class="wishbtn evtrip" disabled>${ic("check", "sm")}On ${esc(on.map(t => t.name).join(", "))}</button>`;
-    else if (target) btn = `<button class="wishbtn evtrip" data-evtrip="${target.id}">${ic("plus", "sm")}Add to ${esc(target.name)}</button>`;
-    else btn = `<button class="wishbtn evtrip" disabled>Not on during any of your trips</button>`;
     return `<div class="pop">
       <h3>${ic(EVENT_ICON[e.ec] || "ticket", "", EVENT_COLOR)}${esc(e.name)}</h3>
       <div class="pcn">${e.cn ? esc(e.cn) + " · " : ""}${esc(evCatLabel(e.ec))}${where ? " · " + esc(where) : ""}</div>
+      ${distHtml(e)}
       <div class="evline">${ic("calendar", "sm")}<b>${esc(evWhen(e))}</b>${evHours(e) ? " · " + esc(evHours(e)) : ""}</div>
       ${a.hoursNote ? `<div class="evline">${esc(a.hoursNote)}</div>` : ""}
       ${evPrice(e) || booking ? `<div class="evline">${ic("ticket", "sm")}${esc([evPrice(e), booking].filter(Boolean).join(" · "))}</div>` : ""}
-      ${e.address ? `<div class="evline">${ic("pin", "sm")}${esc(e.address)}</div>` : ""}
       ${e.desc ? `<p>${esc(e.desc)}</p>` : ""}
-      ${btn}
+      ${e.src ? `<div class="srcline">found via ${esc(e.src)}</div>` : ""}
+      <div class="statusbtns">${btn("want", "Want")}${btn("planned", "Plan")}${btn("visited", "Been")}</div>
+      <textarea placeholder="Your notes…">${esc(note)}</textarea>
+      <button class="extbtn">${ic("search", "sm")}Details &amp; live web</button>
+      <button class="wishbtn">${ic("layers", "sm")}Add as an alternative</button>
     </div>`;
+  }
+  function wireEventPopup(popup, e) {
+    const el = popup.getElement(); if (!el) return;
+    const refresh = () => { popup.setContent(eventPopupHtml(e)); setTimeout(() => wireEventPopup(popup, e), 0); renderList(); };
+    el.querySelectorAll(".statusbtns button").forEach(b => b.onclick = (ev) => {
+      ev.stopPropagation();                           // see wirePopup: the redraw would close the popup
+      const next = store.status[e.id] === b.dataset.st ? null : b.dataset.st;
+      if (next) store.status[e.id] = next; else delete store.status[e.id];
+      Repo.setEventMine(e.id, { status: next }).catch(err => showHint("Couldn't save that mark: " + err.message));
+      const m = eventMarkers[e.id]; if (m) m.setIcon(eventIcon(e));
+      refresh();
+    });
+    const ta = el.querySelector("textarea");
+    if (ta) ta.oninput = () => {
+      if (ta.value) store.notes[e.id] = ta.value; else delete store.notes[e.id];
+      clearTimeout(ta._t);
+      ta._t = setTimeout(() => Repo.setEventMine(e.id, { note: ta.value || null }).catch(() => {}), 500);
+    };
+    const eb = el.querySelector(".extbtn");
+    if (eb) eb.onclick = () => { const m = eventMarkers[e.id]; if (m) m.closePopup(); selectPlace(e); };
+    const wb = el.querySelector(".wishbtn");
+    if (wb) wb.onclick = () => shortlistEvent(e);
+  }
+  // "Add as an alternative": the trip it's on during — the open one first
+  async function shortlistEvent(e) {
+    const t = tripForEvent(e);
+    if (!t) { showHint(e.name + " isn't on during any of your trips"); return; }
+    if ((t.events || []).some(x => x.eventId === e.id)) { showHint("Already on " + t.name); return; }
+    await addEventToTrip(t, e, null);
   }
   function addEventMarker(e) {
     if (typeof e.lat !== "number" || typeof e.lng !== "number") return;
     const m = L.marker([e.lat, e.lng], { icon: eventIcon(e), zIndexOffset: 500 });
     eventMarkers[e.id] = m;
-    m.bindPopup(() => eventPopupHtml(e), { minWidth: 240, maxWidth: 270 });
+    m.bindPopup(() => eventPopupHtml(e), { minWidth: 240, maxWidth: 260 });
     // lazy, like the popup: markers are built before `esc` exists further down
     m.bindTooltip(() => `${ic(EVENT_ICON[e.ec] || "ticket", "sm", EVENT_COLOR)} ${esc(e.name)} · ${esc(evWhen(e))}`,
       { direction: "top", offset: [0, -8] });
-    m.on("popupopen", (ev) => {
-      const el = ev.popup.getElement(); if (!el) return;
-      const b = el.querySelector("[data-evtrip]");
-      if (b) b.onclick = async () => {
-        const t = (store.trips || []).find(x => x.id === b.dataset.evtrip);
-        if (t && await addEventToTrip(t, e, null)) ev.popup.setContent(eventPopupHtml(e));
-      };
-    });
+    // like a place: opening the pin also drives the mini browser
+    m.on("popupopen", (ev) => { wireEventPopup(ev.popup, e); openWeb(e, { auto: true }); });
   }
   EVENTS.forEach(addEventMarker);
 
@@ -1716,8 +1759,6 @@
     return true;
   }
 
-  // Events have no want/planned/visited of their own; "on one of my trips" is
-  // their equivalent of being on your list.
   function visibleEvent(e) {
     if (zoning) return zoning.ids.has(e.id);
     if (scopeTrip) {
@@ -1730,7 +1771,14 @@
     if (!inScopeArea(e.city)) return false;
     if (!activeEventCats.has(e.ec)) return false;
     if (ui.district && e.d !== ui.district) return false;
-    if ((ui.listOnly || ui.status) && !tripsWithEvent(e).length) return false;
+    const st = store.status[e.id];
+    if (ui.listOnly && !st) return false;
+    if (ui.status) {
+      if (ui.status === "marked" && !st) return false;
+      if (ui.status !== "marked" && st !== ui.status) return false;
+    }
+    const w = dateWindow();
+    if (w && !(e.start <= w[1] && (e.end || e.start) >= w[0])) return false;
     if (ui.search) {
       const hay = [e.name, e.cn, e.desc, e.venue, e.address, evCatLabel(e.ec)].join(" ").toLowerCase();
       if (!hay.includes(ui.search.toLowerCase())) return false;
@@ -1802,7 +1850,6 @@
   }
 
   function eventRow(e) {
-    const on = tripsWithEvent(e);
     const row = document.createElement("div");
     row.className = "place" + (activeId === e.id ? " active" : "");
     row.innerHTML = `
@@ -1814,7 +1861,7 @@
           <span class="ev-when">${ic("calendar", "sm")}${esc(evWhen(e))}</span>
           <span class="ev-cat">${esc(evCatLabel(e.ec))}</span>
           ${e.free ? `<span class="ev-free">Free</span>` : ""}
-          ${on.length ? `<span class="ev-trip">${ic("check", "sm")}${esc(on[0].name)}</span>` : ""}
+          ${store.status[e.id] ? `<span class="status-badge s-${store.status[e.id]}">${store.status[e.id] === "want" ? "Want" : store.status[e.id] === "planned" ? "Planned" : "Visited"}</span>` : ""}
         </div>
       </div>`;
     row.onclick = () => focusEvent(e);
@@ -1966,7 +2013,7 @@
         : on.length <= 2 ? on.map(i => i.label).join(", ") : on.length + " of " + g.items.length;
       return groups.length > 1 ? g.label + ": " + what : (what === "all" ? "All " + g.label.toLowerCase() : what);
     }).join(" · "),
-    onChange: () => renderList(),
+    onChange: () => { syncDateFilter(); renderList(); },
   });
   function buildCatSelect() {
     catSel.setGroups([
@@ -1976,6 +2023,49 @@
         ({ id: c.id, label: c.label, icon: ic(EVENT_ICON[c.id] || "ticket", "sm", EVENT_COLOR) })) },
     ]);
   }
+
+  // ---------- dates: for events, and only shown while an event type is ticked ----------
+  const dateSel = document.getElementById("dateFilter");
+  ui.dates = { mode: "all", from: "", to: "" };
+  function buildDateOptions() {
+    const t = todayIso();
+    const opts = [["all", "All dates"], ["today", "Today"], ["weekend", "This weekend"], ["7", "Next 7 days"], ["30", "Next 30 days"]];
+    // your trips that haven't finished: the question is usually "what's on while I'm there"
+    (store.trips || []).filter(tr => tr.end >= t).sort((x, y) => x.start.localeCompare(y.start))
+      .forEach(tr => opts.push(["trip:" + tr.id, `During ${tr.name} (${fmtShort(tr.start)} – ${fmtShort(tr.end)})`]));
+    opts.push(["custom", "Custom range…"]);
+    if (!opts.some(o => o[0] === ui.dates.mode)) ui.dates.mode = "all";
+    dateSel.innerHTML = opts.map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("");
+    dateSel.value = ui.dates.mode;
+  }
+  // the window an event has to overlap, or null for "all dates"
+  function dateWindow() {
+    const m = ui.dates.mode, t = todayIso();
+    if (m === "all") return null;
+    if (m === "today") return [t, t];
+    if (m === "7") return [t, addDays(t, 6)];
+    if (m === "30") return [t, addDays(t, 29)];
+    if (m === "weekend") {              // this Saturday and Sunday — or the rest of it, if it's already the weekend
+      const dow = new Date(t + "T12:00:00").getDay();
+      if (dow === 0) return [t, t];
+      const sat = addDays(t, (6 - dow + 7) % 7);
+      return [dow === 6 ? t : sat, addDays(sat, 1)];
+    }
+    if (m.startsWith("trip:")) {
+      const tr = (store.trips || []).find(x => x.id === m.slice(5));
+      return tr ? [tr.start, tr.end] : null;
+    }
+    if (m === "custom") return [ui.dates.from || "0000-01-01", ui.dates.to || "9999-12-31"];
+    return null;
+  }
+  function syncDateFilter() {
+    const show = activeEventCats.size > 0;
+    document.getElementById("dateBox").hidden = !show;
+    document.getElementById("dateCustom").hidden = !show || ui.dates.mode !== "custom";
+  }
+  dateSel.onchange = () => { ui.dates.mode = dateSel.value; syncDateFilter(); renderList(); };
+  document.getElementById("dateFrom").onchange = (e) => { ui.dates.from = e.target.value; renderList(); };
+  document.getElementById("dateTo").onchange = (e) => { ui.dates.to = e.target.value; renderList(); };
 
   // ---------- where: country, then any number of its areas ----------
   const countrySel = document.getElementById("countrySel");
@@ -3721,6 +3811,7 @@
     setTimeout(() => map.invalidateSize(), 60);
   }
   function renderWeb(p) {
+    if (p.kind === "event") { renderWebEvent(p); return; }
     const cat = catOf(p), d = distInfo(p);
     const dName = DISTRICTS[p.d] ? DISTRICTS[p.d].name : "";
     const cityNm = areaName(p.city) || "";
@@ -3741,6 +3832,25 @@
     det.querySelector("[data-ext-base]").onclick = () => { store.base = p.id; savePrefs({ basePlaceId: p.id }); showHint("Base set to " + p.name); refreshMarkers(); renderWeb(p); if (openTripId) renderTrip(); };
     setWeb(p);
   }
+  function renderWebEvent(e) {
+    const d = distInfo(e);
+    document.getElementById("web-title").innerHTML =
+      `${ic(EVENT_ICON[e.ec] || "ticket", "", EVENT_COLOR)}<div>${esc(e.name)}<small id="web-sub">${esc(e.cn || "")}${e.cn ? " · " : ""}${esc(evCatLabel(e.ec))}${e.city ? " · " + esc(areaName(e.city)) : ""}</small></div>`;
+    const det = document.getElementById("web-detail");
+    det.innerHTML = `
+      <div class="ext-cn">${esc(evWhen(e))}${evHours(e) ? " · " + esc(evHours(e)) : ""}${evPrice(e) ? " · " + esc(evPrice(e)) : ""}</div>
+      ${d ? `<span class="ext-dist">${ic("pin", "sm")}${kmText(d.km)} from ${esc(d.base.name)} · ${d.est}</span>` : ""}
+      ${e.desc ? `<p>${esc(e.desc)}</p>` : ""}
+      ${e.src ? `<div class="ext-cn">found via ${esc(e.src)}</div>` : ""}
+      <div class="ext-actions">
+        <button data-ext-alt>${ic("layers", "sm")}Add as alternative</button>
+        ${e.link ? `<a href="${esc(e.link)}" target="_blank" rel="noopener">${ic("globe", "sm")}Listing</a>` : ""}
+      </div>`;
+    det.querySelector("[data-ext-alt]").onclick = () => shortlistEvent(e);
+    setWeb(e);
+  }
+  // whatever the mini browser is about: a place or an event
+  const selectedThing = () => placeById(selectedPlaceId) || eventById(selectedPlaceId);
   function openWeb(p, opts) {
     if (!p) return;
     selectedPlaceId = p.id;
@@ -3782,7 +3892,7 @@
   }
   function toggleWeb() {
     if (webIsOpen()) { closeWeb(); return; }
-    const p = placeById(selectedPlaceId);
+    const p = selectedThing();
     if (p) openWeb(p);
     else if (webQuery) openWebQuery(webQuery);
     else openWebBlank();
@@ -3891,11 +4001,11 @@
   document.querySelectorAll(".web-tabs [data-web]").forEach(b => b.onclick = () => {
     webMode = b.dataset.web;
     document.querySelectorAll(".web-tabs [data-web]").forEach(x => x.classList.toggle("on", x === b));
-    const p = placeById(selectedPlaceId);
+    const p = selectedThing();
     if (p) setWeb(p); else if (webQuery) openWebQuery(webQuery);
   });
   document.getElementById("web-open").onclick = () => {
-    const p = placeById(selectedPlaceId);
+    const p = selectedThing();
     const u = p ? webUrl(p, webMode) : (webQuery ? queryUrl(webQuery, webMode) : null);
     if (u) window.open(u, "_blank");
   };
@@ -4143,6 +4253,9 @@
   enhanceSelect(countrySel, "Country");
   enhanceSelect(dSel, "District");
   enhanceSelect(document.getElementById("statusFilter"), "Status");
+  buildDateOptions();
+  enhanceSelect(dateSel, "Dates");
+  syncDateFilter();
   applyTheme();
   applyScale(uiScale, false);   // already saved — don't write it straight back
   nav("map");

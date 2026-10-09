@@ -70,6 +70,19 @@ ok("re-dating checks the run too", r.s===400);
 r = await send("PATCH",`/api/trips/${tid}/events/${te.id}`,{ note:"front row" });
 ok("note editable", r.s===200 && r.b.tripEvent.note==="front row");
 
+// want / planned / visited, and a note — the same as a place
+r = await send("PUT",`/api/events/${gig.id}/me`,{ status:"want", note:"get tickets early" });
+ok("mark an event", r.s===200 && r.b.userEvent.status==="want" && r.b.userEvent.note==="get tickets early");
+r = await send("PUT",`/api/events/${gig.id}/me`,{ status:"visited" });
+ok("status changes, note kept", r.b.userEvent.status==="visited" && r.b.userEvent.note==="get tickets early");
+r = await send("PUT",`/api/events/${gig.id}/me`,{ note:null });
+ok("a note can be cleared", r.b.userEvent.note===null && r.b.userEvent.status==="visited");
+ok("bootstrap carries it", (await get("/api/bootstrap")).b.userEvents.some(u => u.event_id===gig.id && u.status==="visited"));
+r = await send("PUT",`/api/events/${gig.id}/me`,{ status:null });
+ok("clearing both removes the mark", r.s===200 && r.b.userEvent===null);
+r = await send("PUT",`/api/events/${gig.id}/me`,{ status:"loved" });
+ok("only want/planned/visited", r.s===400);
+
 r = await send("DELETE",`/api/trips/${tid}/events/${te.id}`);
 ok("remove from trip", r.s===204);
 r = await send("DELETE",`/api/events/${gig.id}`);

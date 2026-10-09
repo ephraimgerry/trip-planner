@@ -28,6 +28,7 @@ router.get("/", asyncHandler(async (req, res) => {
     brands: brands.all(),
     events: events.visibleTo(uid),
     eventCategories: events.categories(),
+    userEvents: events.userEvents(uid),
     userPlaces: places.userPlaces(uid),
     trips: trips.listFor(uid).map(t => tripService.document(t.id, uid)),
     prefs: users.prefs(uid),

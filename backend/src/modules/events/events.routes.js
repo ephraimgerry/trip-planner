@@ -83,6 +83,14 @@ router.patch("/:eventId", validate({ params: S.eventParams, body: S.eventPatch }
     res.json({ event: e });
   }));
 
+// ---- what I think of an event (want / planned / visited, and a note) ----
+router.put("/:eventId/me", validate({ params: S.eventParams, body: S.userEventPatch }),
+  asyncHandler(async (req, res) => {
+    const e = repo.byId(req.params.eventId);
+    if (!e || (e.visibility === "private" && e.created_by !== req.user.id)) throw notFound("Event not found");
+    res.json({ userEvent: repo.setUserEvent(req.user.id, req.params.eventId, req.body) });
+  }));
+
 router.delete("/:eventId", validate({ params: S.eventParams }), asyncHandler(async (req, res) => {
   mustEdit(req, repo.byId(req.params.eventId));
   repo.remove(req.params.eventId);

@@ -83,4 +83,25 @@ function update(eid, patch) {
 
 const remove = (eid) => db.prepare("DELETE FROM events WHERE id = ?").run(eid);
 
-module.exports = { categories, categoryExists, visibleTo, byId, overlapping, create, update, remove };
+// ---- what this user thinks of events ----
+const userEvents = (userId) => db.prepare(
+  "SELECT event_id,status,note FROM user_events WHERE user_id = ?").all(userId);
+
+// A field that's present is written, null included — so a note can be cleared.
+// A field that's absent is left alone. A row with nothing left in it is removed.
+function setUserEvent(userId, eventId, patch) {
+  const cur = db.prepare("SELECT status,note FROM user_events WHERE user_id = ? AND event_id = ?").get(userId, eventId) || {};
+  const status = patch.status !== undefined ? patch.status : (cur.status ?? null);
+  const note = patch.note !== undefined ? (patch.note || null) : (cur.note ?? null);
+  if (!status && !note) {
+    db.prepare("DELETE FROM user_events WHERE user_id = ? AND event_id = ?").run(userId, eventId);
+    return null;
+  }
+  db.prepare(`INSERT INTO user_events (user_id,event_id,status,note,updated_at) VALUES (?,?,?,?,?)
+              ON CONFLICT(user_id,event_id) DO UPDATE SET status = excluded.status, note = excluded.note,
+                updated_at = excluded.updated_at`).run(userId, eventId, status, note, now());
+  return db.prepare("SELECT event_id,status,note FROM user_events WHERE user_id = ? AND event_id = ?").get(userId, eventId);
+}
+
+module.exports = { categories, categoryExists, visibleTo, byId, overlapping, create, update, remove,
+  userEvents, setUserEvent };
