@@ -2547,15 +2547,15 @@
 
   // ---------- stage ----------
   function renderStage(t) {
-    if (!t || stageTab !== "zoning") endZoning();
+    if (!t || stageTab !== "footprint") endZoning();
     if (!t) { renderStageList(); return; }
     if (stageTab === "plan") renderStagePlan(t);
-    else if (stageTab === "zoning") renderStageZoning(t);
+    else if (stageTab === "footprint") renderStageZoning(t);
     else renderStageOverview(t);
   }
 
   // ==================================================================
-  //  ZONING — each day's footprint, as an outline on the map
+  //  FOOTPRINT (code calls it zoning) — each day's ground, as an outline on the map
   // ==================================================================
   // An experiment: wrap everything a day touches — its places, its events and
   // the bed(s) that night — in the tightest outline (a convex hull), so days
@@ -2638,7 +2638,7 @@
     const ticked = zoneDays[t.id] || (zoneDays[t.id] = new Set(days.filter(d => dayPoints(t, d).length)));
     const zones = computeZones(t, days, ticked);
     const dn = d => "D" + (days.indexOf(d) + 1);
-    let h = `<h2 class="st-title">Zoning</h2>
+    let h = `<h2 class="st-title">Footprint</h2>
       <div class="st-sub">Each day's outline wraps its places, events and that night's hotel; a big one is a day that sprawls.
         Days sharing a hotel always meet near it, so <b>overlap</b> is flagged only where the stops themselves overlap —
         those are days that could be merged or swapped.</div>
@@ -2762,7 +2762,7 @@
       <div class="st-tabs">
         <button data-tab="overview" class="${stageTab === "overview" ? "on" : ""}">Overview</button>
         <button data-tab="plan" class="${stageTab === "plan" ? "on" : ""}">Plan</button>
-        <button data-tab="zoning" class="${stageTab === "zoning" ? "on" : ""}">Zoning</button>
+        <button data-tab="footprint" class="${stageTab === "footprint" ? "on" : ""}">Footprint</button>
       </div>
       <span class="spacer"></span>
       <button class="btn sm" id="stDel" title="Delete this trip">${ic("trash", "sm")}</button>
