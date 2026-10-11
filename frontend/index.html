@@ -1735,7 +1735,10 @@
     // when a trip is open, the map is scoped to that trip's places
     if (scopeTrip) {
       const inTrip = tripIdSet(scopeTrip).has(p.id);
-      if (scopeMode === "day") return dayFocusIds.size ? dayFocusIds.has(p.id) : inTrip;
+      // Once a day is picked, show that day — even when it's empty (an arrival
+      // night, a free day). Falling back to the whole trip only makes sense
+      // before any day has been picked at all.
+      if (scopeMode === "day") return focusedDate ? dayFocusIds.has(p.id) : inTrip;
       if (scopeMode === "trip") return inTrip;
       const catOk = activeCats.has(CATEGORIES[p.c] ? p.c : "custom");   // the wider modes honour the category chips
       if (scopeMode === "unvisited") return inTrip || (catOk && store.status[p.id] !== "visited");
@@ -1763,7 +1766,7 @@
     if (zoning) return zoning.ids.has(e.id);
     if (scopeTrip) {
       const inTrip = (scopeTrip.events || []).some(x => x.eventId === e.id);
-      if (scopeMode === "day") return (dayFocusIds.size || dayFocusEventIds.size) ? dayFocusEventIds.has(e.id) : inTrip;
+      if (scopeMode === "day") return focusedDate ? dayFocusEventIds.has(e.id) : inTrip;
       if (scopeMode === "trip") return inTrip;
       return inTrip || (activeEventCats.has(e.ec) && overlapsTrip(e, scopeTrip));
     }
