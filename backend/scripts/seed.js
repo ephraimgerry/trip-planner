@@ -111,6 +111,28 @@ seedPlaces();
 step(`places         ${PLACES.length}`);
 step(`place images   ${db.prepare("SELECT COUNT(*) n FROM place_images").get().n}`);
 
+// ---- 3b. hotels for the sample trip -----------------------------------------
+// Lodging places, so they come before the district pass below. attrs carries
+// the same check-in policy migration 007 gives every other hotel.
+const { HOTELS, TRIPS } = load("trips.js", ["HOTELS", "TRIPS"]);
+const setLodgingAttrs = db.prepare(`UPDATE places SET attrs = json_set(COALESCE(NULLIF(attrs,''), '{}'),
+  '$.checkInTime', '15:00', '$.checkOutTime', '11:00') WHERE id = ?
+  AND json_extract(COALESCE(NULLIF(attrs,''), '{}'), '$.checkInTime') IS NULL`);
+db.transaction(() => {
+  for (const h of HOTELS || []) {
+    const areaId = h.city || "shanghai";
+    upsertPlace.run({
+      id: h.id, kind: "lodging", name: h.name, name_local: h.cn || null,
+      category: null, country_code: areaCountry[areaId] || "cn",
+      area_id: areaId, district_id: null,
+      lat: h.lat ?? null, lng: h.lng ?? null, address: h.address || null,
+      link: h.link || null, description: h.desc || null, source: null, ts: now(),
+    });
+    setLodgingAttrs.run(h.id);
+  }
+})();
+step(`hotels         ${(HOTELS || []).length}`);
+
 // ---- 4. re-derive districts from the polygons -------------------------------
 // The polygons are now authoritative, so any place whose stored district
 // disagrees with where it actually sits gets corrected here.
@@ -136,5 +158,23 @@ step(`districts fixed ${moved} place(s) re-assigned by polygon`);
 const brands = require("../src/modules/places/brands.repository");
 const derived = brands.deriveFromNames();
 step(`brands         ${derived.brands} brand(s), ${derived.linked} branch(es) linked`);
+
+// ---- 6. sample trips ---------------------------------------------------------
+// Created once, owned by the local user. An existing trip is left alone, so
+// whatever was edited in the app survives a re-seed.
+const trips = require("../src/modules/trips/trips.repository");
+let added = 0;
+for (const t of TRIPS || []) {
+  if (trips.byId(t.id)) continue;
+  db.transaction(() => {
+    db.prepare(`INSERT INTO trips (id,name,start_date,end_date,note,created_by,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?)`).run(t.id, t.name, t.startDate, t.endDate, t.note || null, me.id, now(), now());
+    db.prepare(`INSERT INTO trip_members (trip_id,user_id,role,joined_at,created_at)
+                VALUES (?,?,'owner',?,?)`).run(t.id, me.id, now(), now());
+    trips.replacePlan(t.id, t);
+  })();
+  added++;
+}
+step(`trips          ${added} added, ${(TRIPS || []).length - added} already present`);
 
 console.log("\nDone. Legacy trips and marks import separately:  node scripts/import-legacy.js <dump.json>\n");

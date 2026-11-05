@@ -4,7 +4,7 @@ const get=async p=>{const r=await fetch(B+p);return{s:r.status,b:await r.json().
 const snd=async(m,p,b)=>{const r=await fetch(B+p,{method:m,headers:J,body:b===undefined?undefined:JSON.stringify(b)});return{s:r.status,b:await r.json().catch(()=>null)};};
 
 let r=await get("/api/bootstrap");
-const t=r.b.trips.find(x=>/Shanghai/.test(x.name));
+const t=r.b.trips.find(x=>x.id==="trip-fixture-2026-11");
 const d=(n)=>t.days[n-1];
 ok("D9 same city, hotel change → not travel", d(9).travel===false && d(9).areaIds.join()==="hangzhou",
    `${d(9).areaIds.join("→")} travel=${d(9).travel}`);

@@ -6,7 +6,7 @@ const snd=async(m,p,b)=>{const r=await fetch(B+p,{method:m,headers:J,body:b===un
 let r=await get("/api/trips/commute-kinds");
 ok("kind catalogue", r.s===200 && r.b.kinds.length===11, r.b.kinds?.filter(k=>k.spans_days).map(k=>k.id).join(","));
 r=await get("/api/bootstrap");
-const trip=r.b.trips.find(t=>/Shanghai/.test(t.name));
+const trip=r.b.trips.find(t=>t.id==="trip-fixture-2026-11");
 const kinds=[...new Set(trip.commutes.map(c=>c.kind))];
 ok("imported trip has commutes of several kinds", trip.commutes.length>=14 && kinds.length>=3, `${trip.commutes.length} rows, kinds=${kinds.join(",")}`);
 ok("flights survived as commutes", trip.commutes.filter(c=>c.kind==="flight").length===2);
